@@ -1,0 +1,8 @@
+Element or value display name,Description,Data type,Character length,Acceptable values,Required,Accepts null value
+Retn_Code,4 digit code uniquely identifying the retention factors,INT,4,n/a,y,n
+FdGrp_CD,4 digit code uniquely identifying the food group to which the retention factors belong. Can be linked to the Food Group Description file in the USDA National Nutrient Database for Standard Reference.,INT,4,n/a,y,n
+RetnDesc,Description of the food category and preparation,VARCHAR,255,n/a,y,n
+Nutr_No,3 digit unique identifier code for a nutrient ,INT,3,n/a,y,n
+NutrDesc,Name of the food component,VARCHAR,50,n/a,y,n
+Retn_Factor,The specific factor representing the amount of the food component retained during the specified treatment,INT,3,n/a,y,n
+Date,Date of the treatment,DATE,10,n/a,y,n

@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.env
+.runtime/
+
+# Downloaded/generated datasets (keep dataset/README.md tracked).
+dataset/raw/
+dataset/processed/

@@ -1,0 +1,70 @@
+# Personal CV / Portfolio files (do not commit to public repository)
+CV_PROJECT_*.md
+*CV*.md
+CV/
+
+# Environment configurations and secrets
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+
+# Temporary and cache directories
+.tmp/
+tmp/
+temp/
+*.log
+
+# Python / Backend
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+.pytest_cache/
+.ruff_cache/
+.deepeval/
+.runtime/
+.coverage
+htmlcov/
+*.sqlite3
+*.sqlite
+*.db
+
+# Large dataset archives and processed SQLite databases (keep dataset/README.md)
+backend/dataset/raw/
+backend/dataset/processed/
+dataset/raw/
+dataset/processed/
+*.zip
+*.tar.gz
+*.xlsx
+
+# Node / Frontend
+node_modules/
+frontend/node_modules/
+.next/
+frontend/.next/
+out/
+frontend/out/
+build/
+dist/
+*.tsbuildinfo
+frontend/*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Operating System & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo

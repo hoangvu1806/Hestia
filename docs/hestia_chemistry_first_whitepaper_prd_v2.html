@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Hestia v2 - Chemistry-first Product Whitepaper & PRD</title>
+<style>
+:root{
+  --ink:#10181a; --muted:#5f6c70; --line:#dce5e4; --paper:#fff;
+  --bg:#edf3f2; --deep:#102f2b; --teal:#0f766e; --teal2:#dff3ef;
+  --lime:#d7f1c5; --amber:#f5c76d; --amber2:#fff7e6; --red:#c94848; --red2:#fff0ef;
+  --blue:#3d6fc2; --blue2:#eef4ff; --violet:#7657b7; --violet2:#f3efff;
+  --shadow:0 20px 60px rgba(16,47,43,.10);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"DejaVu Sans",Arial,Helvetica,sans-serif;line-height:1.48;font-size:13px}
+a{color:var(--teal);text-decoration:none}
+@page{size:A4;margin:9mm 10mm 11mm 10mm}
+@page cover{size:A4;margin:0}
+@media print{
+  body{background:#fff;font-size:9.35pt;line-height:1.42}
+  .page{margin:0;padding:0;max-width:none;box-shadow:none;border:none}
+  .cover{page:cover;height:297mm;min-height:0;padding:16mm 14mm 13mm;break-after:page}
+  .cover h1{font-size:37pt}.cover .sub{font-size:13.2pt}.cover .manifesto{font-size:10.8pt}
+  .print-break{break-before:page}
+  .avoid,.card,.mini,.ui-frame,.trace,.architecture,.refcard{break-inside:avoid}
+  h2,h3,h4{break-after:avoid}
+  thead{display:table-header-group} tr{break-inside:avoid}
+  a{color:inherit;text-decoration:none}
+}
+.page{max-width:1050px;margin:24px auto;background:var(--paper);padding:34px 44px 54px;box-shadow:var(--shadow);border:1px solid #e3eae8}
+.cover{min-height:1120px;display:flex;flex-direction:column;justify-content:space-between;padding:62px 54px 44px;overflow:hidden;position:relative;background:
+ radial-gradient(circle at 87% 13%,rgba(15,118,110,.18),transparent 28%),
+ radial-gradient(circle at 10% 86%,rgba(245,199,109,.18),transparent 24%),
+ linear-gradient(155deg,#fbfffe 0%,#f1f8f6 55%,#ffffff 100%)}
+.cover:after{content:"";position:absolute;width:320px;height:320px;border:1px solid rgba(15,118,110,.14);border-radius:50%;right:-145px;bottom:80px;box-shadow:0 0 0 38px rgba(15,118,110,.035),0 0 0 76px rgba(15,118,110,.025)}
+.brandline{font-weight:800;letter-spacing:.17em;text-transform:uppercase;color:var(--teal);font-size:10.5px}
+.cover h1{font-size:50px;line-height:1.02;letter-spacing:-.048em;margin:18px 0 18px;max-width:860px}.cover h1 span{color:var(--teal)}
+.cover .sub{font-size:19px;line-height:1.35;max-width:850px;color:#35504e;margin-bottom:22px}
+.manifesto{max-width:870px;border-left:5px solid var(--amber);background:rgba(255,255,255,.82);padding:15px 18px;border-radius:0 14px 14px 0;font-size:15px;color:#3d4948}
+.cover-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:26px;max-width:900px}.cover-grid .mini{padding:13px 14px;background:rgba(255,255,255,.9);border:1px solid var(--line);border-radius:14px}.mini b{display:block;color:var(--deep);font-size:15px;margin-bottom:3px}.mini span{color:var(--muted);font-size:10.5px}
+.meta{border-top:1px solid #cfddda;padding-top:15px;display:flex;justify-content:space-between;gap:20px;color:var(--muted);font-size:11px}.meta strong{color:var(--deep)}
+h1,h2,h3,h4{color:var(--deep);font-weight:800}h2{font-size:26px;line-height:1.16;margin:34px 0 12px;letter-spacing:-.025em;padding-top:18px;border-top:1px solid var(--line)}h3{font-size:18px;line-height:1.25;margin:22px 0 8px;letter-spacing:-.012em}h4{font-size:13.5px;margin:14px 0 5px}
+p{margin:6px 0 9px}ul,ol{margin:6px 0 10px;padding-left:20px}li{margin:3px 0}
+.lead{font-size:15.5px;line-height:1.5;color:#334b49;max-width:950px}.eyebrow{font-size:9.5px;text-transform:uppercase;letter-spacing:.13em;color:var(--teal);font-weight:800;margin-top:16px}.muted{color:var(--muted)}.small{font-size:10.3px}.tiny{font-size:9.2px}.mono{font-family:"DejaVu Sans Mono",Consolas,monospace}.nowrap{white-space:nowrap}
+.toc{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}.toc a{display:flex;gap:8px;justify-content:space-between;padding:6px 0;border-bottom:1px dotted #d3dddb;color:#294846}.toc b{font-size:10px;color:var(--teal)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.card{border:1px solid var(--line);border-radius:14px;padding:13px 14px;background:#fff}.card.soft{background:#f8fbfa}.card.teal{background:#f0faf7;border-color:#c8e3dd}.card.amber{background:var(--amber2);border-color:#efdcae}.card.red{background:var(--red2);border-color:#efc6c3}.card.blue{background:var(--blue2);border-color:#cddbf3}.card.violet{background:var(--violet2);border-color:#ddd1f5}.card h4{margin-top:0}.num{font-size:26px;font-weight:900;color:var(--teal);line-height:1;margin-bottom:7px;letter-spacing:-.04em}
+.callout{padding:12px 14px;border-radius:12px;border:1px solid var(--line);margin:10px 0;background:#f8fbfa}.callout strong:first-child{color:var(--deep)}.callout.danger{background:var(--red2);border-left:4px solid var(--red)}.callout.warn{background:var(--amber2);border-left:4px solid #d69024}.callout.info{background:var(--blue2);border-left:4px solid var(--blue)}.callout.good{background:#edf9f0;border-left:4px solid #348a52}
+.pill{display:inline-flex;align-items:center;gap:4px;border:1px solid #cfdcda;border-radius:999px;padding:3px 7px;margin:2px 3px 2px 0;font-size:9px;font-weight:800;background:#fff;color:#36514e}.pill.red{border-color:#edc3c1;background:#fff4f3;color:#913a3a}.pill.amber{border-color:#efd9a7;background:#fff8e9;color:#8a5a13}.pill.blue{border-color:#cad9f2;background:#f3f7ff;color:#355b9d}.pill.teal{border-color:#c4dfd9;background:#f0faf7;color:#176b63}
+.tablebox{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:9px 0 14px}table{width:100%;border-collapse:collapse;font-size:10.5px}th{background:#edf6f4;color:#254844;text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}td{padding:7px 8px;border-bottom:1px solid #edf1f0;vertical-align:top}tr:last-child td{border-bottom:none}.tight td,.tight th{padding:6px 7px}.danger-txt{color:#a23f3f;font-weight:800}.warn-txt{color:#8e611f;font-weight:800}.ok-txt{color:#2b7650;font-weight:800}
+.architecture{border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,#fcfefd,#f6faf9);padding:15px;margin:10px 0}.flowrow{display:flex;align-items:stretch;justify-content:center;gap:7px;flex-wrap:wrap}.flowbox{min-width:112px;flex:1;border:1px solid #cddbd8;border-radius:11px;background:#fff;padding:9px 9px;text-align:center;font-weight:800;font-size:10.5px}.flowbox.teal{background:#eaf8f4;border-color:#b8dcd3}.flowbox.red{background:#fff0ef;border-color:#ebc5c2}.flowbox.amber{background:#fff7e7;border-color:#ecd7a7}.flowbox.blue{background:#eef4ff;border-color:#c9d8f0}.flowbox.violet{background:#f4efff;border-color:#d9cdf1}.arrow{display:flex;align-items:center;color:#7c8b88;font-weight:900}.stack{display:flex;flex-direction:column;gap:7px}
+.trace{border:1px solid #d9e4e1;border-radius:15px;padding:13px;background:#fbfdfc}.trace-line{display:grid;grid-template-columns:28px 1fr 88px;gap:8px;align-items:start;padding:7px 0;border-bottom:1px dashed #dce5e3}.trace-line:last-child{border-bottom:none}.step{width:24px;height:24px;border-radius:50%;background:var(--deep);color:#fff;display:grid;place-items:center;font-weight:900;font-size:9px}.src{font-size:8.5px;text-align:right;color:#63726f}.chem-eq{font-family:"DejaVu Sans Mono",monospace;background:#112522;color:#d9f5ec;border-radius:12px;padding:12px 13px;font-size:10.5px;line-height:1.5;white-space:pre-wrap;margin:8px 0}
+.riskbar{height:8px;background:linear-gradient(90deg,#86c69b 0 25%,#f1d37d 25% 55%,#e79858 55% 76%,#cc5555 76% 100%);border-radius:999px;position:relative;margin:8px 0 2px}.riskbar i{position:absolute;top:-4px;width:3px;height:16px;background:#142824;border-radius:2px}.legend{display:flex;justify-content:space-between;font-size:8.5px;color:#6b7976}
+.schema{background:#11211e;color:#dcefe9;border-radius:12px;padding:12px 14px;font-family:"DejaVu Sans Mono",monospace;font-size:9.2px;line-height:1.42;white-space:pre-wrap;overflow-wrap:anywhere}.code-light{background:#f5f8f7;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-family:"DejaVu Sans Mono",monospace;font-size:9.2px;white-space:pre-wrap;overflow-wrap:anywhere}
+.ui-frame{border:1px solid #cfdad8;border-radius:18px;overflow:hidden;background:#fff;margin:10px 0}.ui-head{display:flex;justify-content:space-between;gap:10px;padding:9px 12px;background:#eef6f4;border-bottom:1px solid var(--line)}.ui-head strong{font-size:12.5px}.ui-body{display:grid;grid-template-columns:185px 1fr;min-height:270px}.ui-side{background:#fafcfb;border-right:1px solid var(--line);padding:10px}.ui-main{padding:10px}.ui-item{border:1px dashed #bdccca;border-radius:10px;padding:8px 9px;margin-bottom:7px;font-size:9.5px;color:#4d5e5b;background:#fff}.bubble{padding:9px 10px;border-radius:12px;margin:6px 0;max-width:90%;font-size:9.5px}.bubble.user{margin-left:auto;background:#153d38;color:#fff}.bubble.ai{border:1px solid var(--line);background:#f9fbfa}.quick{display:inline-block;border:1px solid #cbd9d6;background:#fff;border-radius:999px;padding:4px 7px;margin:3px 3px 0 0;font-size:8.7px}.mini-chart{height:72px;display:flex;align-items:flex-end;gap:5px;border:1px solid var(--line);border-radius:9px;padding:7px;background:#fbfdfc}.mini-chart i{display:block;flex:1;background:linear-gradient(180deg,#55a799,#0f766e);border-radius:4px 4px 1px 1px}.reaction-ui{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px;border:1px solid #ead7a7;background:#fff9eb;border-radius:10px}.reaction-ui span{border:1px solid #e6d3a3;background:#fff;padding:5px 7px;border-radius:8px;font-size:8.5px;font-weight:800}.reaction-ui b{color:#8b601b}
+.kpi{font-size:21px;font-weight:900;color:var(--deep);line-height:1}.kpi small{font-size:8.5px;color:var(--muted);font-weight:700;display:block;margin-top:2px}
+.refcard{display:grid;grid-template-columns:34px 1fr;gap:8px;padding:7px 0;border-bottom:1px solid #e7eceb}.refcard:last-child{border-bottom:none}.refnum{width:30px;height:22px;border-radius:7px;background:#e8f5f1;color:#176b63;font-weight:900;display:grid;place-items:center;font-size:8.5px}.refcard .url{font-size:8.7px;color:#55706b;word-break:break-all}
+.footer-note{margin-top:24px;padding-top:10px;border-top:1px solid var(--line);font-size:9px;color:#71807d}
+</style>
+</head>
+<body>
+
+<section class="page cover">
+  <div>
+    <div class="brandline">Chemistry-first product whitepaper · PRD · implementation blueprint</div>
+    <h1><span>Hestia</span><br/>Từ ảnh nguyên liệu đến suy luận hóa học có bằng chứng.</h1>
+    <div class="sub">Một trợ lý bếp đa phương thức dùng Google ADK để điều phối recipe, nutrition, food chemistry và food-safety reasoning - với knowledge graph, rule evaluator và evidence retrieval nằm dưới agent thay vì để LLM “đoán”.</div>
+    <div class="manifesto"><b>Thay đổi cốt lõi của bản v2:</b> Hestia không chỉ trả lời “nấu gì”. Khi câu hỏi liên quan đến độc tố, biến đổi do nhiệt, thực phẩm sống/chín, bảo quản hoặc chất có thể hình thành, hệ thống phải chỉ ra <b>tên chất / tác nhân</b>, <b>điều kiện kích hoạt</b>, <b>đường suy luận có thể kiểm toán</b>, <b>mức rủi ro</b>, <b>cách giảm rủi ro</b> và <b>nguồn bằng chứng</b>.</div>
+    <div class="cover-grid">
+      <div class="mini"><b>1 ảnh + 1 câu hỏi</b><span>Không ép user điền form; intent có thể chỉ là “nấu gì?” hoặc “có độc không?”.</span></div>
+      <div class="mini"><b>3 sub-agent</b><span>Culinary & Nutrition · Chemistry & Safety · Web Search & Evidence.</span></div>
+      <div class="mini"><b>Hybrid knowledge</b><span>FoodOn + ChEBI + USDA/FAO + rules + evidence chunks.</span></div>
+      <div class="mini"><b>Rich response</b><span>Cards, risk scale, reaction flow, charts, source drawer, AI dish image.</span></div>
+    </div>
+  </div>
+  <div class="meta"><div><strong>Version 2.0</strong><br/>Chemistry & Food-Safety First</div><div><strong>Platforms</strong><br/>Next.js Web · Tauri 2 Android APK</div><div><strong>Backend</strong><br/>FastAPI · Google ADK · Qdrant · optional FalkorDB</div><div><strong>Data</strong><br/>USDA · FAO/INFOODS · FoodOn · ChEBI · FDA/USDA guidance</div></div>
+</section>
+
+<main class="page">
+<div class="eyebrow">How to read</div>
+<h2 style="margin-top:6px;border-top:0;padding-top:0">Mục lục & cách tận dụng tài liệu</h2>
+<div class="toc">
+  <a href="#vision"><span>01. Product insight & marketing story</span><b>WHY</b></a>
+  <a href="#scenarios"><span>02. Use cases & intent map</span><b>UX</b></a>
+  <a href="#chemcore"><span>03. Chemistry-first scope</span><b>SCIENCE</b></a>
+  <a href="#poison"><span>04. Food-poisoning risk model</span><b>SAFETY</b></a>
+  <a href="#reasoning"><span>05. Explainable reasoning model</span><b>TRACE</b></a>
+  <a href="#prd"><span>06. PRD & MVP boundary</span><b>BUILD</b></a>
+  <a href="#agents"><span>07. Google ADK agent architecture</span><b>AGENT</b></a>
+  <a href="#knowledge"><span>08. Knowledge & reasoning architecture</span><b>KG</b></a>
+  <a href="#ingestion"><span>09. Data download & preprocessing guide</span><b>ETL</b></a>
+  <a href="#tools"><span>10. Tool contracts & safety rules</span><b>API</b></a>
+  <a href="#response"><span>11. Rich agent-response protocol</span><b>UI JSON</b></a>
+  <a href="#screens"><span>12. Five product screens</span><b>UI/UX</b></a>
+  <a href="#tech"><span>13. Technology & deployment</span><b>STACK</b></a>
+  <a href="#nfr"><span>14. Non-functional, privacy, observability</span><b>NFR</b></a>
+  <a href="#eval"><span>15. Evaluation & test set</span><b>QA</b></a>
+  <a href="#roadmap"><span>16. Delivery roadmap</span><b>PLAN</b></a>
+  <a href="#refs"><span>17. Research sources</span><b>SOURCES</b></a>
+</div>
+<div class="callout info"><strong>Cách dùng whitepaper này.</strong> Product/marketing đọc 01-06. AI/backend đọc 07-10. Frontend đọc 11-12. Data engineer đọc 08-10. QA đọc 14-15. Phần 09 là checklist triển khai thực tế từ file nguồn đến KG/Qdrant, không chỉ là mô tả khái niệm.</div>
+
+<section id="vision">
+<div class="eyebrow">01 · Product insight</div>
+<h2>Câu chuyện sản phẩm: “Tủ lạnh không thiếu đồ - thiếu một người hiểu điều gì sẽ xảy ra khi nấu chúng.”</h2>
+<p class="lead">Người dùng mở tủ lạnh, chụp một ảnh và hỏi rất ngắn: <b>“Nấu gì đây?”</b>. Hệ thống nhận diện gà, khoai tây, trứng và hành; đề xuất vài món khả thi. Sau đó người dùng hỏi tiếp: <b>“Nếu chiên khoai 200°C thì có chất độc gì sinh ra không?”</b>. Đây là khoảnh khắc Hestia khác một recipe chatbot: câu trả lời phải chuyển từ “sáng tạo món ăn” sang <b>scientific risk reasoning</b>.</p>
+<div class="grid3">
+  <div class="card teal"><div class="num">01</div><h4>See</h4><p>Hiểu ảnh: nguyên liệu, trạng thái sơ bộ, nhãn, số lượng ước lượng.</p></div>
+  <div class="card amber"><div class="num">02</div><h4>Reason</h4><p>Hiểu intent và điều kiện: món gì, cách nấu, nhiệt, thời gian, bảo quản, mục tiêu.</p></div>
+  <div class="card red"><div class="num">03</div><h4>Verify</h4><p>Rủi ro cao phải đi qua knowledge/rules/evidence trước khi trả lời.</p></div>
+</div>
+<div class="callout good"><strong>Marketing promise:</strong> “Chụp nguyên liệu. Hỏi điều bạn đang nghĩ. Hestia không chỉ gợi ý món - nó giải thích <i>vì sao</i> và <i>điều gì cần lưu ý</i> dưới góc nhìn hóa học thực phẩm.”</div>
+<div class="grid2">
+  <div class="card soft"><h4>Không định vị là</h4><ul><li>app đếm calorie từ ảnh;</li><li>recipe generator;</li><li>chatbot “biết mọi thứ”;</li><li>công cụ chẩn đoán ngộ độc hay tư vấn y khoa.</li></ul></div>
+  <div class="card soft"><h4>Định vị là</h4><ul><li>multimodal culinary copilot;</li><li>chemistry-aware recommendation;</li><li>food-safety decision support;</li><li>evidence-grounded educational assistant.</li></ul></div>
+</div>
+</section>
+
+<section id="scenarios">
+<div class="eyebrow">02 · User scenarios</div>
+<h2>Một entry point, nhiều intent - Root Agent tự chọn đường đi</h2>
+<div class="tablebox"><table class="tight"><thead><tr><th>Ảnh + câu hỏi</th><th>Intent</th><th>Đường agent</th><th>Response nên render</th></tr></thead><tbody>
+<tr><td>[Ảnh tủ lạnh] “Nấu gì đây?”</td><td>Recipe recommendation</td><td>Culinary</td><td>Recipe cards + thiếu nguyên liệu + quick chips</td></tr>
+<tr><td>[Gà, trứng, rau] “Món nào nhiều protein?”</td><td>Nutrition ranking</td><td>Culinary</td><td>Comparison chart + portion caveat</td></tr>
+<tr><td>[Khoai, dầu] “Chiên 200°C có chất gì sinh ra?”</td><td>Chemistry</td><td>Chemistry → Evidence</td><td>Reaction pathway + acrylamide card + mitigation</td></tr>
+<tr><td>[Thịt] “Nướng cháy cạnh có sao không?”</td><td>Process contaminant</td><td>Chemistry → Evidence</td><td>HCA/PAH explanation + risk qualifiers</td></tr>
+<tr><td>[Cá ngừ] “Để ngoài lâu rồi nấu lại được không?”</td><td>Food poisoning</td><td>Chemistry/Safety → Evidence</td><td>Histamine intoxication warning + “heat cannot fix” note</td></tr>
+<tr><td>[Đậu đỏ] “Nấu bằng slow cooker có ổn?”</td><td>Natural toxin</td><td>Chemistry/Safety → Evidence</td><td>PHA toxin + preparation requirement</td></tr>
+<tr><td>[Gà] “10 phút đủ chưa?”</td><td>Microbial safety</td><td>Chemistry/Safety → Evidence</td><td>Core-temperature requirement; refuse visual/time-only certainty</td></tr>
+<tr><td>[Món cụ thể] “Nấu vậy ít mất vitamin C hơn không?”</td><td>Nutrient transformation</td><td>Culinary + Chemistry</td><td>Retention chart + conditions + uncertainty</td></tr>
+<tr><td>[Ảnh nhãn] “Chất này là gì?”</td><td>Chemical entity</td><td>Chemistry → Evidence if needed</td><td>Compound card: name, role, formula/identifier, source</td></tr>
+<tr><td>[Ảnh] “Có gì nguy hiểm?”</td><td>Open hazard scan</td><td>Chemistry + selective Evidence</td><td>Risk checklist; clearly separate observed vs inferred</td></tr>
+</tbody></table></div>
+<div class="callout warn"><strong>UX rule:</strong> câu hỏi càng ngắn càng không được mặc định user muốn “recipe”. Root Agent phải đọc ảnh + lịch sử + từ khóa rủi ro. “Có sao không?”, “độc?”, “để qua đêm?”, “sống”, “cháy”, “tái hâm”, “lên men”, “đóng hộp” là các trigger tăng mức safety.</div>
+</section>
+
+<section id="chemcore" class="print-break">
+<div class="eyebrow">03 · Chemistry-first scope</div>
+<h2>Chemistry là một subsystem, không phải một prompt</h2>
+<p>Để câu trả lời có giá trị, Chemistry & Safety Agent phải phân biệt ít nhất 5 nhóm hiện tượng. Mỗi nhóm có dữ liệu, rule và cách render khác nhau.</p>
+<div class="grid5">
+  <div class="card teal"><h4>Transformation</h4><p class="small">Protein denaturation, starch gelatinization, pigment/nutrient changes.</p></div>
+  <div class="card amber"><h4>Process contaminants</h4><p class="small">Acrylamide, HCA/PAH, furan… phụ thuộc process.</p></div>
+  <div class="card red"><h4>Natural toxins</h4><p class="small">PHA, amygdalin/cyanide potential, mushroom toxins…</p></div>
+  <div class="card violet"><h4>Microbial toxins</h4><p class="small">Histamine, cereulide, staphylococcal enterotoxin…</p></div>
+  <div class="card blue"><h4>Pathogens</h4><p class="small">Salmonella, Campylobacter, Listeria… không gọi nhầm là “chất độc”.</p></div>
+</div>
+<h3>Ví dụ chemistry path 1 - khoai tây chiên & acrylamide</h3>
+<div class="grid3 compact">
+  <div class="mini"><b>Acrylamide</b><span>C₃H₅NO · prop-2-enamide</span></div>
+  <div class="mini"><b>ChEBI</b><span>CHEBI:28619</span></div>
+  <div class="mini"><b>Hazard class</b><span>Process contaminant · không đồng nghĩa ngộ độc cấp</span></div>
+</div>
+<div class="trace">
+  <div class="trace-line"><div class="step">1</div><div><b>Food state</b>: khoai tây là thực phẩm nguồn thực vật có đường tự nhiên và amino acid; asparagine là một tiền chất quan trọng.</div><div class="src">FDA [S6]</div></div>
+  <div class="trace-line"><div class="step">2</div><div><b>Process</b>: frying/roasting/baking ở nhiệt cao làm tăng khả năng hình thành acrylamide; thời gian/nhiệt cao hơn thường làm tích lũy nhiều hơn.</div><div class="src">FDA [S6]</div></div>
+  <div class="trace-line"><div class="step">3</div><div><b>Chemical reasoning</b>: <span class="pill amber">reducing sugars</span> + <span class="pill amber">asparagine</span> + <span class="pill red">high heat</span> → Maillard-related pathway → <b>acrylamide có thể hình thành</b>.</div><div class="src">rule R-ACR-001</div></div>
+  <div class="trace-line"><div class="step">4</div><div><b>Communication</b>: không nói “200°C chắc chắn sinh độc”; phải nói “có khả năng hình thành, phụ thuộc thực phẩm, thời gian, nhiệt và mức nâu hóa”.</div><div class="src">policy</div></div>
+</div>
+<div class="chem-eq">CHEMICAL SIGNATURE — không giả vờ là một phương trình stoichiometric đơn giản
+L-asparagine (CHEBI:17196) + reducing carbonyl species
+      -- high-temperature Maillard chemistry --> reactive intermediates
+      --> [possible branch] acrylamide (C3H5NO; CHEBI:28619)
+
+POTATO --contains--> precursors + high-temperature frying/roasting/baking
+      --> increased formation likelihood; modulated by time / temperature / moisture / browning</div>
+<h3>Ví dụ chemistry path 2 - thịt nướng nhiệt cao</h3>
+<div class="grid2">
+  <div class="card amber"><h4>Heterocyclic amines (HCAs)</h4><p>Liên quan đến muscle meat và phương pháp nhiệt cao như pan-frying/grilling. UI nên gọi đúng tên nhóm chất và ghi đây là <b>process-formed compounds</b>, không gắn nhãn “ngộ độc cấp” một cách sai lệch.</p><span class="pill blue">NCI [S7]</span></div>
+  <div class="card amber"><h4>Polycyclic aromatic hydrocarbons (PAHs)</h4><p>Có thể hình thành trong các bối cảnh nướng/open flame và khói; app nên hỏi/nhận process context trước khi kết luận.</p><span class="pill blue">NCI [S7]</span></div>
+</div>
+<h3>Ví dụ chemistry path 3 - histamine trong cá</h3>
+<div class="grid3 compact">
+  <div class="mini"><b>Precursor</b><span>L-histidine · C₆H₉N₃O₂</span></div>
+  <div class="mini"><b>Product</b><span>Histamine · C₅H₉N₃ · CHEBI:18295</span></div>
+  <div class="mini"><b>Catalysis</b><span>bacterial histidine decarboxylase</span></div>
+</div>
+<div class="chem-eq">L-histidine  --histidine decarboxylase-->  histamine + CO2
+C6H9N3O2                                  C5H9N3
+
+condition context: histamine-forming bacteria + time/temperature abuse
+result class: PRE-FORMED / BIOGENIC-AMINE INTOXICATION RISK</div>
+<div class="callout danger"><strong>Điểm UX quan trọng:</strong> đây là ví dụ mà “nấu lại cho kỹ” không giải quyết được. FDA mô tả histamine hình thành do bacterial enzymes chuyển histidine thành histamine trong cơ thịt cá; khi histamine đã hình thành, heating/freezing không phải biện pháp loại bỏ đáng tin cậy. Agent phải hiển thị rõ <b>precursor → enzyme → product → storage condition → risk</b>, không chỉ trả lời “cá hỏng”. [S10]</div>
+</section>
+
+<section id="poison">
+<div class="eyebrow">04 · Food poisoning model</div>
+<h2>Phân loại rủi ro ngộ độc đúng bản chất trước khi reasoning</h2>
+<div class="tablebox"><table><thead><tr><th>Hazard class</th><th>Bản chất</th><th>Ví dụ</th><th>Điều app cần hỏi/biết</th><th>Không được làm</th></tr></thead><tbody>
+<tr><td><b>Foodborne infection</b></td><td>Ăn phải vi sinh vật gây bệnh sống.</td><td>Salmonella/Campylobacter ở poultry.</td><td>Raw/cooked, core temp, cross-contamination, storage.</td><td>Không gọi pathogen là “chất độc”.</td></tr>
+<tr><td><b>Preformed microbial toxin</b></td><td>Toxin đã được vi sinh vật tạo trong thực phẩm.</td><td>Cereulide của B. cereus; staph enterotoxin; histamine.</td><td>Time-temperature history, food category, reheating.</td><td>Không giả định reheating luôn làm an toàn.</td></tr>
+<tr><td><b>Natural toxin</b></td><td>Độc chất tự nhiên vốn có trong nguyên liệu.</td><td>PHA ở raw kidney beans; amygdalin trong hạt/quả hạch nhất định.</td><td>Loài/part, raw/processed, preparation method.</td><td>Không suy diễn dose từ ảnh.</td></tr>
+<tr><td><b>Process contaminant</b></td><td>Hợp chất phát sinh trong chế biến.</td><td>Acrylamide; HCA/PAH.</td><td>Food matrix, method, temperature, duration, browning.</td><td>Không biến hazard dài hạn thành “ngộ độc ngay”.</td></tr>
+<tr><td><b>Chemical/environmental contaminant</b></td><td>Chất ngoại lai / nhiễm bẩn.</td><td>Metals, pesticides, PFAS…</td><td>Xuất xứ, recall/test data, package/product.</td><td>Không đoán từ ảnh; cần web evidence/data.</td></tr>
+</tbody></table></div>
+<div class="grid3">
+  <div class="card red"><h4>Kidney bean → PHA</h4><p>FDA nêu phytohaemagglutinin (PHA) là lectin có thể gây buồn nôn, nôn và tiêu chảy ở mức cao trong đậu sống/không chín đủ; proper soaking + boiling là yếu tố xử lý quan trọng. [S9]</p></div>
+  <div class="card red"><h4>B. cereus → cereulide</h4><p>FDA BAM mô tả intoxication do cereulide được tạo sẵn khi spores phát triển trong thực phẩm bảo quản không đúng; toxin này bền với acid, nhiệt và enzyme tiêu hóa. [S12]</p></div>
+  <div class="card red"><h4>Fish → histamine</h4><p>Với một số loài cá, time-temperature abuse có thể tạo histamine/scombrotoxin; một khi đã hình thành thì cooking/freezing không loại bỏ. [S10]</p></div>
+</div>
+<h3>Risk score cho UI - không phải xác suất y khoa</h3>
+<p>App nên dùng <b>operational risk level</b> để quyết định route và cách hiển thị, không giả vờ đó là xác suất mắc bệnh. Gợi ý:</p>
+<div class="grid4">
+  <div class="card"><div class="kpi">L0<small>Informational</small></div><p class="small">Biến đổi bình thường, không có safety trigger.</p></div>
+  <div class="card amber"><div class="kpi">L1<small>Caution</small></div><p class="small">Potential process contaminant / nutrient issue.</p></div>
+  <div class="card red"><div class="kpi">L2<small>Safety-critical</small></div><p class="small">Raw animal food, toxin, improper storage, uncertain doneness.</p></div>
+  <div class="card red"><div class="kpi">L3<small>Do-not-infer</small></div><p class="small">Need data unavailable (history, species, core temp); answer must state insufficiency.</p></div>
+</div>
+<div class="riskbar"><i style="left:67%"></i></div><div class="legend"><span>educational</span><span>caution</span><span>safety critical</span><span>insufficient / escalate</span></div>
+</section>
+
+<section id="reasoning" class="print-break">
+<div class="eyebrow">05 · Explainability</div>
+<h2>Thể hiện suy luận rõ - nhưng là “evidence path”, không lộ chain-of-thought</h2>
+<p>UI không cần và không nên hiển thị suy nghĩ nội bộ của LLM. Thứ cần hiển thị là một <b>structured decision trace</b> được tạo từ facts + rules + evidence đã truy xuất.</p>
+<div class="architecture">
+  <div class="flowrow"><div class="flowbox teal">Observed / user facts<br/><span class="tiny">ingredient, process, time</span></div><div class="arrow">→</div><div class="flowbox blue">Canonical entities<br/><span class="tiny">FoodOn / ChEBI IDs</span></div><div class="arrow">→</div><div class="flowbox amber">Rule activation<br/><span class="tiny">R-ACR-001, R-HIS-002</span></div><div class="arrow">→</div><div class="flowbox red">Hazard / transformation<br/><span class="tiny">compound, pathogen, toxin</span></div><div class="arrow">→</div><div class="flowbox violet">Evidence<br/><span class="tiny">source + excerpt metadata</span></div></div>
+</div>
+<div class="grid2">
+<div>
+<h3>Trace object mẫu</h3>
+<div class="schema">{
+  "trace_id": "tr_01",
+  "facts": [
+    {"type":"food", "id":"foodon:...", "label":"potato"},
+    {"type":"process", "method":"frying", "temperature_c":200}
+  ],
+  "rule_hits": ["R-ACR-001"],
+  "conclusion": {
+    "entity":"CHEBI:...", "label":"acrylamide",
+    "modality":"possible", "risk_level":"L1"
+  },
+  "evidence_ids":["ev_fda_acrylamide_qa"],
+  "missing_facts":["duration_min", "browning_level"]
+}</div>
+</div>
+<div>
+<h3>Render thành ngôn ngữ người dùng</h3>
+<div class="card amber"><h4>Acrylamide có thể hình thành</h4><p><b>Vì:</b> khoai tây + chiên nhiệt cao là bối cảnh FDA nêu có khả năng hình thành acrylamide từ đường và asparagine.</p><p><b>Còn thiếu:</b> thời gian chiên và mức nâu hóa, nên không ước lượng được mức hình thành.</p><div class="reaction-ui"><span>Khoai tây</span><b>+</b><span>Nhiệt cao</span><b>→</b><span>Acrylamide (possible)</span></div><p class="tiny muted">Nguồn: FDA Acrylamide Q&A · evidence strength: authoritative guidance</p></div>
+</div>
+</div>
+<div class="callout info"><strong>Explainability contract:</strong> Mỗi kết luận chemistry/safety có thể mở “Vì sao?” → hiển thị facts, rule name, compound/pathogen, evidence. Không render raw prompt, scratchpad hay hidden reasoning.</div>
+</section>
+
+<section id="prd">
+<div class="eyebrow">06 · PRD</div>
+<h2>Phạm vi MVP: chemistry sâu vừa đủ để đáng tin, không giả mô phỏng phòng thí nghiệm</h2>
+<div class="grid2">
+  <div class="card teal"><h4>MVP phải có</h4><ul><li>1-5 ảnh + câu hỏi tự nhiên, chat multi-turn;</li><li>ingredient recognition + editable ingredient chips;</li><li>recipe recommendation & missing-ingredient logic;</li><li>nutrition lookup từ source data;</li><li>chemistry/safety reasoning cho curated hazard set;</li><li>evidence cards + source provenance;</li><li>rich response blocks;</li><li>Google SSO; history; Web + Android APK.</li></ul></div>
+  <div class="card soft"><h4>Không hứa ở MVP</h4><ul><li>định lượng chính xác toxin từ ảnh;</li><li>chẩn đoán thực phẩm “an toàn” chỉ bằng màu/mùi;</li><li>kinetic simulation mọi phản ứng;</li><li>tư vấn điều trị/y khoa;</li><li>general-purpose chemistry cho mọi chất;</li><li>full global recipe catalog.</li></ul></div>
+</div>
+<h3>Functional requirements</h3>
+<div class="tablebox"><table class="tight"><thead><tr><th>ID</th><th>Requirement</th><th>Acceptance note</th></tr></thead><tbody>
+<tr><td>FR-01</td><td>Upload/camera nhiều ảnh; compress client-side; giữ metadata cần thiết.</td><td>Preview, remove/reorder, retry upload.</td></tr>
+<tr><td>FR-02</td><td>Root Agent nhận image + text + session context và trả structured response.</td><td>Intent/risk/routing logs quan sát được.</td></tr>
+<tr><td>FR-03</td><td>Ingredient recognition có confidence và cho user sửa.</td><td>Low-confidence item hiển thị “Có phải…?”</td></tr>
+<tr><td>FR-04</td><td>Recipe Agent rank món theo available ingredients, missing count, time, preference.</td><td>Không fabricate ingredient availability.</td></tr>
+<tr><td>FR-05</td><td>Nutrition lookup dựa vào canonical food mapping + quantity.</td><td>Không có quantity → render range/caveat, không fake precision.</td></tr>
+<tr><td>FR-06</td><td>Chemistry Agent trả tên compound/pathogen/toxin, process relation, conditions, mitigation, uncertainty.</td><td>Có structured trace.</td></tr>
+<tr><td>FR-07</td><td>Safety-critical claims yêu cầu verified KB hoặc Evidence Agent.</td><td>Không evidence → degrade thành “chưa đủ căn cứ”.</td></tr>
+<tr><td>FR-08</td><td>Response blocks render chart/flow/cards/source drawer/image.</td><td>Unknown block graceful fallback.</td></tr>
+<tr><td>FR-09</td><td>History & reopen conversation; favorite recipe; save source.</td><td>Auth-aware sync.</td></tr>
+<tr><td>FR-10</td><td>Web + Tauri Android dùng cùng domain components.</td><td>Static-export compatible frontend shell.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="agents" class="print-break">
+<div class="eyebrow">07 · Agent architecture</div>
+<h2>Google ADK: Root orchestrator + đúng 3 sub-agent</h2>
+<p>ADK hỗ trợ multi-agent composition và custom tools; tool là function có input/output có cấu trúc, còn LLM quyết định khi nào gọi tool. [S13][S14] Với Hestia, giữ agent count nhỏ để route dễ dự đoán và đánh giá.</p>
+<div class="architecture">
+<div class="flowrow"><div class="flowbox teal">User<br/>images + query</div><div class="arrow">→</div><div class="flowbox teal">Root Agent<br/><span class="tiny">multimodal orchestrator</span></div><div class="arrow">→</div><div class="stack" style="flex:2.5"><div class="flowrow"><div class="flowbox blue">A. Culinary & Nutrition</div><div class="flowbox red">B. Chemistry & Safety</div><div class="flowbox violet">C. Web Search & Evidence</div></div><div class="flowrow"><div class="flowbox">Tools: recipe / FDC</div><div class="flowbox">Tools: KG / rules / retention</div><div class="flowbox">Tools: search / source fetch</div></div></div><div class="arrow">→</div><div class="flowbox amber">Response Composer<br/><span class="tiny">validated UI schema</span></div></div>
+</div>
+<div class="grid2">
+  <div class="card"><h4>Root Agent</h4><ul><li>Multimodal understanding + ingredient candidates;</li><li>intent + safety trigger classification;</li><li>build execution plan <i>internally</i>;</li><li>route 1-3 specialists;</li><li>merge contradictions using evidence priority;</li><li>output Pydantic-validated response envelope.</li></ul></div>
+  <div class="card blue"><h4>A · Culinary & Nutrition</h4><ul><li>recipe retrieval/ranking;</li><li>ingredient substitution by culinary function;</li><li>FoodData Central/FAO composition lookup;</li><li>serving/quantity handling;</li><li>calls Chemistry Agent when risk trigger appears.</li></ul></div>
+  <div class="card red"><h4>B · Chemistry & Safety</h4><ul><li>entity resolution to FoodOn/ChEBI;</li><li>food process & compound reasoning;</li><li>natural toxin / microbial toxin / pathogen rules;</li><li>USDA retention factor lookup;</li><li>construct evidence path + missing facts.</li></ul></div>
+  <div class="card violet"><h4>C · Web Search & Evidence</h4><ul><li>search authoritative fresh sources;</li><li>prefer FDA/USDA/FAO/WHO/EFSA + primary papers;</li><li>return source metadata + claim support;</li><li>never write graph directly;</li><li>propose candidate evidence for curation.</li></ul></div>
+</div>
+<h3>Routing policy</h3>
+<div class="tablebox"><table class="tight"><thead><tr><th>Signal</th><th>Risk</th><th>Route</th><th>Policy</th></tr></thead><tbody>
+<tr><td>“nấu gì”, “món nào”, “thay gì”</td><td>L0</td><td>Culinary</td><td>No web unless data missing/current product info.</td></tr>
+<tr><td>vitamin, retention, hấp/luộc/chiên</td><td>L0-L1</td><td>Culinary + Chemistry</td><td>Use retention dataset first.</td></tr>
+<tr><td>độc, toxin, cháy, nướng nhiệt cao, để lâu</td><td>L1-L2</td><td>Chemistry + Evidence</td><td>Evidence-gated.</td></tr>
+<tr><td>raw chicken, doneness, storage, reheating</td><td>L2-L3</td><td>Chemistry + Evidence</td><td>Ask minimum missing fact or state insufficiency.</td></tr>
+<tr><td>specific current branded product / recall</td><td>L2</td><td>Evidence + Chemistry</td><td>Web/current source required.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="knowledge">
+<div class="eyebrow">08 · Knowledge architecture</div>
+<h2>Kiến trúc đề xuất: Operational Knowledge Graph + Evidence RAG + Deterministic Rule Layer</h2>
+<p class="lead">Không nên chọn “FalkorDB hay Qdrant” như hai lựa chọn thay thế nhau. Hai hệ thống giải hai loại câu hỏi khác nhau: <b>graph</b> cho quan hệ có cấu trúc/multi-hop, <b>vector retrieval</b> cho đoạn bằng chứng văn bản. Rule layer mới là nơi quyết định điều kiện safety có được kích hoạt hay không.</p>
+<div class="architecture">
+<div class="flowrow"><div class="flowbox">USDA / FAO<br/><span class="tiny">composition</span></div><div class="flowbox">FoodOn OWL<br/><span class="tiny">food/process ontology</span></div><div class="flowbox">ChEBI<br/><span class="tiny">chemical entities</span></div><div class="flowbox">FDA / USDA guidance<br/><span class="tiny">hazards/evidence</span></div></div>
+<div style="text-align:center;margin:5px;color:#7e8c89">↓ normalize · map IDs · provenance · curate rules ↓</div>
+<div class="flowrow"><div class="flowbox teal">Canonical Store<br/><span class="tiny">Parquet/SQLite/Supabase</span></div><div class="flowbox blue">FalkorDB<br/><span class="tiny">operational graph</span></div><div class="flowbox violet">Qdrant<br/><span class="tiny">evidence chunks</span></div><div class="flowbox amber">Rule Evaluator<br/><span class="tiny">Python + versioned YAML/JSON</span></div></div>
+<div style="text-align:center;margin:5px;color:#7e8c89">↓ tools return structured facts, paths, scores, evidence IDs ↓</div>
+<div class="flowrow"><div class="flowbox red">Chemistry & Safety Agent</div><div class="arrow">→</div><div class="flowbox teal">Root Agent</div><div class="arrow">→</div><div class="flowbox">Rich UI Response</div></div>
+</div>
+<div class="grid2">
+  <div class="card blue"><h4>Vì sao dùng FoodOn + ChEBI?</h4><p>FoodOn có food product, ingredient và food transformation-process semantics; FoodOn stable release được cung cấp dưới dạng OWL. ChEBI là ontology/database chemical entities và có download OWL/OBO/SDF/SQL. [S3][S4][S5]</p></div>
+  <div class="card teal"><h4>Vì sao projection sang FalkorDB?</h4><p>FalkorDB dùng property graph + OpenCypher, hỗ trợ full-text/vector/range index. [S16] Ta giữ IRI gốc trên node để không mất ontology identity, nhưng query operational bằng Cypher để latency và schema đơn giản hơn.</p></div>
+  <div class="card violet"><h4>Vì sao Qdrant vẫn cần?</h4><p>Evidence là đoạn văn, guideline, paper excerpt. Qdrant hỗ trợ dense+sparse hybrid queries, filtering và RRF/DBSF fusion. [S15] Đây là lớp retrieval cho “nguồn nào thực sự nói điều này?”.</p></div>
+  <div class="card amber"><h4>Vì sao rule riêng?</h4><p>Quan hệ “potato contains X” không tự suy ra “hazard active”. Rule cần context runtime như method, heat, time, storage. Versioned rules giúp QA test được và tránh để LLM tự bịa ngưỡng.</p></div>
+</div>
+<h3>Graph schema tối thiểu</h3>
+<div class="tablebox"><table class="tight"><thead><tr><th>Node</th><th>Key properties</th><th>Edges điển hình</th></tr></thead><tbody>
+<tr><td><b>Food</b></td><td>canonical_id, foodon_iri, names_vi/en, fdc_ids, category</td><td>IS_A, CONTAINS, HAS_INGREDIENT, UNDERGOES</td></tr>
+<tr><td><b>ChemicalEntity</b></td><td>chebi_id, name, formula, smiles?, roles</td><td>PRECURSOR_OF, FORMS, CONTRIBUTES_TO</td></tr>
+<tr><td><b>Process</b></td><td>method, heat_class, moisture_context</td><td>TRANSFORMS, PROMOTES, MITIGATES</td></tr>
+<tr><td><b>Hazard</b></td><td>type, severity_policy, acute_vs_chronic</td><td>ASSOCIATED_WITH, CAUSED_BY, MITIGATED_BY</td></tr>
+<tr><td><b>Pathogen/Toxin</b></td><td>scientific_name, toxin_name, stability_notes</td><td>MAY_OCCUR_IN, PRODUCES, INACTIVATED_BY</td></tr>
+<tr><td><b>Evidence</b></td><td>source_id, url, title, date, authority, qdrant_point</td><td>SUPPORTS</td></tr>
+<tr><td><b>Rule</b></td><td>rule_id, version, conditions, output, confidence policy</td><td>USES_FACT, EMITS_HAZARD, SUPPORTED_BY</td></tr>
+</tbody></table></div>
+<h3>Không import toàn bộ ontology vào runtime graph một cách mù quáng</h3>
+<div class="callout warn"><strong>Khuyến nghị:</strong> giữ FoodOn/ChEBI raw release như nguồn canonical, nhưng materialize một <b>domain slice</b> cho food/cooking/hazard đang support. Điều này giảm graph size, mapping ambiguity và giúp QA. Khi gặp entity mới, ETL có thể mở rộng slice có kiểm soát.</div>
+</section>
+
+<section id="ingestion" class="print-break">
+<div class="eyebrow">09 · Data engineering guide</div>
+<h2>Tải, tiền xử lý và nạp knowledge - từng bước để tận dụng whitepaper</h2>
+<h3>9.1 Cấu trúc thư mục dữ liệu</h3>
+<div class="code-light">data/
+  raw/
+    usda_fdc/2026-04/          # Foundation Foods CSV/JSON
+    usda_retention/r6/         # NutrientRetention.csv + dictionary
+    fao_infoods/{release}/     # tables/guidelines actually licensed/used
+    foodon/{release}/          # foodon.owl + synonyms
+    chebi/{release}/           # OWL/OBO or curated subset
+    safety/fda/{yyyy-mm}/      # HTML/PDF-derived normalized evidence
+  staging/                     # parsed but not canonical
+  canonical/
+    foods.parquet
+    nutrients.parquet
+    compounds.parquet
+    processes.parquet
+    hazards.parquet
+    rules.jsonl
+    evidence.jsonl
+  graph/                       # graph node/edge CSV or Cypher batches
+  manifests/source_manifest.json
+  eval/                        # gold queries + expected trace/source</div>
+<h3>9.2 Source registry trước khi ETL</h3>
+<div class="schema">{
+ "source_id":"usda_fdc_foundation_2026_04",
+ "authority":"USDA ARS",
+ "retrieved_at":"2026-08-09",
+ "release":"2026-04",
+ "license":"public-domain/CC0 as stated by FDC",
+ "raw_paths":["raw/usda_fdc/2026-04/..."],
+ "sha256":"...",
+ "parser_version":"fdc_v1.2",
+ "status":"active"
+}</div>
+<p class="small">Mọi node/record quan trọng phải giữ <code>source_id</code>, <code>source_record_id</code>, <code>transform_version</code>. Nếu không, về sau agent có citation nhưng team không biết data được biến đổi từ đâu.</p>
+<h3>9.3 USDA FoodData Central</h3>
+<p>USDA cho tải FoodData Central ở cả CSV và JSON; trang download hiện liệt kê Foundation Foods release 04/2026. Foundation Foods nhấn mạnh nutrient/component values cùng metadata như sample count, location và analytical approach. [S1][S2]</p>
+<div class="grid2">
+<div class="card"><h4>ETL đề xuất</h4><ol><li>Download Foundation Foods CSV/JSON.</li><li>Giữ <code>fdc_id</code> nguyên bản.</li><li>Flatten food ↔ nutrient thành normalized tables.</li><li>Chuẩn hóa unit (g, mg, µg) nhưng không xóa original unit.</li><li>Map name/synonym → canonical Food.</li><li>Map Food → FoodOn class bằng curated mapping + confidence.</li></ol></div>
+<div class="card"><h4>Canonical nutrient record</h4><div class="schema">{
+ "food_id":"cc_food_0012",
+ "fdc_id":746771,
+ "nutrient_id":1003,
+ "name":"Protein",
+ "amount":31.0,
+ "unit":"g/100g",
+ "basis":"100g edible portion",
+ "source_id":"usda_fdc_..."
+}</div></div>
+</div>
+<h3>9.4 USDA Nutrient Retention Factors - cần cleaning thật</h3>
+<p>Dataset Release 6 có factors dùng để tính retention của 26 vitamin, khoáng chất và alcohol trong food preparation; data.gov cung cấp PDF, CSV và data dictionary. [S8]</p>
+<div class="callout danger"><strong>Data-quality finding khi inspect CSV:</strong> có 24 dòng trong nhóm <code>ALC BEV,STIRRED,BKD/SIMMRD 30 MIN</code> mà cột factor trống và giá trị <code>Sep-75</code> nằm ở vị trí factor, khiến parser naïve đọc <code>Retn_Factor="Sep-75"</code> và <code>Date=null</code>. Không được ép numeric rồi silently drop.</div>
+<div class="code-light">Cleaning rule:
+1) read all columns as string first
+2) Retn_Factor valid domain := numeric [0,100]
+3) if Retn_Factor matches date pattern and Date is empty:
+      Date = Retn_Factor; Retn_Factor = null; quality_flag += "MISSING_FACTOR_SHIFT"
+4) keep missing factor as UNKNOWN - never impute 100 by default
+5) parse RetnDesc into food_group + process + modifiers (with/without drippings, time...)
+6) create mapping table Retn_Code -> canonical ProcessProfile</div>
+<div class="grid2"><div class="card amber"><h4>Retention dùng thế nào?</h4><p><code>retained_amount ≈ raw_amount × retention_factor / 100</code> chỉ dùng khi food/process mapping phù hợp. Nếu mapping chỉ gần đúng, UI phải nói “estimated from nearest USDA retention category”.</p></div><div class="card"><h4>Không biến retention thành reaction model</h4><p>Retention factor là empirical/baseline cho nutrient retention, không chứng minh pathway hóa học cụ thể. Reaction explanation cần source/rule riêng.</p></div></div>
+<h3>9.5 FoodOn</h3>
+<p>FoodOn mô hình hóa food products và transformation processes; quan hệ như <code>has ingredient</code> và output-of-process hữu ích cho cooking knowledge. Stable OWL release được trỏ từ repo chính thức. [S3][S4][S5]</p>
+<div class="code-light">FoodOn preprocessing:
+OWL/RDF -> parse classes + labels + synonyms + selected object properties
+        -> whitelist relevant roots (food product, food transformation process, ingredient relations)
+        -> canonical mapping table (foodon_iri <-> Hestia food_id)
+        -> projection to FalkorDB nodes/edges
+Do NOT discard IRI / parent hierarchy / source ontology version.</div>
+<h3>9.6 ChEBI</h3>
+<p>ChEBI là curated ontology/database cho chemical entities, hỗ trợ download ở SDF/OBO/OWL/flat/SQL; có cấu trúc class/role và identifiers. [S5] MVP chỉ cần import chemical slice liên quan tới supported hazards/nutrients/precursors.</p>
+<div class="tablebox"><table class="tight"><thead><tr><th>Slice MVP</th><th>Ví dụ entity</th><th>Mục đích</th></tr></thead><tbody>
+<tr><td>Process contaminants</td><td>acrylamide, selected HCA/PAH classes</td><td>compound cards, KG relation</td></tr>
+<tr><td>Natural toxin / precursor</td><td>histamine, amygdalin, cyanide; selected glycoalkaloid/lectin concepts</td><td>safety reasoning</td></tr>
+<tr><td>Nutrients / food chemistry</td><td>ascorbic acid, carotenoids, selected fatty acids</td><td>identity + roles</td></tr>
+<tr><td>Precursors</td><td>asparagine, reducing sugar concepts</td><td>reaction-path display</td></tr>
+</tbody></table></div>
+<h3>9.7 Evidence ingestion into Qdrant</h3>
+<div class="code-light">Document -> semantic sections -> claim-sized chunks (not arbitrary 1,000 tokens)
+chunk payload:
+  source_id, title, authority, url, published_at,
+  hazard_type, foodon_ids[], chebi_ids[], process_tags[],
+  section, quote_span_hash, language, version
+vectors:
+  dense_embedding + sparse/BM25 representation
+query:
+  hybrid search + metadata filters + rerank + source-priority policy</div>
+<div class="callout info"><strong>Important:</strong> Qdrant hybrid retrieval nên lọc theo entity/process/hazard trước khi semantic search; Qdrant hỗ trợ hybrid queries và rank-fusion như RRF/DBSF. [S15] Điều này giúp query “histamine cá ngừ nấu lại” không bị trả về bài về histamine allergy chung.</div>
+<h3>9.8 Curated rules - artifact quan trọng nhất của Chemistry MVP</h3>
+<div class="schema">{
+ "rule_id":"R-HISTAMINE-FISH-001",
+ "version":"1.0.0",
+ "when":{
+   "food_category":["scombrotoxin-forming-fish"],
+   "storage_abuse":true
+ },
+ "then":{
+   "hazard":"histamine/scombrotoxin",
+   "class":"preformed_toxin",
+   "risk_level":"L2",
+   "heat_fix":false
+ },
+ "evidence":["fda_scombrotoxin_2024"],
+ "required_facts":["species_or_category","storage_history"]
+}</div>
+</section>
+
+<section id="tools">
+<div class="eyebrow">10 · Tool layer</div>
+<h2>Agent gọi tool; tool trả facts - không trả prose mơ hồ</h2>
+<div class="tablebox"><table class="tight"><thead><tr><th>Tool</th><th>Input</th><th>Output chuẩn</th><th>Owner</th></tr></thead><tbody>
+<tr><td><code>resolve_ingredients</code></td><td>image refs + labels</td><td>canonical foods + confidence + ambiguity</td><td>Root</td></tr>
+<tr><td><code>search_recipes</code></td><td>foods, constraints</td><td>ranked candidates + missing ingredients</td><td>Culinary</td></tr>
+<tr><td><code>get_nutrients</code></td><td>food_id, amount</td><td>nutrients + source/provenance</td><td>Culinary</td></tr>
+<tr><td><code>get_retention</code></td><td>food/process/nutrients</td><td>factor + mapping quality + source</td><td>Chemistry</td></tr>
+<tr><td><code>query_food_graph</code></td><td>entities + relation pattern</td><td>bounded graph paths</td><td>Chemistry</td></tr>
+<tr><td><code>evaluate_hazards</code></td><td>FoodState + ProcessState</td><td>rule hits + missing facts + risk</td><td>Chemistry</td></tr>
+<tr><td><code>get_compound</code></td><td>ChEBI/name</td><td>identity/formula/class/roles + source</td><td>Chemistry</td></tr>
+<tr><td><code>retrieve_evidence</code></td><td>claim/entity/process filters</td><td>top evidence chunks + authority scores</td><td>Evidence</td></tr>
+<tr><td><code>web_search_authoritative</code></td><td>query + domains/source policy</td><td>fresh source candidates</td><td>Evidence</td></tr>
+</tbody></table></div>
+<h3>FoodState và ProcessState - common language giữa các agent</h3>
+<div class="grid2"><div class="schema">FoodState {
+ foods: [{food_id, label, amount?, state?}],
+ storage: {temperature?, duration?, opened?},
+ observations: [{type, value, confidence}],
+ user_assertions: [...]
+}</div><div class="schema">ProcessState {
+ method: fry|boil|steam|bake|grill|raw|unknown,
+ temperature_c?: number,
+ duration_min?: number,
+ open_flame?: bool,
+ browning?: light|golden|dark|unknown,
+ reheating?: bool,
+ pH?: number
+}</div></div>
+<h3>Guardrails khoa học</h3>
+<div class="grid3"><div class="card red"><h4>No fake precision</h4><p class="small">Không có mass/time/temp chính xác thì chart là qualitative/range, không hiển thị “37.2% toxin”.</p></div><div class="card amber"><h4>Separate observation/inference</h4><p class="small">“Ảnh cho thấy bề mặt nâu” khác với “có acrylamide ở mức X”.</p></div><div class="card blue"><h4>Authority gating</h4><p class="small">High-risk conclusion chỉ dùng verified KB/evidence; web result chưa curate phải gắn provisional.</p></div></div>
+</section>
+
+<section id="response" class="print-break">
+<div class="eyebrow">11 · Response rendering</div>
+<h2>AI không trả một cục Markdown - trả một “visual response document”</h2>
+<p>FastAPI stream hai lớp: <b>answer text</b> cho fallback + <b>typed blocks</b> cho UI hiện đại. Frontend render block theo registry; block không hỗ trợ thì degrade thành text.</p>
+<div class="schema">{
+ "response_id":"res_...",
+ "intent":"food_chemistry_safety",
+ "risk_level":"L1",
+ "answer":"Chiên khoai ở nhiệt cao có thể hình thành acrylamide...",
+ "blocks":[
+   {"type":"ingredient_strip","items":[...]},
+   {"type":"hazard_banner","severity":"caution","title":"Acrylamide có thể hình thành"},
+   {"type":"reaction_flow","nodes":[...],"edges":[...]},
+   {"type":"compound_card","name":"Acrylamide","chebi_id":"..."},
+   {"type":"risk_factors","items":["high heat","longer cooking","darker browning"]},
+   {"type":"mitigation_steps","items":[...]},
+   {"type":"evidence_list","evidence_ids":[...]}
+ ],
+ "followups":["Bạn chiên khoảng bao lâu?","Xem cách giảm nâu hóa","So sánh air fryer và luộc"]
+}</div>
+<h3>Block catalog</h3>
+<div class="tablebox"><table class="tight"><thead><tr><th>Block</th><th>Khi nào</th><th>Render tinh tế</th></tr></thead><tbody>
+<tr><td><code>ingredient_strip</code></td><td>Sau vision</td><td>Thumbnail/chip, confidence dot, tap-to-correct; không chiếm quá 1 hàng.</td></tr>
+<tr><td><code>recipe_gallery</code></td><td>Recipe intent</td><td>2-3 cards, cook time, “thiếu 1 nguyên liệu”, CTA; image optional.</td></tr>
+<tr><td><code>generated_food_image</code></td><td>User muốn hình dung món / recipe hero</td><td>AI-generated badge rõ; lazy load; không dùng ảnh sinh làm bằng chứng khoa học. Có thể adapter Gemini native image generation. [S20]</td></tr>
+<tr><td><code>hazard_banner</code></td><td>Safety/chemistry</td><td>Severity + one-sentence action; không dùng màu đỏ cho mọi “chemical”.</td></tr>
+<tr><td><code>compound_card</code></td><td>Named compound/toxin</td><td>Tên phổ biến + scientific name/formula + class + “why it matters”.</td></tr>
+<tr><td><code>reaction_flow</code></td><td>Có pathway</td><td>Node → condition chip → node; dotted edge cho “possible”; solid cho known relation.</td></tr>
+<tr><td><code>reasoning_trace</code></td><td>User mở “Vì sao?”</td><td>Facts → rule → conclusion → source; không chain-of-thought.</td></tr>
+<tr><td><code>nutrition_chart</code></td><td>Compare nutrients</td><td>Bar/radar chỉ khi có basis rõ; toggle per-serving/per-100g.</td></tr>
+<tr><td><code>retention_chart</code></td><td>Cooking comparison</td><td>Before/after bars + mapping-quality badge.</td></tr>
+<tr><td><code>temperature_timeline</code></td><td>Doneness/storage</td><td>Timeline + required threshold source; warning if actual core temp unknown.</td></tr>
+<tr><td><code>evidence_list</code></td><td>Any verified claim</td><td>Authority logo/text, title, date, supported claim, expand excerpt.</td></tr>
+<tr><td><code>uncertainty_note</code></td><td>Missing facts</td><td>Neutral tone + one actionable clarification.</td></tr>
+</tbody></table></div>
+<h3>Ví dụ response sống động - khoai chiên</h3>
+<div class="ui-frame"><div class="ui-head"><strong>Hestia · Chemistry answer</strong><span class="pill amber">Caution · evidence verified</span></div><div class="ui-body"><div class="ui-side"><div class="ui-item"><b>Detected</b><br/>🥔 Khoai tây · 0.96<br/>🫗 Dầu ăn · 0.90</div><div class="ui-item"><b>Question</b><br/>“Chiên 200°C có chất độc gì sinh ra?”</div><div class="ui-item"><b>Intent</b><br/>Process contaminant</div></div><div class="ui-main"><div class="bubble ai"><b>Acrylamide có thể hình thành khi khoai được chiên ở nhiệt cao.</b><br/><span class="muted">Mức hình thành phụ thuộc thời gian, nhiệt và mức nâu hóa; từ ảnh/câu hỏi hiện tại chưa thể định lượng.</span></div><div class="reaction-ui"><span>Reducing sugars</span><b>+</b><span>Asparagine</span><b>+</b><span>High heat</span><b>→</b><span>Acrylamide</span></div><div class="grid2" style="margin-top:7px"><div class="ui-item"><b>Yếu tố làm tăng</b><br/>nhiệt cao · thời gian dài · nâu sẫm</div><div class="ui-item"><b>Làm gì?</b><br/>tránh quá nâu; tối ưu nhiệt/thời gian</div></div><div class="ui-item"><b>Vì sao?</b> <span class="pill blue">FDA source</span> <span class="pill teal">Rule R-ACR-001</span><br/><span class="tiny">Food fact → process fact → rule hit → potential compound.</span></div><span class="quick">Tôi chiên 15 phút</span><span class="quick">So với air fryer?</span><span class="quick">Xem nguồn</span></div></div></div>
+<h3>Streaming UX</h3>
+<div class="grid4"><div class="card"><h4>0-400ms</h4><p class="small">Echo user image + “Đang nhận diện nguyên liệu”.</p></div><div class="card"><h4>Early</h4><p class="small">Ingredient chips xuất hiện dần, cho sửa ngay.</p></div><div class="card"><h4>Mid</h4><p class="small">Status “Đang kiểm tra chemistry/source” - không lộ reasoning.</p></div><div class="card"><h4>Final</h4><p class="small">Answer + visual blocks hydrate; source drawer available.</p></div></div>
+</section>
+
+<section id="screens">
+<div class="eyebrow">12 · UX specification</div>
+<h2>Tối đa 5 screens - mỗi screen có một job rõ ràng</h2>
+<h3>Screen 1 · Scan & Ask</h3>
+<div class="ui-frame"><div class="ui-head"><strong>Scan & Ask</strong><span class="pill teal">Primary entry</span></div><div class="ui-body"><div class="ui-side"><div class="ui-item"><b>Desktop side rail</b><br/>New chat · History · Saved · Settings</div><div class="ui-item"><b>Mobile</b><br/>Bottom nav + floating camera action</div></div><div class="ui-main"><div class="ui-item"><b>Hero capture zone</b><br/>Camera / gallery / drag-drop. Multiple images as stacked cards; intelligent crop preview.</div><div class="ui-item"><b>Prompt composer</b><br/>“Hỏi bất cứ điều gì về các nguyên liệu này…” + voice optional + send.</div><div class="ui-item"><b>Quick starters</b><br/><span class="quick">Nấu gì đây?</span><span class="quick">Món nào nhiều protein?</span><span class="quick">Có gì cần lưu ý?</span><span class="quick">Phân tích hóa học</span></div><div class="ui-item"><b>Privacy microcopy</b><br/>Cho phép remove image trước send; camera permission chỉ khi cần.</div></div></div></div>
+<h3>Screen 2 · Conversation Workspace</h3>
+<div class="ui-frame"><div class="ui-head"><strong>Conversation</strong><span class="pill blue">Rich blocks</span></div><div class="ui-body"><div class="ui-side"><div class="ui-item"><b>Ingredient context</b><br/>Sticky compact chips, tap sửa tên/amount.</div><div class="ui-item"><b>Conversation actions</b><br/>Save · share text · clear image context.</div></div><div class="ui-main"><div class="bubble user">[2 ảnh] Nấu gì đây?</div><div class="bubble ai">Mình thấy gà, khoai tây, trứng và hành. Ba món hợp nhất với nguyên liệu hiện có:</div><div class="ui-item"><b>Recipe gallery</b> · horizontal on mobile, 3-column on web; each card: image, time, missing count, nutrition highlights.</div><div class="ui-item"><b>Inline follow-up chips</b><br/><span class="quick">Ít dầu hơn</span><span class="quick">Nhiều protein</span><span class="quick">Có nguy cơ gì?</span></div></div></div></div>
+<h3>Screen 3 · Recipe & Cooking Plan</h3>
+<div class="ui-frame"><div class="ui-head"><strong>Recipe detail</strong><span class="pill amber">Actionable cooking</span></div><div class="ui-body"><div class="ui-side"><div class="ui-item"><b>Hero image</b><br/>Real recipe asset preferred; optional AI illustration labeled.</div><div class="ui-item"><b>At a glance</b><br/>time · difficulty · missing ingredients.</div></div><div class="ui-main"><div class="ui-item"><b>Step timeline</b><br/>Numbered steps with timers; each chemistry-relevant step has subtle “Why?” icon.</div><div class="ui-item"><b>Safety checkpoints</b><br/>Core temperature/storage checks appear exactly where needed, not as giant disclaimer at top.</div><div class="mini-chart"><i style="height:65%"></i><i style="height:90%"></i><i style="height:42%"></i><i style="height:78%"></i></div><div class="tiny muted">Optional nutrient comparison, only with valid quantities/basis.</div></div></div></div>
+<h3>Screen 4 · Chemistry & Safety Explorer</h3>
+<div class="ui-frame"><div class="ui-head"><strong>Chemistry & Safety</strong><span class="pill red">Evidence explorer</span></div><div class="ui-body"><div class="ui-side"><div class="ui-item"><b>Tabs</b><br/>Overview · Compounds · Trace · Sources</div><div class="ui-item"><b>Risk summary</b><br/>Acute vs long-term; potential vs confirmed.</div></div><div class="ui-main"><div class="reaction-ui"><span>Food</span><b>→</b><span>Process</span><b>→</b><span>Compound / pathogen / toxin</span></div><div class="grid2" style="margin-top:7px"><div class="ui-item"><b>Compound cards</b><br/>Acrylamide · Histamine · etc. Name, class, formula when meaningful, source identifiers.</div><div class="ui-item"><b>Evidence path</b><br/>Observed facts → rule hit → result → supported claim.</div></div><div class="ui-item"><b>Source drawer</b><br/>Authority badge, title, last verified, exact claim supported; open original source.</div></div></div></div>
+<h3>Screen 5 · Library, History & Settings</h3>
+<div class="ui-frame"><div class="ui-head"><strong>My Kitchen</strong><span class="pill">Utility</span></div><div class="ui-body"><div class="ui-side"><div class="ui-item"><b>Auth</b><br/>Firebase Google SSO.</div><div class="ui-item"><b>Preferences</b><br/>dietary preferences, allergens only if user chooses to store.</div></div><div class="ui-main"><div class="grid2"><div class="ui-item"><b>Recent chats</b><br/>Preview image + question + result type.</div><div class="ui-item"><b>Saved recipes / sources</b><br/>Pin useful chemistry explanations.</div></div><div class="ui-item"><b>Data controls</b><br/>Delete conversation/images; clear stored preferences; source & model info.</div></div></div></div>
+<h3>Responsive rules</h3>
+<div class="grid3"><div class="card"><h4>Web ≥ 1024</h4><p class="small">Optional 3-pane: nav / conversation / context drawer. Main answer max-width ~760px for reading.</p></div><div class="card"><h4>Tablet</h4><p class="small">Side rail collapses; context becomes right sheet; recipe cards 2-column.</p></div><div class="card"><h4>Mobile / Tauri</h4><p class="small">Single column; bottom sheet for sources/trace; camera-first; 44px touch targets; Android back closes sheet before leaving chat.</p></div></div>
+</section>
+
+<section id="tech" class="print-break">
+<div class="eyebrow">13 · Technology</div>
+<h2>Stack đề xuất & lý do</h2>
+<div class="architecture"><div class="flowrow"><div class="flowbox teal">Next.js<br/>static-export capable</div><div class="arrow">↔</div><div class="flowbox">FastAPI<br/>SSE/stream API</div><div class="arrow">↔</div><div class="flowbox blue">Google ADK<br/>Root + 3 agents</div><div class="arrow">↔</div><div class="flowbox violet">Qdrant</div><div class="flowbox amber">FalkorDB<br/>phase 2</div></div><div style="height:7px"></div><div class="flowrow"><div class="flowbox">SQLite → Supabase</div><div class="flowbox">Firebase Auth</div><div class="flowbox">Object Storage<br/>images</div><div class="flowbox">Tauri 2<br/>Android APK/AAB</div></div></div>
+<div class="tablebox"><table><thead><tr><th>Layer</th><th>Choice</th><th>Design note</th></tr></thead><tbody>
+<tr><td>Frontend</td><td>Next.js + TypeScript</td><td>UI domain blocks; static-export compatible shell. Next.js documents <code>output:'export'</code> for static HTML/CSS/JS export. [S18]</td></tr>
+<tr><td>Mobile</td><td>Tauri 2</td><td>Reuse web frontend; Tauri supports Android/iOS/desktop from web UI and Android distribution/signing. [S17]</td></tr>
+<tr><td>API</td><td>FastAPI</td><td>Auth verification, upload, SSE stream, tool gateway, response-schema validation.</td></tr>
+<tr><td>Agents</td><td>Google ADK</td><td>Multi-agent composition + function/custom tools. [S13][S14]</td></tr>
+<tr><td>Operational DB</td><td>SQLite MVP → Supabase/Postgres</td><td>Sessions, users, chats, feedback, source registry, rule versions.</td></tr>
+<tr><td>Vector</td><td>Qdrant</td><td>Evidence retrieval, hybrid dense+sparse, metadata filters. [S15]</td></tr>
+<tr><td>Graph</td><td>FalkorDB optional/phase 2</td><td>Use when curated graph grows enough to justify multi-hop Cypher. Property graph/OpenCypher. [S16]</td></tr>
+<tr><td>Auth</td><td>Firebase Google SSO</td><td>Web Google sign-in available through Firebase Auth. [S19]</td></tr>
+<tr><td>Image generation</td><td>Provider adapter</td><td>Gemini native image generation can create recipe illustration; model id config via env because model lifecycle changes. [S20]</td></tr>
+</tbody></table></div>
+<h3>Repo structure</h3>
+<div class="code-light">apps/
+  web/                    # Next.js shared UI + Tauri-compatible build
+  api/                    # FastAPI
+  tauri/                  # Tauri shell / capabilities
+packages/
+  ui-blocks/              # typed rich response renderers
+  contracts/              # shared JSON schemas / TS types
+  chemistry-rules/        # versioned rules + tests
+  data-models/            # canonical entity models
+services/
+  agents/                 # ADK root + 3 sub-agents
+  retrieval/              # Qdrant
+  graph/                  # FalkorDB adapter
+  ingestion/              # ETL jobs
+  evidence/               # source registry / validation
+infra/
+  docker-compose.yml
+  migrations/</div>
+</section>
+
+<section id="nfr">
+<div class="eyebrow">14 · Non-functional requirements</div>
+<h2>Latency, trust, privacy và observability là một phần của UX</h2>
+<div class="grid4"><div class="card"><h4>Latency</h4><p class="small">Simple recipe path: first meaningful UI ≤ ~2s target; chemistry path streams progress and evidence rather than blank wait.</p></div><div class="card"><h4>Reliability</h4><p class="small">Tool timeouts, bounded retries, circuit breaker; a failed source lookup must not crash chat.</p></div><div class="card"><h4>Traceability</h4><p class="small">Every hazard response stores rule IDs, evidence IDs, source versions, tool latency.</p></div><div class="card"><h4>Privacy</h4><p class="small">Minimize image retention; explicit delete; avoid persisting sensitive dietary/allergy profile unless opted-in.</p></div></div>
+<h3>Safety response policy</h3>
+<div class="tablebox"><table class="tight"><thead><tr><th>Case</th><th>System behavior</th></tr></thead><tbody>
+<tr><td>Image alone cannot determine food safety</td><td>State limitation; ask/check relevant measurable fact (core temperature, time out of fridge, storage history).</td></tr>
+<tr><td>Safety source conflicts</td><td>Prefer current authoritative guidance; show discrepancy; do not average incompatible thresholds.</td></tr>
+<tr><td>No high-quality evidence</td><td>Return uncertainty and safe-general guidance; avoid naming a toxin as fact.</td></tr>
+<tr><td>User reports symptoms/possible poisoning</td><td>App exits “recipe mode”; advise seeking appropriate medical/poison-control help according to local product policy. Do not diagnose.</td></tr>
+<tr><td>Generated dish image</td><td>Always label AI illustration; never infer doneness/safety from generated image.</td></tr>
+</tbody></table></div>
+<h3>Observability events</h3>
+<div class="code-light">agent.route.selected
+agent.tool.called / completed / failed
+chem.rule.hit
+chem.rule.missing_fact
+retrieval.query / source_selected
+response.block.rendered / fallback
+user.ingredient.corrected
+user.source.opened
+user.feedback.claim_wrong / unsafe / helpful</div>
+</section>
+
+<section id="eval" class="print-break">
+<div class="eyebrow">15 · Evaluation</div>
+<h2>Đánh giá không chỉ “LLM trả lời hay” - phải test route, fact, rule, source và UI</h2>
+<div class="tablebox"><table><thead><tr><th>Layer</th><th>Metric/test</th><th>Ví dụ gold test</th></tr></thead><tbody>
+<tr><td>Vision/entity</td><td>Top-1/top-k food resolution; correction rate</td><td>Ảnh khoai + dầu → không hallucinate onion.</td></tr>
+<tr><td>Intent routing</td><td>Intent F1; safety-trigger recall</td><td>“để ngoài rồi nấu lại được không?” phải route Safety.</td></tr>
+<tr><td>Rule layer</td><td>Rule precision/recall on synthetic + curated cases</td><td>Raw kidney beans → PHA rule; properly canned beans → no false warning.</td></tr>
+<tr><td>KG</td><td>Entity mapping accuracy; path validity</td><td>FoodOn/ChEBI IDs resolve đúng entity.</td></tr>
+<tr><td>Evidence</td><td>Recall@k; source authority; claim entailment</td><td>Acrylamide claim phải retrieve FDA relevant passage.</td></tr>
+<tr><td>Final answer</td><td>Unsupported-claim rate; overclaim rate</td><td>Không nói “200°C chắc chắn gây ung thư”.</td></tr>
+<tr><td>UI</td><td>Block schema validity; fallback rate</td><td>reaction_flow malformed vẫn render text fallback.</td></tr>
+<tr><td>Safety UX</td><td>Critical-missing-fact handling</td><td>Chicken “10 phút đủ?” → không kết luận từ thời gian.</td></tr>
+</tbody></table></div>
+<h3>Gold scenario pack nên có ít nhất</h3>
+<div class="grid3"><div class="card"><h4>Process contaminants</h4><p class="small">potato/acrylamide · grilled meat/HCA-PAH · coffee/furan as later extension.</p></div><div class="card"><h4>Intoxication</h4><p class="small">tuna/histamine · rice/B. cereus/cereulide · staph toxin contexts.</p></div><div class="card"><h4>Natural toxins</h4><p class="small">kidney bean/PHA · stone-fruit pits/amygdalin · cassava cyanogenic glycosides later.</p></div><div class="card"><h4>Pathogens</h4><p class="small">poultry doneness · leftovers · cross-contamination.</p></div><div class="card"><h4>Nutrients</h4><p class="small">vitamin C retention across cooking categories; mapping-quality tests.</p></div><div class="card"><h4>Adversarial</h4><p class="small">ambiguous image; user asks for certainty; source conflict; missing storage history.</p></div></div>
+</section>
+
+<section id="roadmap">
+<div class="eyebrow">16 · Delivery roadmap</div>
+<h2>Build theo chiều dọc: một hazard path hoàn chỉnh trước khi mở rộng breadth</h2>
+<div class="tablebox"><table class="tight"><thead><tr><th>Phase</th><th>Outcome</th><th>Deliverables</th></tr></thead><tbody>
+<tr><td><b>P0 · 1 week</b></td><td>Contracts & data spine</td><td>Response schema; source manifest; FDC + retention ETL; 20-30 canonical foods; rule framework.</td></tr>
+<tr><td><b>P1 · 2 weeks</b></td><td>Web vertical slice</td><td>Scan/ask → recipe + one chemistry path (acrylamide) → evidence → rich UI blocks.</td></tr>
+<tr><td><b>P2 · 2 weeks</b></td><td>Food-poisoning core</td><td>Histamine, PHA, B. cereus/cereulide, poultry safety; gold eval set.</td></tr>
+<tr><td><b>P3 · 2 weeks</b></td><td>Knowledge graph</td><td>FoodOn/ChEBI domain slice → FalkorDB; trace explorer; Cypher tool.</td></tr>
+<tr><td><b>P4 · 1-2 weeks</b></td><td>Android & polish</td><td>Tauri build/signing, camera UX, auth, history, performance.</td></tr>
+<tr><td><b>P5 · ongoing</b></td><td>Scale & research</td><td>More hazards, kinetics/ML where data justifies, user correction feedback loop.</td></tr>
+</tbody></table></div>
+<div class="callout good"><strong>Best first demo:</strong> User chụp khoai + dầu → hỏi “nấu gì?” → chọn khoai chiên → hỏi “chiên 200°C có độc gì?” → UI chuyển từ recipe cards sang chemistry view, hiện acrylamide, reaction path, risk qualifiers, source FDA và mitigation. Demo này cho thấy multimodal + agent routing + chemistry + evidence + rich renderer trong một flow duy nhất.</div>
+<h3>Checklist “dùng whitepaper để bắt đầu code ngay”</h3>
+<ol>
+<li>Freeze response schema + FoodState/ProcessState.</li>
+<li>Tạo <code>source_manifest</code>, download FDC/Retention, commit parser tests.</li>
+<li>Curate 5 hazard rules đầu tiên và 30-50 evidence chunks authoritative.</li>
+<li>Implement Chemistry tools trước khi prompt Chemistry Agent.</li>
+<li>Build Root routing with safety-trigger tests.</li>
+<li>Frontend implement block registry + fallback.</li>
+<li>Chạy gold scenarios; chỉ mở thêm hazard khi pass source entailment/overclaim tests.</li>
+<li>Thêm FalkorDB khi multi-hop graph mang giá trị rõ; đừng để graph làm chậm MVP.</li>
+</ol>
+</section>
+
+<section id="refs" class="print-break">
+<div class="eyebrow">17 · Research basis</div>
+<h2>Nguồn nền sử dụng cho thiết kế v2</h2>
+<p class="small muted">Ưu tiên nguồn chính thức/primary documentation. Các URL dưới đây là input cho source registry; khi ingestion, lưu release/retrieval date + hash.</p>
+<div class="refcard"><div class="refnum">S1</div><div><b>USDA FoodData Central - Download Datasets.</b><div class="url">https://fdc.nal.usda.gov/download-datasets</div><div class="tiny muted">CSV/JSON downloads; current Foundation Foods release listing.</div></div></div>
+<div class="refcard"><div class="refnum">S2</div><div><b>USDA FoodData Central - Foundation Foods Documentation.</b><div class="url">https://fdc.nal.usda.gov/Foundation_Foods_Documentation</div></div></div>
+<div class="refcard"><div class="refnum">S3</div><div><b>FoodOn - Food transformation process.</b><div class="url">https://foodon.org/food-facets/food-transformation-process/</div></div></div>
+<div class="refcard"><div class="refnum">S4</div><div><b>FoodOn - Relations.</b><div class="url">https://foodon.org/design/foodon-relations/</div></div></div>
+<div class="refcard"><div class="refnum">S5</div><div><b>FoodOn repository / ChEBI official database & ontology.</b><div class="url">https://github.com/FoodOntology/foodon · https://www.ebi.ac.uk/chebi/</div></div></div>
+<div class="refcard"><div class="refnum">S6</div><div><b>FDA - Acrylamide Questions and Answers.</b><div class="url">https://www.fda.gov/food/process-contaminants-food/acrylamide-questions-and-answers</div></div></div>
+<div class="refcard"><div class="refnum">S7</div><div><b>National Cancer Institute - Chemicals in Meat Cooked at High Temperatures.</b><div class="url">https://www.cancer.gov/about-cancer/causes-prevention/risk/diet/cooked-meats-fact-sheet</div></div></div>
+<div class="refcard"><div class="refnum">S8</div><div><b>USDA Table of Nutrient Retention Factors, Release 6.</b><div class="url">https://catalog.data.gov/dataset/usda-table-of-nutrient-retention-factors-release-6-2007</div></div></div>
+<div class="refcard"><div class="refnum">S9</div><div><b>FDA - Natural Toxins in Food.</b><div class="url">https://www.fda.gov/food/chemical-contaminants-pesticides/natural-toxins-food</div></div></div>
+<div class="refcard"><div class="refnum">S10</div><div><b>FDA - Scombrotoxin / histamine guidance pages.</b><div class="url">https://www.fda.gov/food/seafood-guidance-documents-regulatory-information/scombrotoxin-poisoning-and-decomposition</div></div></div>
+<div class="refcard"><div class="refnum">S11</div><div><b>FDA - Bad Bug Book, Foodborne Pathogenic Microorganisms and Natural Toxins.</b><div class="url">https://www.fda.gov/food/foodborne-pathogens/bad-bug-book-second-edition</div></div></div>
+<div class="refcard"><div class="refnum">S12</div><div><b>FDA BAM - Quantitative Analysis for Cereulide in Food Products.</b><div class="url">https://www.fda.gov/food/laboratory-methods-food/bam-quantitative-analysis-cereulide-food-products</div></div></div>
+<div class="refcard"><div class="refnum">S13</div><div><b>Google Agent Development Kit - Multi-agent workflows.</b><div class="url">https://adk.dev/agents/multi-agents/</div></div></div>
+<div class="refcard"><div class="refnum">S14</div><div><b>Google ADK - Custom Tools.</b><div class="url">https://adk.dev/tools-custom/</div></div></div>
+<div class="refcard"><div class="refnum">S15</div><div><b>Qdrant - Hybrid Queries.</b><div class="url">https://qdrant.tech/documentation/search/hybrid-queries/</div></div></div>
+<div class="refcard"><div class="refnum">S16</div><div><b>FalkorDB - Graph database / OpenCypher / indexing documentation.</b><div class="url">https://docs.falkordb.com/</div></div></div>
+<div class="refcard"><div class="refnum">S17</div><div><b>Tauri 2 - platform and Google Play distribution docs.</b><div class="url">https://v2.tauri.app/ · https://v2.tauri.app/distribute/google-play/</div></div></div>
+<div class="refcard"><div class="refnum">S18</div><div><b>Next.js - Static Exports.</b><div class="url">https://nextjs.org/docs/app/guides/static-exports</div></div></div>
+<div class="refcard"><div class="refnum">S19</div><div><b>Firebase - Authenticate Using Google with JavaScript.</b><div class="url">https://firebase.google.com/docs/auth/web/google-signin</div></div></div>
+<div class="refcard"><div class="refnum">S20</div><div><b>Gemini API - Native image generation.</b><div class="url">https://ai.google.dev/gemini-api/docs/image-generation</div></div></div>
+<div class="refcard"><div class="refnum">S21</div><div><b>FAO/INFOODS - Food Composition / Standards & Databases.</b><div class="url">https://www.fao.org/food-composition/en · https://www.fao.org/infoods/infoods/standards-guidelines/en/</div></div></div>
+
+<div class="footer-note"><b>Disclaimer sản phẩm:</b> Hestia là công cụ thông tin/decision support cho nấu ăn và food chemistry, không phải thiết bị đo, xét nghiệm, chẩn đoán hay thay thế hướng dẫn an toàn thực phẩm của cơ quan có thẩm quyền. Chemistry rules và nguồn phải được version hóa, đánh giá và cập nhật định kỳ.</div>
+</section>
+</main>
+</body></html>

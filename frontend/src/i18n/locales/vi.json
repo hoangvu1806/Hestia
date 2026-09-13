@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "title": "Hestia — Trợ lý ẩm thực, hóa học và an toàn",
+    "description": "Hiểu nguyên liệu, hiểu điều xảy ra khi nấu và tự tin hơn trong căn bếp."
+  },
+  "brand": {
+    "name": "Hestia",
+    "tagline": "Ẩm thực, hóa học và an toàn"
+  },
+  "sidebar": {
+    "newChat": "Cuộc trò chuyện mới",
+    "workspace": "Không gian làm việc",
+    "chat": "Hỏi Hestia",
+    "ingredients": "Nguyên liệu",
+    "saved": "Món ăn đã lưu",
+    "recent": "Trò chuyện gần đây",
+    "historyOne": "Nguyên liệu cho nồi chiên",
+    "historyTwo": "Tìm hiểu phản ứng Maillard",
+    "historyThree": "Bữa tối giàu đạm",
+    "settings": "Cài đặt"
+  },
+  "header": {
+    "title": "Hỏi Hestia",
+    "subtitle": "Người bạn đồng hành trong căn bếp",
+    "theme": "Đổi giao diện sáng tối",
+    "language": "Đổi ngôn ngữ"
+  },
+  "welcome": {
+    "eyebrow": "Nấu ăn theo cách dễ hiểu hơn",
+    "title": "Hôm nay mình sẽ nấu món gì?",
+    "description": "Gửi một bức ảnh hoặc kể cho mình những gì bạn đang có. Mình sẽ giúp bạn hiểu nguyên liệu, kiểm tra những rủi ro đáng lưu ý và biến chúng thành một món ăn thực tế.",
+    "scanTitle": "Quét nguyên liệu",
+    "scanDescription": "Tải ảnh lên và nhận diện những gì đang có trong bếp.",
+    "scanPrompt": "Trong ảnh này có những nguyên liệu gì?",
+    "safetyTitle": "Kiểm tra an toàn",
+    "safetyDescription": "Xem xét rủi ro liên quan đến cách nấu, bảo quản và hóa học.",
+    "safetyPrompt": "Giúp tôi kiểm tra món tôi muốn nấu có an toàn không.",
+    "chemistryTitle": "Giải thích hóa học",
+    "chemistryDescription": "Hiểu vì sao một phản ứng đáng quan tâm bằng ngôn ngữ gần gũi.",
+    "chemistryPrompt": "Giải thích hóa học thực phẩm trong món tôi muốn nấu."
+  },
+  "chat": {
+    "you": "Bạn",
+    "assistant": "Hestia",
+    "connecting": "Đang kết nối với Hestia…",
+    "thinking": "Đang suy nghĩ…",
+    "analyzing": "Đang xem xét nguyên liệu và kiểm tra bằng chứng…",
+    "progressLabel": "Tiến độ phân tích",
+    "understandingRequest": "Hestia đang đọc ngữ cảnh và hiểu yêu cầu",
+    "analysisStarted": "Chuyên gia hóa học thực phẩm đang tiếp nhận món ăn",
+    "researchStarted": "Chuyên gia tài liệu khoa học đang bắt đầu tra cứu",
+    "mappingCompounds": "Đang đối chiếu nguyên liệu và hợp chất trong FooDB",
+    "identifyingCompounds": "Đang xác minh danh tính các hợp chất liên quan",
+    "checkingHazards": "Đang kiểm tra dữ liệu độc tính và mối nguy",
+    "checkingReactions": "Đang kiểm chứng các phản ứng có thể xảy ra khi nấu",
+    "searchingEvidence": "Đang tìm bằng chứng khoa học phù hợp với điều kiện nấu",
+    "synthesizingEvidence": "Đang tổng hợp kết quả phân tích chuyên sâu",
+    "updatingState": "Đang cập nhật dữ kiện của phiên phân tích",
+    "composingAnswer": "Hestia đang viết câu trả lời cuối",
+    "usingEvidenceTool": "Đang kiểm tra dữ liệu qua {tool}",
+    "liveUpdates": "{count} cập nhật trực tiếp từ agent",
+    "failed": "Mình gặp chút gián đoạn khi kiểm tra yêu cầu này. Bạn thử gửi lại sau một lát nhé.",
+    "imageReady": "Ảnh đã sẵn sàng",
+    "imageTooLarge": "Ảnh cần nhỏ hơn 8 MB.",
+    "removeImage": "Bỏ ảnh",
+    "newSessionFailed": "Mình chưa thể bắt đầu cuộc trò chuyện lúc này. Bạn thử lại sau một lát nhé."
+  },
+  "composer": {
+    "placeholder": "Hỏi về nguyên liệu hoặc món bạn muốn nấu…",
+    "attach": "Đính kèm hình ảnh",
+    "send": "Gửi tin nhắn",
+    "hint": "Hestia có thể nhầm lẫn. Hãy kiểm chứng thông tin an toàn quan trọng."
+  },
+  "profile": {
+    "name": "Khách vào bếp",
+    "status": "Phiên cục bộ"
+  }
+}

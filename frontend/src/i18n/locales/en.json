@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "title": "Hestia — Food, chemistry & safety assistant",
+    "description": "Understand your ingredients, the chemistry behind cooking, and how to cook with confidence."
+  },
+  "brand": {
+    "name": "Hestia",
+    "tagline": "Food, chemistry & safety"
+  },
+  "sidebar": {
+    "newChat": "New conversation",
+    "workspace": "Workspace",
+    "chat": "Ask Hestia",
+    "ingredients": "Ingredients",
+    "saved": "Saved meals",
+    "recent": "Recent conversations",
+    "historyOne": "Air-fry ingredients",
+    "historyTwo": "Understanding Maillard",
+    "historyThree": "Protein-rich dinner",
+    "settings": "Settings"
+  },
+  "header": {
+    "title": "Ask Hestia",
+    "subtitle": "Your culinary science companion",
+    "theme": "Change color theme",
+    "language": "Change language"
+  },
+  "welcome": {
+    "eyebrow": "A clearer way to cook",
+    "title": "What are we cooking today?",
+    "description": "Share a photo or tell me what you have. I’ll help you understand the ingredients, check meaningful risks, and turn them into a practical meal.",
+    "scanTitle": "Scan ingredients",
+    "scanDescription": "Upload a photo and identify what is on your counter.",
+    "scanPrompt": "What ingredients are in this image?",
+    "safetyTitle": "Check food safety",
+    "safetyDescription": "Review relevant cooking, storage, and chemistry risks.",
+    "safetyPrompt": "Help me check whether the food I want to cook is safe.",
+    "chemistryTitle": "Explain the chemistry",
+    "chemistryDescription": "See why a reaction matters without the textbook language.",
+    "chemistryPrompt": "Explain the food chemistry behind the dish I want to cook."
+  },
+  "chat": {
+    "you": "You",
+    "assistant": "Hestia",
+    "connecting": "Connecting to Hestia…",
+    "thinking": "Thinking…",
+    "analyzing": "Reviewing ingredients and evidence…",
+    "progressLabel": "Analysis progress",
+    "understandingRequest": "Hestia is reading the context and understanding the request",
+    "analysisStarted": "The food chemistry specialist is reviewing the dish",
+    "researchStarted": "The research specialist is starting the evidence search",
+    "mappingCompounds": "Matching ingredients and compounds in FooDB",
+    "identifyingCompounds": "Verifying the identity of relevant compounds",
+    "checkingHazards": "Checking toxicology and hazard data",
+    "checkingReactions": "Verifying reactions that may occur during cooking",
+    "searchingEvidence": "Finding scientific evidence that matches the cooking conditions",
+    "synthesizingEvidence": "Synthesizing the specialist analysis",
+    "updatingState": "Updating the analysis session state",
+    "composingAnswer": "Hestia is composing the final answer",
+    "usingEvidenceTool": "Checking evidence with {tool}",
+    "liveUpdates": "{count} live updates from the agent",
+    "failed": "I ran into a temporary interruption while checking that. Please try again in a moment.",
+    "imageReady": "Image ready",
+    "imageTooLarge": "The image must be smaller than 8 MB.",
+    "removeImage": "Remove image",
+    "newSessionFailed": "I couldn’t start the conversation just now. Please try again in a moment."
+  },
+  "composer": {
+    "placeholder": "Ask about your ingredients or the dish you want to cook…",
+    "attach": "Attach an image",
+    "send": "Send message",
+    "hint": "Hestia can make mistakes. Verify critical food-safety information."
+  },
+  "profile": {
+    "name": "Guest cook",
+    "status": "Local session"
+  }
+}

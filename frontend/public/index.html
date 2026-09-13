@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Hestia</title>
+    <script>
+      (() => {
+        const saved = localStorage.getItem("hestia-locale");
+        const locale = saved === "vi" || saved === "en"
+          ? saved
+          : navigator.language.toLowerCase().startsWith("vi") ? "vi" : "en";
+        location.replace(`/${locale}/`);
+      })();
+    </script>
+  </head>
+  <body>
+    <p><a href="/en/">English</a> · <a href="/vi/">Tiếng Việt</a></p>
+  </body>
+</html>
