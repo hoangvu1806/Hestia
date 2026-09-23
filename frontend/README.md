@@ -18,6 +18,10 @@ The static file server runs at `http://localhost:3434`. Chat connects directly t
 at `http://127.0.0.1:8484/api/v1` and consumes its Server-Sent Events stream. Override the endpoint
 with `NEXT_PUBLIC_HESTIA_API_URL` when needed.
 
+Google SSO is provided by Firebase Authentication. Copy `.env.example` to `.env.local` and set
+the `NEXT_PUBLIC_FIREBASE_*` values from the Firebase Web App configuration. Firebase maintains
+the browser session; API requests send a short-lived Firebase ID token to FastAPI.
+
 ## Static production build
 
 ```powershell

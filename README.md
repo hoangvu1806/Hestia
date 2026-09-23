@@ -139,6 +139,8 @@ cd backend
 # Copy environment template
 Copy-Item .env.example .env
 
+# Point HESTIA_FIREBASE_CREDENTIALS at a Firebase Admin service-account JSON file.
+
 # Install dependencies in editable mode
 python -m pip install -e ".[dev]"
 
@@ -156,6 +158,8 @@ cd frontend
 # Copy environment template
 Copy-Item .env.example .env.local
 
+# Fill NEXT_PUBLIC_FIREBASE_* from the Firebase Web App configuration.
+
 # Install dependencies
 npm install
 
@@ -164,6 +168,10 @@ npm run dev
 ```
 
 Open `http://localhost:3434` in your browser.
+
+The web app uses Firebase Google SSO. FastAPI verifies the Firebase ID token and uses its `uid`
+to isolate agent sessions. Hestia does not create a separate user/profile record; application
+data storage can be connected to PostgreSQL independently.
 
 ---
 
