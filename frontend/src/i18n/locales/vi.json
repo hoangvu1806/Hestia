@@ -8,7 +8,7 @@
     "tagline": "Ẩm thực, hóa học và an toàn"
   },
   "auth": {
-    "kicker": "Bết của bạn, trợ lý của bạn",
+    "kicker": "Bếp của bạn, trợ lý của bạn",
     "title": "Chào mừng bạn đến với Hestia",
     "description": "Đăng nhập để bắt đầu trò chuyện với trợ lý ẩm thực và an toàn thực phẩm.",
     "googleSignIn": "Tiếp tục với Google",
@@ -83,6 +83,45 @@
     "attach": "Đính kèm hình ảnh",
     "send": "Gửi tin nhắn",
     "hint": "Hestia có thể nhầm lẫn. Hãy kiểm chứng thông tin an toàn quan trọng."
+  },
+  "ingredients": {
+    "eyebrow": "Bếp của bạn, rõ ràng hơn",
+    "title": "Kho nguyên liệu",
+    "description": "Ghi lại những gì đang có, kết hợp nguyên liệu và hỏi Hestia về món ăn, an toàn hoặc hóa học khi nấu.",
+    "scan": "Quét từ ảnh",
+    "add": "Thêm nguyên liệu",
+    "stats": { "total": "Tổng nguyên liệu", "fridge": "Trong tủ lạnh", "groups": "Nhóm thực phẩm", "selected": "Đang chọn" },
+    "search": "Tìm theo tên hoặc ghi chú…",
+    "filterLabel": "Lọc nguyên liệu theo nhóm",
+    "all": "Tất cả",
+    "categories": { "protein": "Chất đạm", "vegetable": "Rau củ", "fruit": "Trái cây", "grain": "Ngũ cốc", "spice": "Gia vị", "dairy": "Sữa", "other": "Khác" },
+    "states": { "raw": "Tươi / sống", "prepared": "Đã sơ chế", "cooked": "Đã nấu", "frozen": "Đông lạnh" },
+    "storages": { "fridge": "Tủ lạnh", "freezer": "Ngăn đông", "pantry": "Tủ bếp" },
+    "units": { "item": "phần", "g": "g", "kg": "kg", "ml": "ml", "l": "lít", "bunch": "bó", "pack": "gói" },
+    "emptyTitle": "Kho nguyên liệu đang trống",
+    "emptyDescription": "Thêm từng món hoặc chụp nhanh nguyên liệu trên bàn bếp. Dữ liệu hiện chỉ được giữ cục bộ trên trình duyệt này.",
+    "noResults": "Không tìm thấy nguyên liệu phù hợp.",
+    "clearFilters": "Xóa bộ lọc",
+    "select": "Chọn {name}",
+    "edit": "Sửa",
+    "localStorageNote": "Bản thử nghiệm lưu nguyên liệu cục bộ theo tài khoản trên trình duyệt. Có thể thay lớp lưu trữ này bằng PostgreSQL sau.",
+    "selectionCount": " nguyên liệu đã chọn",
+    "clearSelection": "Bỏ chọn tất cả",
+    "actions": { "recipes": "Gợi ý món", "safety": "Kiểm tra an toàn", "compare": "So sánh", "lab": "Thử cách nấu" },
+    "form": {
+      "editTitle": "Chỉnh sửa nguyên liệu", "addTitle": "Thêm vào kho", "description": "Mô tả trạng thái thực tế để Hestia hiểu đúng ngữ cảnh.",
+      "name": "Tên nguyên liệu", "namePlaceholder": "Ví dụ: Ức gà", "quantity": "Số lượng", "unit": "Đơn vị", "category": "Nhóm", "state": "Trạng thái", "storage": "Bảo quản", "note": "Ghi chú", "notePlaceholder": "Hạn dùng, đã mở gói, dự định nấu…", "delete": "Xóa", "cancel": "Hủy", "save": "Lưu nguyên liệu"
+    },
+    "detail": { "amount": "Số lượng", "state": "Trạng thái", "storage": "Bảo quản", "compounds": "Thành phần đáng chú ý", "safety": "Lưu ý an toàn", "substitutes": "Có thể thay bằng", "note": "Ghi chú của bạn", "ask": "Hỏi Hestia về nguyên liệu này", "disclaimer": "Thông tin tóm tắt mang tính tham khảo; hãy hỏi Hestia với cách nấu cụ thể để có phân tích phù hợp." },
+    "lab": { "title": "Phòng thí nghiệm nấu ăn", "description": "Thử một điều kiện nấu và xem Hestia phân tích phản ứng, chất lượng cùng rủi ro.", "method": "Phương pháp", "temperature": "Nhiệt độ (°C)", "duration": "Thời gian (phút)", "run": "Phân tích cách nấu này", "disclaimer": "Nhiệt độ thiết bị không luôn bằng nhiệt độ lõi thực phẩm. Cần đo thực tế khi an toàn phụ thuộc vào độ chín." },
+    "methods": { "fry": "Chiên áp chảo", "boil": "Luộc", "steam": "Hấp", "roast": "Nướng lò", "grill": "Nướng trực tiếp", "airFry": "Nồi chiên không dầu", "stew": "Hầm" },
+    "prompts": {
+      "recipes": "Tôi đang có các nguyên liệu sau: {ingredients}. Hãy gợi ý 3 món khả thi, nêu nguyên liệu còn thiếu, thời gian và các lưu ý an toàn quan trọng.",
+      "safety": "Kiểm tra an toàn thực phẩm cho các nguyên liệu này: {ingredients}. Hãy ưu tiên rủi ro do trạng thái, bảo quản, nhiễm chéo và cách làm chín; phân biệt điều chắc chắn với điều cần thêm thông tin.",
+      "compare": "So sánh vai trò ẩm thực, dinh dưỡng, phản ứng khi nấu và khả năng kết hợp của các nguyên liệu sau: {ingredients}. Trình bày ngắn gọn và thực tế.",
+      "lab": "Phân tích thí nghiệm nấu ăn với {ingredients}: phương pháp {method}, khoảng {temperature}°C trong {duration} phút. Giải thích biến đổi cấu trúc, phản ứng hóa học có thể xảy ra, chất lượng mong đợi và rủi ro an toàn. Đề xuất điều chỉnh nếu cần.",
+      "detail": "Hãy phân tích nguyên liệu {ingredient}: cách chọn, bảo quản, sơ chế, phản ứng đáng chú ý khi nấu và những lưu ý an toàn có bằng chứng."
+    }
   },
   "profile": {
     "name": "Khách vào bếp",

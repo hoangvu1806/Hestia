@@ -17,6 +17,7 @@ import {
 import { AuthScreen } from "./auth-screen";
 import { Brand } from "./brand";
 import { Icon } from "./icons";
+import { IngredientsWorkspace } from "./ingredients-workspace";
 import { LocaleSwitcher } from "./locale-switcher";
 import { MarkdownPre } from "./mermaid-diagram";
 import { ThemeToggle } from "./theme-toggle";
@@ -48,6 +49,8 @@ type Message = {
   progress?: Array<{ label: string; done: boolean }>;
   activity?: number;
 };
+
+type Workspace = "chat" | "ingredients" | "saved";
 
 const navItems = [
   ["chat", "chat"],
@@ -186,6 +189,7 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
   const [authBusy, setAuthBusy] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [workspace, setWorkspace] = useState<Workspace>("chat");
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
   const [pendingFile, setPendingFile] = useState<InlineFile | null>(null);
@@ -518,6 +522,7 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
   }
 
   async function newConversation() {
+    setWorkspace("chat");
     if (busy) activeRequest.current?.abort();
     setBusy(false);
     setConnection("connecting");
@@ -547,10 +552,7 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
     }
   }
 
-  async function chooseFile(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (!file) return;
+  async function attachFile(file: File) {
     if (file.size > 8 * 1024 * 1024) {
       setMessages((current) => [
         ...current,
@@ -561,13 +563,14 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
           error: false,
         },
       ]);
-      return;
+      return false;
     }
     try {
       const inline = await fileToInline(file);
       setPendingFile(inline);
       setPreview(`data:${inline.mime_type};base64,${inline.data}`);
       textarea.current?.focus();
+      return true;
     } catch {
       setMessages((current) => [
         ...current,
@@ -578,7 +581,26 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
           error: false,
         },
       ]);
+      return false;
     }
+  }
+
+  async function chooseFile(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (file) await attachFile(file);
+  }
+
+  function askFromIngredients(prompt: string) {
+    setWorkspace("chat");
+    setDraft(prompt);
+    window.setTimeout(() => textarea.current?.focus(), 0);
+  }
+
+  async function scanFromIngredients(file: File) {
+    setWorkspace("chat");
+    setDraft(welcome.scanPrompt);
+    await attachFile(file);
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -640,6 +662,14 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
   ) : (
     <span className={className}>{initials || "H"}</span>
   );
+  const pageTitle = workspace === "ingredients"
+    ? dictionary.ingredients.title
+    : workspace === "saved"
+      ? sidebar.saved
+      : header.title;
+  const pageSubtitle = workspace === "ingredients"
+    ? dictionary.ingredients.eyebrow
+    : header.subtitle;
 
   return (
     <main className="app-frame">
@@ -654,8 +684,13 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
 
         <nav aria-label={sidebar.workspace} className="sidebar-nav">
           <p className="nav-label">{sidebar.workspace}</p>
-          {navItems.map(([key, icon], index) => (
-            <button className={index === 0 ? "nav-item active" : "nav-item"} key={key} type="button">
+          {navItems.map(([key, icon]) => (
+            <button
+              className={workspace === key ? "nav-item active" : "nav-item"}
+              key={key}
+              onClick={() => setWorkspace(key)}
+              type="button"
+            >
               <Icon height={18} name={icon} width={18} />
               {sidebar[key]}
             </button>
@@ -692,9 +727,9 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
         <header className="topbar">
           <div className="mobile-brand"><Brand name={brand.name} /></div>
           <div className="page-title">
-            <strong>{header.title}</strong>
-            <span className={`connection ${connection}`}>
-              <i />{connection === "connecting" ? chat.connecting : header.subtitle}
+            <strong>{pageTitle}</strong>
+            <span className={`connection ${workspace === "chat" ? connection : "ready"}`}>
+              <i />{workspace === "chat" && connection === "connecting" ? chat.connecting : pageSubtitle}
             </span>
           </div>
           <div className="header-actions">
@@ -735,6 +770,36 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
           </div>
         </header>
 
+        <nav aria-label={sidebar.workspace} className="mobile-workspace-nav">
+          {navItems.map(([key, icon]) => (
+            <button
+              className={workspace === key ? "active" : ""}
+              key={key}
+              onClick={() => setWorkspace(key)}
+              type="button"
+            >
+              <Icon height={17} name={icon} width={17} />
+              <span>{sidebar[key]}</span>
+            </button>
+          ))}
+        </nav>
+
+        {workspace === "ingredients" ? (
+          <IngredientsWorkspace
+            dictionary={dictionary}
+            locale={locale}
+            onAskHestia={askFromIngredients}
+            onScanImage={(file) => void scanFromIngredients(file)}
+            userId={authUser.uid}
+          />
+        ) : workspace === "saved" ? (
+          <section className="saved-placeholder">
+            <span>🔖</span>
+            <h1>{sidebar.saved}</h1>
+            <p>{locale === "vi" ? "Các món bạn lưu sẽ xuất hiện ở đây." : "Meals you save will appear here."}</p>
+          </section>
+        ) : (
+          <>
         <div className="conversation" ref={conversation}>
           {messages.length === 0 ? (
             <section className="welcome">
@@ -886,6 +951,8 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
           </form>
           <p className="disclaimer">{composer.hint}</p>
         </div>
+          </>
+        )}
       </section>
     </main>
   );

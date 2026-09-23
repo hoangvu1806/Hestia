@@ -84,6 +84,45 @@
     "send": "Send message",
     "hint": "Hestia can make mistakes. Verify critical food-safety information."
   },
+  "ingredients": {
+    "eyebrow": "A clearer view of your kitchen",
+    "title": "Ingredient pantry",
+    "description": "Track what you have, combine ingredients, and ask Hestia about dishes, safety, or cooking chemistry.",
+    "scan": "Scan a photo",
+    "add": "Add ingredient",
+    "stats": { "total": "Total ingredients", "fridge": "In the fridge", "groups": "Food groups", "selected": "Selected" },
+    "search": "Search by name or note…",
+    "filterLabel": "Filter ingredients by category",
+    "all": "All",
+    "categories": { "protein": "Protein", "vegetable": "Vegetables", "fruit": "Fruit", "grain": "Grains", "spice": "Herbs & spices", "dairy": "Dairy", "other": "Other" },
+    "states": { "raw": "Fresh / raw", "prepared": "Prepared", "cooked": "Cooked", "frozen": "Frozen" },
+    "storages": { "fridge": "Fridge", "freezer": "Freezer", "pantry": "Pantry" },
+    "units": { "item": "item", "g": "g", "kg": "kg", "ml": "ml", "l": "litre", "bunch": "bunch", "pack": "pack" },
+    "emptyTitle": "Your pantry is empty",
+    "emptyDescription": "Add ingredients one by one or snap a photo of your counter. For now, this data stays only in this browser.",
+    "noResults": "No matching ingredients found.",
+    "clearFilters": "Clear filters",
+    "select": "Select {name}",
+    "edit": "Edit",
+    "localStorageNote": "This prototype stores ingredients locally per account in this browser. The storage layer can be replaced by PostgreSQL later.",
+    "selectionCount": " ingredients selected",
+    "clearSelection": "Clear selection",
+    "actions": { "recipes": "Suggest dishes", "safety": "Safety check", "compare": "Compare", "lab": "Test cooking" },
+    "form": {
+      "editTitle": "Edit ingredient", "addTitle": "Add to pantry", "description": "Describe its real condition so Hestia understands the context.",
+      "name": "Ingredient name", "namePlaceholder": "For example: Chicken breast", "quantity": "Quantity", "unit": "Unit", "category": "Category", "state": "Condition", "storage": "Storage", "note": "Note", "notePlaceholder": "Use-by date, opened pack, cooking plan…", "delete": "Delete", "cancel": "Cancel", "save": "Save ingredient"
+    },
+    "detail": { "amount": "Amount", "state": "Condition", "storage": "Storage", "compounds": "Notable components", "safety": "Safety notes", "substitutes": "Possible substitutes", "note": "Your note", "ask": "Ask Hestia about this ingredient", "disclaimer": "This is a reference summary. Ask Hestia with a specific cooking method for a contextual analysis." },
+    "lab": { "title": "Cooking laboratory", "description": "Try a cooking condition and have Hestia analyze reactions, quality, and risk.", "method": "Method", "temperature": "Temperature (°C)", "duration": "Time (minutes)", "run": "Analyze this method", "disclaimer": "Appliance temperature is not always the food's core temperature. Measure the food when safety depends on doneness." },
+    "methods": { "fry": "Pan-fry", "boil": "Boil", "steam": "Steam", "roast": "Oven roast", "grill": "Grill", "airFry": "Air-fry", "stew": "Stew" },
+    "prompts": {
+      "recipes": "I have these ingredients: {ingredients}. Suggest 3 practical dishes, list anything missing, estimate time, and flag important safety notes.",
+      "safety": "Check food safety for these ingredients: {ingredients}. Prioritize risks from condition, storage, cross-contamination, and doneness; distinguish what is known from what needs more context.",
+      "compare": "Compare the culinary role, nutrition, cooking reactions, and compatibility of these ingredients: {ingredients}. Keep it concise and practical.",
+      "lab": "Analyze a cooking experiment using {ingredients}: {method} at about {temperature}°C for {duration} minutes. Explain structural changes, likely chemical reactions, expected quality, and safety risks. Suggest adjustments where useful.",
+      "detail": "Analyze {ingredient}: selection, storage, preparation, notable cooking reactions, and evidence-based safety considerations."
+    }
+  },
   "profile": {
     "name": "Guest cook",
     "status": "Local session"
