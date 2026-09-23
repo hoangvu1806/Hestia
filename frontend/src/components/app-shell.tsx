@@ -14,7 +14,6 @@ import {
   useState,
 } from "react";
 
-import { AuthScreen } from "./auth-screen";
 import { Brand } from "./brand";
 import { Icon } from "./icons";
 import { LocaleSwitcher } from "./locale-switcher";
@@ -24,18 +23,13 @@ import { ThemeToggle } from "./theme-toggle";
 import type { Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries";
 import {
+  browserIdentity,
   createSession,
   ensureSession,
   fileToInline,
   type InlineFile,
   streamMessage,
 } from "@/lib/hestia-api";
-import {
-  observeAuth,
-  signInWithGoogle,
-  signOutUser,
-  type User,
-} from "@/lib/firebase";
 
 type Message = {
   id: string;
@@ -55,7 +49,7 @@ const navItems = [
   ["saved", "bookmark"],
 ] as const;
 
-const sessionKey = (uid: string) => `hestia-session-id:${uid}`;
+const sessionKey = "hestia-session-id";
 const foodbTag = /\[(?:<)?([^:\]<>\n]+):(FDB\d+)(?:>)?\]/gi;
 const foodbFoodTag = /\[(?:<)?([^:\]<>\n]+):(FOOD\d+)(?:>)?\]/gi;
 const markdownCode = /(```[\s\S]*?```|`[^`\n]+`)/g;
@@ -180,12 +174,7 @@ function progressiveText(onText: (text: string) => void) {
 }
 
 export function AppShell({ dictionary, locale }: { dictionary: Dictionary; locale: Locale }) {
-  const { auth, brand, chat, composer, header, sidebar, welcome } = dictionary;
-  const [authUser, setAuthUser] = useState<User | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [authBusy, setAuthBusy] = useState(false);
-  const [authError, setAuthError] = useState<string | null>(null);
-  const [accountOpen, setAccountOpen] = useState(false);
+  const { brand, chat, composer, header, profile, sidebar, welcome } = dictionary;
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
   const [pendingFile, setPendingFile] = useState<InlineFile | null>(null);
@@ -198,48 +187,31 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
   const textarea = useRef<HTMLTextAreaElement>(null);
   const conversation = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const userId = useRef<string | null>(null);
   const sessionId = useRef<string | null>(null);
   const connectionPromise = useRef<Promise<string> | null>(null);
   const activeRequest = useRef<AbortController | null>(null);
 
   useEffect(() => {
+    const id = browserIdentity();
+    const storedSession = localStorage.getItem(sessionKey);
+    userId.current = id;
+    const pending = ensureSession(id, storedSession);
+    connectionPromise.current = pending;
     let active = true;
-    const unsubscribe = observeAuth((user) => {
-      if (!active) return;
-      activeRequest.current?.abort();
-      setAuthUser(user);
-      setAuthLoading(false);
-      setAuthError(null);
-      setMessages([]);
-      sessionId.current = null;
-      connectionPromise.current = null;
 
-      if (!user) {
-        setConnection("connecting");
-        return;
-      }
-
-      const pending = user
-        .getIdToken()
-        .then((token) => ensureSession(token, localStorage.getItem(sessionKey(user.uid))));
-      connectionPromise.current = pending;
-      pending
-        .then((resolved) => {
-          if (!active) return;
-          sessionId.current = resolved;
-          localStorage.setItem(sessionKey(user.uid), resolved);
-          setConnection("ready");
-        })
-        .catch(() => {
-          if (!active) return;
-          connectionPromise.current = null;
-          setConnection("error");
-        });
-    });
-
+    pending
+      .then((resolved) => {
+        sessionId.current = resolved;
+        localStorage.setItem(sessionKey, resolved);
+        if (active) setConnection("ready");
+      })
+      .catch(() => {
+        connectionPromise.current = null;
+        if (active) setConnection("error");
+      });
     return () => {
       active = false;
-      unsubscribe();
       activeRequest.current?.abort();
     };
   }, []);
@@ -256,16 +228,16 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
   async function activeSession() {
     if (sessionId.current) return sessionId.current;
     if (connectionPromise.current) return connectionPromise.current;
-    if (!authUser) throw new Error("authentication_required");
 
+    const id = userId.current || browserIdentity();
+    userId.current = id;
     setConnection("connecting");
-    const token = await authUser.getIdToken();
-    const pending = ensureSession(token, localStorage.getItem(sessionKey(authUser.uid)));
+    const pending = ensureSession(id, localStorage.getItem(sessionKey));
     connectionPromise.current = pending;
     try {
       const resolved = await pending;
       sessionId.current = resolved;
-      localStorage.setItem(sessionKey(authUser.uid), resolved);
+      localStorage.setItem(sessionKey, resolved);
       setConnection("ready");
       return resolved;
     } catch (error) {
@@ -273,30 +245,6 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
       setConnection("error");
       throw error;
     }
-  }
-
-  async function login() {
-    setAuthBusy(true);
-    setAuthError(null);
-    try {
-      await signInWithGoogle();
-    } catch (error) {
-      const code = typeof error === "object" && error && "code" in error
-        ? String(error.code)
-        : "";
-      if (code !== "auth/popup-closed-by-user" && code !== "auth/cancelled-popup-request") {
-        setAuthError(auth.signInFailed);
-      }
-    } finally {
-      setAuthBusy(false);
-    }
-  }
-
-  async function logout() {
-    activeRequest.current?.abort();
-    setBusy(false);
-    setAccountOpen(false);
-    await signOutUser();
   }
 
   function updateMessage(id: string, patch: Partial<Message>) {
@@ -374,8 +322,7 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
     let renderer: ReturnType<typeof progressiveText> | null = null;
     try {
       const currentSession = await activeSession();
-      if (!authUser) throw new Error("authentication_required");
-      const idToken = await authUser.getIdToken();
+      const currentUser = userId.current || browserIdentity();
       const controller = new AbortController();
       activeRequest.current = controller;
       let streamedText = "";
@@ -414,7 +361,7 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
       };
 
       await streamMessage(
-        idToken,
+        currentUser,
         currentSession,
         { text: cleanText, files: file ? [file] : [] },
         async ({ event, data }) => {
@@ -527,12 +474,12 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
     setPreview(null);
 
     try {
-      if (!authUser) throw new Error("authentication_required");
-      const idToken = await authUser.getIdToken();
-      const nextSession = await createSession(idToken);
+      const currentUser = userId.current || browserIdentity();
+      userId.current = currentUser;
+      const nextSession = await createSession(currentUser);
       sessionId.current = nextSession;
       connectionPromise.current = Promise.resolve(nextSession);
-      localStorage.setItem(sessionKey(authUser.uid), nextSession);
+      localStorage.setItem(sessionKey, nextSession);
       setConnection("ready");
     } catch {
       setConnection("error");
@@ -599,48 +546,6 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
     ["chemistry", welcome.chemistryTitle, welcome.chemistryDescription, welcome.chemistryPrompt],
   ] as const;
 
-  if (authLoading) {
-    return (
-      <main className="auth-page auth-loading">
-        <Brand name={brand.name} tagline={auth.loading} />
-        <span className="auth-spinner" aria-hidden="true" />
-      </main>
-    );
-  }
-
-  if (!authUser) {
-    return (
-      <AuthScreen
-        dictionary={dictionary}
-        error={authError}
-        loading={authBusy}
-        locale={locale}
-        onSignIn={() => void login()}
-      />
-    );
-  }
-
-  const displayName = authUser.displayName || authUser.email || auth.accountFallback;
-  const initials = displayName
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
-  const avatar = (className: string, size: number) => authUser.photoURL ? (
-    <Image
-      alt={displayName}
-      className={className}
-      height={size}
-      referrerPolicy="no-referrer"
-      src={authUser.photoURL}
-      width={size}
-    />
-  ) : (
-    <span className={className}>{initials || "H"}</span>
-  );
-
   return (
     <main className="app-frame">
       <aside className="sidebar">
@@ -680,10 +585,9 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
             <Icon height={18} name="settings" width={18} />
             {sidebar.settings}
           </button>
-          <div className="profile profile-auth">
-            {avatar("avatar", 34)}
-            <span><strong>{displayName}</strong><small>{auth.signedIn}</small></span>
-            <button aria-label={auth.signOut} className="sign-out-button" onClick={() => void logout()} title={auth.signOut} type="button">×</button>
+          <div className="profile">
+            <span className="avatar">HC</span>
+            <span><strong>{profile.name}</strong><small>{profile.status}</small></span>
           </div>
         </div>
       </aside>
@@ -700,38 +604,7 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
           <div className="header-actions">
             <LocaleSwitcher label={header.language} locale={locale} />
             <ThemeToggle label={header.theme} />
-            <div
-              className="account-menu-wrap"
-              onBlur={(event) => {
-                if (!event.currentTarget.contains(event.relatedTarget)) setAccountOpen(false);
-              }}
-            >
-              <button
-                aria-expanded={accountOpen}
-                aria-haspopup="menu"
-                aria-label={displayName}
-                className="header-account"
-                onClick={() => setAccountOpen((open) => !open)}
-                title={displayName}
-                type="button"
-              >
-                {avatar("header-avatar", 38)}
-              </button>
-              {accountOpen ? (
-                <div className="account-menu" role="menu">
-                  <div className="account-menu-identity">
-                    {avatar("account-menu-avatar", 42)}
-                    <span>
-                      <strong>{displayName}</strong>
-                      {authUser.email ? <small>{authUser.email}</small> : null}
-                    </span>
-                  </div>
-                  <button onClick={() => void logout()} role="menuitem" type="button">
-                    {auth.signOut}
-                  </button>
-                </div>
-              ) : null}
-            </div>
+            <span className="header-avatar">HC</span>
           </div>
         </header>
 
@@ -774,7 +647,7 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
                     {message.role === "assistant" ? (
                       <Image alt="Hestia" height={30} src="/logo.png" width={30} />
                     ) : (
-                      avatar("message-user-avatar", 30)
+                      <span>HC</span>
                     )}
                     <strong>{message.role === "assistant" ? chat.assistant : chat.you}</strong>
                   </div>
