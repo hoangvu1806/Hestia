@@ -5,7 +5,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from google.adk.models.lite_llm import LiteLlm, LiteLLMClient
-from google.adk.tools.mcp_tool import McpToolset, StreamableHTTPConnectionParams
+from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
+from google.adk.tools.mcp_tool.mcp_toolset import McpToolset
 from pydantic import Field
 
 load_dotenv(Path(__file__).resolve().parents[2] / ".env")

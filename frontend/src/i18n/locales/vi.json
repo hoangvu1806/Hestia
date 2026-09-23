@@ -7,6 +7,19 @@
     "name": "Hestia",
     "tagline": "Ẩm thực, hóa học và an toàn"
   },
+  "auth": {
+    "kicker": "Bết của bạn, trợ lý của bạn",
+    "title": "Chào mừng bạn đến với Hestia",
+    "description": "Đăng nhập để bắt đầu trò chuyện với trợ lý ẩm thực và an toàn thực phẩm.",
+    "googleSignIn": "Tiếp tục với Google",
+    "signingIn": "Đang mở Google…",
+    "signInFailed": "Không thể đăng nhập lúc này. Vui lòng thử lại.",
+    "privacy": "Hestia chỉ dùng Firebase để xác thực. Thông tin tài khoản không được sao chép vào database của Hestia.",
+    "loading": "Đang kiểm tra phiên đăng nhập…",
+    "signedIn": "Đã đăng nhập qua Google",
+    "signOut": "Đăng xuất",
+    "accountFallback": "Người dùng Hestia"
+  },
   "sidebar": {
     "newChat": "Cuộc trò chuyện mới",
     "workspace": "Không gian làm việc",

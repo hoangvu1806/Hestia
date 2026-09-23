@@ -7,6 +7,19 @@
     "name": "Hestia",
     "tagline": "Food, chemistry & safety"
   },
+  "auth": {
+    "kicker": "Your kitchen, your assistant",
+    "title": "Welcome to Hestia",
+    "description": "Sign in to start a conversation with your food and culinary-safety assistant.",
+    "googleSignIn": "Continue with Google",
+    "signingIn": "Opening Google…",
+    "signInFailed": "Sign-in is unavailable right now. Please try again.",
+    "privacy": "Hestia uses Firebase only for authentication. Your account profile is not copied into a Hestia database.",
+    "loading": "Checking your sign-in…",
+    "signedIn": "Signed in with Google",
+    "signOut": "Sign out",
+    "accountFallback": "Hestia user"
+  },
   "sidebar": {
     "newChat": "New conversation",
     "workspace": "Workspace",

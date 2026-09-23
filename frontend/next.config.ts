@@ -12,6 +12,11 @@ const nextConfig: NextConfig = {
         hostname: "foodb.ca",
         pathname: "/structures/**",
       },
+      {
+        protocol: "https",
+        hostname: "*.googleusercontent.com",
+        pathname: "/**",
+      },
     ],
   },
 };
