@@ -11,8 +11,6 @@ CV/
 .env.test.local
 .env.production.local
 !.env.example
-*firebase-adminsdk*.json
-*service-account*.json
 
 # Temporary and cache directories
 .tmp/
@@ -30,7 +28,6 @@ ENV/
 env/
 .pytest_cache/
 .ruff_cache/
-*.egg-info/
 .deepeval/
 .runtime/
 .coverage

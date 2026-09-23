@@ -23,31 +23,31 @@ type Session = {
   id: string;
 };
 
-const headers = (idToken: string) => ({
+const headers = (userId: string) => ({
   "Content-Type": "application/json",
-  Authorization: `Bearer ${idToken}`,
+  "X-Hestia-User-Id": userId,
 });
 
-export async function createSession(idToken: string): Promise<string> {
+export async function createSession(userId: string): Promise<string> {
   const response = await fetch(`${API_URL}/sessions`, {
     method: "POST",
-    headers: headers(idToken),
+    headers: headers(userId),
     body: JSON.stringify({}),
   });
   if (!response.ok) throw new Error("request_failed");
   return ((await response.json()) as Session).id;
 }
 
-export async function ensureSession(idToken: string, sessionId?: string | null) {
+export async function ensureSession(userId: string, sessionId?: string | null) {
   if (sessionId) {
     const response = await fetch(`${API_URL}/sessions/${sessionId}`, {
-      headers: headers(idToken),
+      headers: headers(userId),
       cache: "no-store",
     });
     if (response.ok) return sessionId;
     if (response.status !== 404) throw new Error("request_failed");
   }
-  return createSession(idToken);
+  return createSession(userId);
 }
 
 function parseEvent(block: string): HestiaEvent | null {
@@ -66,7 +66,7 @@ function parseEvent(block: string): HestiaEvent | null {
 }
 
 export async function streamMessage(
-  idToken: string,
+  userId: string,
   sessionId: string,
   input: ChatInput,
   onEvent: (event: HestiaEvent) => void | Promise<void>,
@@ -74,7 +74,7 @@ export async function streamMessage(
 ) {
   const response = await fetch(`${API_URL}/sessions/${sessionId}/messages/stream`, {
     method: "POST",
-    headers: headers(idToken),
+    headers: headers(userId),
     body: JSON.stringify({
       text: input.text || null,
       files: input.files || [],
@@ -105,6 +105,16 @@ export async function streamMessage(
 
   const remaining = parseEvent(buffer.trim());
   if (remaining) await onEvent(remaining);
+}
+
+export function browserIdentity() {
+  const userKey = "hestia-user-id";
+  let userId = localStorage.getItem(userKey);
+  if (!userId) {
+    userId = `web-${crypto.randomUUID()}`;
+    localStorage.setItem(userKey, userId);
+  }
+  return userId;
 }
 
 export function fileToInline(file: File): Promise<InlineFile> {

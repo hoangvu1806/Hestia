@@ -10,11 +10,6 @@ python -m pip install -e ".[dev]"
 python -m uvicorn main:app --app-dir src --host 0.0.0.0 --port 8484 --reload --reload-dir src
 ```
 
-Configure `HESTIA_FIREBASE_CREDENTIALS` with the path to a Firebase Admin service-account
-JSON file. Authenticated API calls must send `Authorization: Bearer <firebase-id-token>`.
-The backend uses the verified Firebase `uid` as the ADK session owner and does not copy the
-Firebase profile into an application user database.
-
 Các lệnh trên sử dụng trực tiếp Python environment đang active trong terminal;
 dự án không tạo hoặc quản lý virtual environment riêng.
 
@@ -40,8 +35,8 @@ tests/
 
 ## API v1
 
-All endpoints use `/api/v1`. Session and chat endpoints require a Firebase ID token. Health and
-API documentation remain public.
+All endpoints use `/api/v1`. Until authentication is implemented, pass a development identity
+through `X-Hestia-User-Id`; it falls back to `local-user`.
 
 ```text
 POST   /api/v1/sessions
@@ -70,20 +65,6 @@ CUSTOM_BASE_URL=https://openrouter.ai/api/v1
 CUSTOM_LLM_MODEL_1=openrouter/google/gemini-3.5-flash-lite
 CUSTOM_LLM_MODEL_2=openrouter/qwen/qwen3.6-35b-a3b
 ```
-
-For a Google AI Studio / Gemini API key, use Gemini directly through LiteLLM
-instead of the OpenRouter endpoint. Set these values in your local `.env`:
-
-```dotenv
-CUSTOM_API_KEY=your_gemini_api_key
-CUSTOM_BASE_URL=
-CUSTOM_LLM_MODEL_1=gemini/gemini-2.5-flash
-CUSTOM_LLM_MODEL_2=gemini/gemini-2.5-flash
-```
-
-Restart the backend after changing `.env`. `ASTA_API_KEY` is a separate credential
-for literature search; the Gemini key does not replace it. Local FooDB/OpenFoodTox
-indices are still required for composition and toxicology lookups.
 
 Run the CLI. The short form treats a bare image path as the `analyze` command:
 
