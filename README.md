@@ -41,7 +41,7 @@ The platform distinguishes observed facts, database records, calculations, and g
                                    ▼                                     ▼
                       ┌─────────────────────────┐          ┌───────────────────────────┐
                       │  Firebase Authentication│          │  Next.js Static Frontend  │
-                      │  (Google Sign-In / OIDC)│          │  (Nginx Proxy / Port 8080)│
+                      │  (Google Sign-In / OIDC)│          │ (Nginx Static / Port 8080)│
                       └─────────────────────────┘          └─────────────┬─────────────┘
                                                                          │
                                        ┌─────────────────────────────────┴─────────────────┐
@@ -116,7 +116,7 @@ Hestia/
 │   │   ├── i18n/         # Bilingual dictionaries (en.json, vi.json)
 │   │   └── lib/          # SEO configuration, Schema.org builders, Firebase & API client
 │   ├── Dockerfile        # Production multi-stage Next.js export container
-│   ├── nginx.conf        # Production Nginx reverse proxy & caching configuration
+│   ├── nginx.conf        # Static file serving, caching, and security headers
 │   └── package.json      # Node.js dependencies & scripts
 │
 ├── .github/workflows/    # CI/CD pipelines (Lint, Test, Docker Build & GHCR Publish)
@@ -211,7 +211,7 @@ Open `http://localhost:3434` in your browser.
 
 ## 🐳 Docker Deployment
 
-To launch the full production stack (Nginx, Next.js Static Export, FastAPI, PostgreSQL, MinIO):
+To launch the application stack (Nginx static frontend, FastAPI, PostgreSQL, and external MinIO):
 
 ```powershell
 Copy-Item compose.env.example .env
@@ -226,7 +226,25 @@ Check status:
 docker compose ps
 ```
 
-The unified web application is accessible at `http://localhost:8080`.
+The frontend is bound to `127.0.0.1:8080` and the API to `127.0.0.1:8484` by default. Nginx serves only the exported frontend and does not proxy API traffic.
+
+### Cloudflare Tunnel routing
+
+Use Cloudflare Tunnel as the public edge and route `/api/*` directly to FastAPI before the frontend catch-all rule. A host-installed `cloudflared` configuration can use:
+
+```yaml
+ingress:
+  - hostname: hestia.hoangvu.id.vn
+    path: ^/api/.*
+    service: http://127.0.0.1:8484
+  - hostname: hestia.hoangvu.id.vn
+    service: http://127.0.0.1:8080
+  - service: http_status:404
+```
+
+Build the frontend with `NEXT_PUBLIC_HESTIA_API_URL=/api/v1`. Browser API and SSE requests then stay on the same public origin while Cloudflare Tunnel sends them directly to FastAPI. Keep `HESTIA_CORS_ORIGINS` set to the public frontend origin as defense in depth.
+
+If `cloudflared` runs as a container on the Compose `app` network, use `http://backend:8484` and `http://frontend:8080` as services instead of the loopback addresses. Do not expose PostgreSQL or MinIO through the application tunnel.
 
 ---
 
