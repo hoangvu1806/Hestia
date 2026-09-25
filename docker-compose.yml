@@ -49,8 +49,8 @@ services:
       - firebase_service_account
     volumes:
       - generated_images:/app/.runtime/generated-images
-    expose:
-      - "8484"
+    ports:
+      - "${HESTIA_API_BIND_ADDRESS:-127.0.0.1}:${HESTIA_API_PORT:-8484}:8484"
     depends_on:
       postgres:
         condition: service_healthy
@@ -92,10 +92,7 @@ services:
         - type=local,dest=.docker-cache/frontend,mode=max
     restart: unless-stopped
     ports:
-      - "${HESTIA_HTTP_PORT:-8080}:8080"
-    depends_on:
-      backend:
-        condition: service_healthy
+      - "${HESTIA_HTTP_BIND_ADDRESS:-127.0.0.1}:${HESTIA_HTTP_PORT:-8080}:8080"
     read_only: true
     tmpfs:
       - /tmp:size=32m,mode=1777
