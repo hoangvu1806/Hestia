@@ -61,7 +61,7 @@ class S3ObjectStore:
         return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
     @staticmethod
-    def _error_code(exc: BotoCoreError) -> str:
+    def _error_code(exc: BotoCoreError | ClientError) -> str:
         if isinstance(exc, ClientError):
             return str(exc.response.get("Error", {}).get("Code", ""))
         return ""
@@ -80,7 +80,7 @@ class S3ObjectStore:
                 return
             try:
                 self.client.head_bucket(Bucket=self.bucket)
-            except BotoCoreError as exc:
+            except (BotoCoreError, ClientError) as exc:
                 code = self._error_code(exc)
                 if code not in {"404", "NoSuchBucket", "NotFound"}:
                     raise ObjectStoreError("Unable to access the S3 bucket") from exc
@@ -91,7 +91,7 @@ class S3ObjectStore:
                     }
                 try:
                     self.client.create_bucket(**options)
-                except BotoCoreError as create_exc:
+                except (BotoCoreError, ClientError) as create_exc:
                     raise ObjectStoreError("Unable to create the S3 bucket") from create_exc
             self._bucket_ready = True
 
@@ -118,7 +118,7 @@ class S3ObjectStore:
                 Key=self._key(user_id, session_id, "attachments", attachment_id),
             )
             return True
-        except BotoCoreError as exc:
+        except (BotoCoreError, ClientError) as exc:
             code = self._error_code(exc)
             if code in {"404", "NoSuchKey", "NotFound"}:
                 return False
@@ -145,7 +145,7 @@ class S3ObjectStore:
                 ContentType=content_type,
                 CacheControl="private, max-age=86400",
             )
-        except BotoCoreError as exc:
+        except (BotoCoreError, ClientError) as exc:
             raise ObjectStoreError("Unable to store the object") from exc
 
     def _get(self, key: str) -> StoredObject:
@@ -164,7 +164,7 @@ class S3ObjectStore:
             )
         except self.client.exceptions.NoSuchKey as exc:
             raise FileNotFoundError(key) from exc
-        except BotoCoreError as exc:
+        except (BotoCoreError, ClientError) as exc:
             code = self._error_code(exc)
             if code in {"404", "NoSuchKey", "NotFound"}:
                 raise FileNotFoundError(key) from exc
