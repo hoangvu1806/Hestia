@@ -15,6 +15,8 @@ The project is designed to distinguish observed facts, database matches, and mod
 - Specialist agents for food chemistry, safety analysis, and literature retrieval
 - English and Vietnamese interface preferences, light and dark themes
 - Static frontend export suitable for deployment behind any static file server
+- Route-specific canonical metadata, Open Graph cards, structured data, and crawl controls
+- Build-generated `sitemap.xml`, `robots.txt`, web app manifest, and an AI-readable `llms.txt`
 
 ## Architecture
 
@@ -138,6 +140,8 @@ Fill in the public Firebase web configuration in `frontend/.env.local`. These va
 
 ```dotenv
 NEXT_PUBLIC_HESTIA_API_URL=http://127.0.0.1:8484/api/v1
+NEXT_PUBLIC_SITE_URL=https://hestia.example.com
+NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=
 NEXT_PUBLIC_FIREBASE_API_KEY=...
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
@@ -156,6 +160,23 @@ npm run dev
 Open `http://localhost:3434`.
 
 `npm run dev` performs a production-style static export before serving `frontend/out/`. Use `npm run build` when only the export is required and `npm run start` to serve an existing export.
+
+### Search and discovery configuration
+
+`NEXT_PUBLIC_SITE_URL` is the canonical production origin used by page metadata, Open Graph URLs, `robots.txt`, and `sitemap.xml`. Set it to the final HTTPS origin before building the frontend. Do not use a staging or localhost URL in a production image.
+
+If the site is verified with Google Search Console, put only the verification token in `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`. After deployment, submit `/sitemap.xml` in Search Console and verify that the canonical public pages return `200` without authentication.
+
+The public discovery files are generated or copied into the static export:
+
+```text
+/sitemap.xml          Indexable editorial and ingredient routes
+/robots.txt           Crawl policy and sitemap location
+/manifest.webmanifest Install metadata for browsers
+/llms.txt             Concise, machine-readable product and source guide
+```
+
+Authenticated routes such as `/chat`, `/login`, and `/settings` emit `noindex` metadata and are intentionally excluded from the sitemap. Add a route to `frontend/src/lib/site.ts` only when it has unique, public, indexable content. Search ranking cannot be guaranteed by technical metadata alone; content quality, reputation, links, performance, and correct production hosting remain material.
 
 ## Docker deployment
 
@@ -209,7 +230,7 @@ The GitHub Actions workflows under `.github/workflows/` provide:
 - GHCR publication for `main`, `dev`, and version tags
 - image provenance and SBOM generation
 
-The publishing workflow requires the public Firebase frontend values to be configured as GitHub repository variables named after the corresponding `NEXT_PUBLIC_FIREBASE_*` settings. Runtime secrets such as the model API key, database password, Asta key, and Firebase Admin SDK JSON are never built into the images.
+The publishing workflow requires `NEXT_PUBLIC_SITE_URL` and the public Firebase frontend values to be configured as GitHub repository variables. `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` is optional. Runtime secrets such as the model API key, database password, Asta key, MinIO credentials, and Firebase Admin SDK JSON are never built into the images.
 
 ## Database import
 

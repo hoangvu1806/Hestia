@@ -1,7 +1,43 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
+import { JsonLd } from "@/components/json-ld";
 import { MarketingShell } from "@/components/marketing-shell";
+import { absoluteUrl, pageMetadata } from "@/lib/site";
+
+export const metadata: Metadata = pageMetadata({
+  path: "/home",
+  title: "Evidence-based cooking and food science",
+  description:
+    "Turn ingredient photos and cooking questions into practical guidance grounded in food chemistry, safety data, and scientific evidence.",
+  keywords: [
+    "evidence-based cooking",
+    "AI cooking assistant",
+    "ingredient photo analysis",
+    "food safety guidance",
+    "cooking science",
+  ],
+});
+
+const applicationSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "Hestia",
+  url: absoluteUrl("/home"),
+  applicationCategory: "LifestyleApplication",
+  operatingSystem: "Any modern web browser",
+  description:
+    "A multimodal culinary intelligence application for ingredient analysis, cooking chemistry, food safety, and evidence-based kitchen decisions.",
+  featureList: [
+    "Ingredient image analysis",
+    "Cooking chemistry explanations",
+    "Food-safety evidence review",
+    "Nutrient and food compound exploration",
+    "Persistent private cooking conversations",
+  ],
+  inLanguage: ["en", "vi"],
+};
 
 const capabilities = [
   { index: "01", title: "See what is on the counter", copy: "Share an image. Hestia separates visible ingredients from uncertain guesses before suggesting what to cook.", tone: "coral" },
@@ -12,6 +48,7 @@ const capabilities = [
 export default function HomePage() {
   return (
     <MarketingShell>
+      <JsonLd data={applicationSchema} />
       <section className="home-hero">
         <Image alt="A plated dish surrounded by fresh ingredients and culinary science tools" fill priority sizes="100vw" src="/hestia-hero.png" />
         <div className="home-hero-shade" />

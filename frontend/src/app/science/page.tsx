@@ -1,7 +1,24 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { MarketingShell } from "@/components/marketing-shell";
 import { SectionHero } from "@/components/section-hero";
+import { pageMetadata } from "@/lib/site";
+
+export const metadata: Metadata = pageMetadata({
+  path: "/science",
+  title: "Cooking chemistry and food-safety science",
+  description:
+    "Understand browning, protein denaturation, nutrient retention, heat, pH, moisture, and food-safety pathways in practical kitchen terms.",
+  keywords: [
+    "cooking chemistry",
+    "food science",
+    "Maillard reaction",
+    "protein denaturation",
+    "nutrient retention",
+    "food safety science",
+  ],
+});
 
 export default function SciencePage() {
   return <MarketingShell><SectionHero eyebrow="Food science, made usable" title="Understand the change, not just the recipe." copy="Hestia turns cooking questions into small scientific problems, then brings the answer back to heat, time, texture, nutrition, and safety." aside={<div className="molecule-orbit"><i /><i /><i /><b>C₆H₁₂O₆</b></div>} />
