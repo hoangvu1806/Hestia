@@ -18,12 +18,14 @@ backend/secrets/
 .tmp/
 tmp/
 temp/
+.docker-cache/
 *.log
 
 # Python / Backend
 __pycache__/
 *.py[cod]
 *$py.class
+*.egg-info/
 .venv/
 venv/
 ENV/

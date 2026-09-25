@@ -1,6 +1,6 @@
 # Hestia
 
-Hestia is a web application for ingredient research, cooking guidance, and evidence-based food-safety screening. It combines a static Next.js client with a FastAPI API, Firebase authentication, PostgreSQL-backed food data, and a Google ADK agent runtime.
+Hestia is a web application for ingredient research, cooking guidance, and evidence-based food-safety screening. It combines a static Next.js client with a FastAPI API, Firebase authentication, PostgreSQL-backed food data, private S3-compatible image storage, and a Google ADK agent runtime.
 
 The project is designed to distinguish observed facts, database matches, and model inference. Chemical records are treated as compositional evidence, not as proof that a reaction occurred or that a serving is safe.
 
@@ -11,9 +11,12 @@ The project is designed to distinguish observed facts, database matches, and mod
 - Food-compound profiles with explicit quantified and reported evidence labels
 - Firebase ID-token verification and per-user session isolation
 - PostgreSQL persistence for conversations and food-intelligence data
+- Persistent user uploads and AI-generated images in private S3-compatible storage
 - Specialist agents for food chemistry, safety analysis, and literature retrieval
 - English and Vietnamese interface preferences, light and dark themes
 - Static frontend export suitable for deployment behind any static file server
+- Route-specific canonical metadata, Open Graph cards, structured data, and crawl controls
+- Build-generated `sitemap.xml`, `robots.txt`, web app manifest, and an AI-readable `llms.txt`
 
 ## Architecture
 
@@ -32,6 +35,7 @@ Browser
                   │
                   ├── Google ADK agent runtime
                   ├── PostgreSQL sessions
+                  ├── MinIO / S3 chat images
                   ├── FooDB / OpenFoodTox index
                   └── External data and literature services
 ```
@@ -66,6 +70,7 @@ docs/               Product and architecture notes
 - Node.js 20 or later
 - npm
 - PostgreSQL
+- Private S3-compatible object storage such as MinIO
 - A Firebase project with Google sign-in enabled
 - Credentials for the configured model provider
 
@@ -95,6 +100,11 @@ Set the required values in `backend/.env`:
 HESTIA_SESSION_DATABASE_URL=postgresql+asyncpg://USER:PASSWORD@HOST:5432/DATABASE
 HESTIA_FIREBASE_PROJECT_ID=your-firebase-project-id
 HESTIA_FIREBASE_CREDENTIALS_PATH=secrets/firebase/service-account.json
+HESTIA_S3_ENDPOINT_URL=http://100.x.x.x:9000
+HESTIA_S3_ACCESS_KEY_ID=your-access-key
+HESTIA_S3_SECRET_ACCESS_KEY=your-secret-key
+HESTIA_S3_BUCKET=hestia
+HESTIA_S3_REGION=us-east-1
 
 CUSTOM_API_KEY=your-provider-key
 CUSTOM_BASE_URL=https://openrouter.ai/api/v1
@@ -130,6 +140,8 @@ Fill in the public Firebase web configuration in `frontend/.env.local`. These va
 
 ```dotenv
 NEXT_PUBLIC_HESTIA_API_URL=http://127.0.0.1:8484/api/v1
+NEXT_PUBLIC_SITE_URL=https://hestia.example.com
+NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=
 NEXT_PUBLIC_FIREBASE_API_KEY=...
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
@@ -148,6 +160,77 @@ npm run dev
 Open `http://localhost:3434`.
 
 `npm run dev` performs a production-style static export before serving `frontend/out/`. Use `npm run build` when only the export is required and `npm run start` to serve an existing export.
+
+### Search and discovery configuration
+
+`NEXT_PUBLIC_SITE_URL` is the canonical production origin used by page metadata, Open Graph URLs, `robots.txt`, and `sitemap.xml`. Set it to the final HTTPS origin before building the frontend. Do not use a staging or localhost URL in a production image.
+
+If the site is verified with Google Search Console, put only the verification token in `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`. After deployment, submit `/sitemap.xml` in Search Console and verify that the canonical public pages return `200` without authentication.
+
+The public discovery files are generated or copied into the static export:
+
+```text
+/sitemap.xml          Indexable editorial and ingredient routes
+/robots.txt           Crawl policy and sitemap location
+/manifest.webmanifest Install metadata for browsers
+/llms.txt             Concise, machine-readable product and source guide
+```
+
+Authenticated routes such as `/chat`, `/login`, and `/settings` emit `noindex` metadata and are intentionally excluded from the sitemap. Add a route to `frontend/src/lib/site.ts` only when it has unique, public, indexable content. Search ranking cannot be guaranteed by technical metadata alone; content quality, reputation, links, performance, and correct production hosting remain material.
+
+## Docker deployment
+
+Docker Compose runs the static frontend behind Nginx, proxies `/api` to FastAPI, and keeps PostgreSQL on a named volume. Uploaded and AI-generated chat images are stored in the configured private MinIO/S3 bucket. Only the frontend port is published.
+
+```powershell
+Copy-Item compose.env.example .env
+Copy-Item backend/.env.example backend/.env
+```
+
+Complete both environment files and place the Firebase Admin SDK key at `backend/secrets/firebase/service-account.json`. Then build and start the stack:
+
+```powershell
+docker compose build
+docker compose up -d
+docker compose ps
+```
+
+Open `http://localhost:8080`. Change `HESTIA_HTTP_PORT` in the root `.env` file when another host port is required.
+
+The images use multi-stage builds and BuildKit cache mounts. Compose also stores reusable build layers in `.docker-cache/`, so source-only changes reuse Python wheels, npm packages, and Next.js compilation data. To force a clean rebuild:
+
+```powershell
+Remove-Item -Recurse -Force .docker-cache
+docker compose build --no-cache
+```
+
+To deploy images published by GitHub Actions instead of building on the server, set these values in the root `.env` file and run `docker compose pull` before `docker compose up -d`:
+
+```dotenv
+HESTIA_BACKEND_IMAGE=ghcr.io/OWNER/hestia-backend:latest
+HESTIA_FRONTEND_IMAGE=ghcr.io/OWNER/hestia-frontend:latest
+```
+
+If a local FooDB SQLite import exists under `backend/dataset/processed/`, import it once with the tools profile:
+
+```powershell
+docker compose --profile tools run --rm food-data-import
+```
+
+Back up the `postgres_data` volume and the configured object-storage bucket before destructive upgrades. The `generated_images` volume remains mounted only for backward-compatible reads of images created by older releases. Put a TLS-terminating reverse proxy or load balancer in front of port `8080` for public traffic.
+
+## Continuous integration and delivery
+
+The GitHub Actions workflows under `.github/workflows/` provide:
+
+- backend tests and Ruff checks
+- frontend lint and production export
+- independent backend and frontend container builds
+- BuildKit layer caching through the GitHub Actions cache
+- GHCR publication for `main`, `dev`, and version tags
+- image provenance and SBOM generation
+
+The publishing workflow requires `NEXT_PUBLIC_SITE_URL` and the public Firebase frontend values to be configured as GitHub repository variables. `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` is optional. Runtime secrets such as the model API key, database password, Asta key, MinIO credentials, and Firebase Admin SDK JSON are never built into the images.
 
 ## Database import
 
@@ -180,7 +263,8 @@ DELETE /sessions/{session_id}
 GET    /sessions/{session_id}/events
 POST   /sessions/{session_id}/messages
 POST   /sessions/{session_id}/messages/stream
-GET    /generated-images/{image_id}
+GET    /sessions/{session_id}/attachments/{attachment_id}
+GET    /sessions/{session_id}/images/{image_id}
 ```
 
 Authenticated routes expect a Firebase ID token:
@@ -213,6 +297,7 @@ npm run build
 ## Security notes
 
 - Keep `.env`, `.env.local`, Firebase Admin SDK credentials, and database exports out of version control.
+- Keep the MinIO bucket private. Chat image endpoints verify the Firebase user and session before reading an object.
 - Rotate a service-account key immediately if it is exposed in a commit, build artifact, log, or screenshot.
 - The frontend Firebase configuration is public by design; access control must be enforced by Firebase rules and backend token verification.
 - Generated analysis is not a substitute for laboratory testing, medical advice, or official food-safety guidance.

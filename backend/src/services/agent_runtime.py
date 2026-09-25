@@ -3,9 +3,10 @@ from __future__ import annotations
 import asyncio
 import base64
 import binascii
+import mimetypes
 from collections.abc import AsyncIterator
 from contextlib import aclosing
-from uuid import uuid4
+from uuid import NAMESPACE_URL, uuid4, uuid5
 
 from google.adk.agents.run_config import RunConfig, StreamingMode
 from google.adk.apps import App
@@ -20,6 +21,7 @@ from google.genai import types
 
 from core.config import Settings, get_settings
 from schemas.chat import MessageCreate
+from services.object_store import ObjectStoreError, get_object_store
 
 
 class SessionNotFoundError(LookupError):
@@ -28,6 +30,9 @@ class SessionNotFoundError(LookupError):
 
 class InvalidFileError(ValueError):
     pass
+
+
+ALLOWED_IMAGE_TYPES = {"image/gif", "image/jpeg", "image/png", "image/webp"}
 
 
 class AgentRuntime:
@@ -99,6 +104,48 @@ class AgentRuntime:
         await self.sessions.append_event(session=session, event=event)
         return await self.get_session(user_id, session_id)
 
+    async def hydrate_legacy_attachments(
+        self, user_id: str, session_id: str, session: Session
+    ) -> None:
+        """Copy inline images from older events to object storage on first history read."""
+        store = get_object_store()
+        for event in session.events:
+            if event.author != "user" or not event.content or not event.content.parts:
+                continue
+            metadata = dict(event.custom_metadata or {})
+            if metadata.get("attachments"):
+                continue
+            attachments: list[dict[str, object]] = []
+            for index, part in enumerate(event.content.parts):
+                blob = part.inline_data
+                if not blob or not blob.data:
+                    continue
+                attachment_id = uuid5(NAMESPACE_URL, f"hestia:{event.id}:{index}")
+                exists = await asyncio.to_thread(
+                    store.attachment_exists, user_id, session_id, attachment_id
+                )
+                if not exists:
+                    await asyncio.to_thread(
+                        store.put_attachment,
+                        user_id,
+                        session_id,
+                        attachment_id,
+                        blob.data,
+                        blob.mime_type or "application/octet-stream",
+                    )
+                extension = mimetypes.guess_extension(blob.mime_type or "") or ""
+                attachments.append(
+                    {
+                        "id": str(attachment_id),
+                        "name": f"uploaded-image-{index + 1}{extension}",
+                        "mime_type": blob.mime_type or "application/octet-stream",
+                        "size": len(blob.data),
+                    }
+                )
+            if attachments:
+                metadata["attachments"] = attachments
+                event.custom_metadata = metadata
+
     async def run(
         self,
         user_id: str,
@@ -110,26 +157,36 @@ class AgentRuntime:
         await self.get_session(user_id, session_id)
         lock = self._locks.setdefault((user_id, session_id), asyncio.Lock())
         async with lock:
+            content, attachments = await self._content(user_id, session_id, message)
+            metadata = dict(message.metadata)
+            if attachments:
+                metadata["attachments"] = attachments
             generator = self.runner.run_async(
                 user_id=user_id,
                 session_id=session_id,
-                new_message=self._content(message),
+                new_message=content,
                 state_delta=message.state_delta,
                 run_config=RunConfig(
                     streaming_mode=StreamingMode.SSE if stream else StreamingMode.NONE,
                     max_llm_calls=self.settings.max_llm_calls,
-                    custom_metadata=message.metadata or None,
+                    custom_metadata=metadata or None,
                 ),
             )
             async with aclosing(generator) as events:
                 async for event in events:
                     yield event
 
-    def _content(self, message: MessageCreate) -> types.Content:
+    async def _content(
+        self, user_id: str, session_id: str, message: MessageCreate
+    ) -> tuple[types.Content, list[dict[str, object]]]:
         parts: list[types.Part] = []
+        attachments: list[dict[str, object]] = []
         if message.text and message.text.strip():
             parts.append(types.Part(text=message.text.strip()))
         for file in message.files:
+            mime_type = file.mime_type.lower()
+            if mime_type not in ALLOWED_IMAGE_TYPES:
+                raise InvalidFileError(f"Unsupported image type for {file.name or 'file'}")
             try:
                 data = base64.b64decode(file.data, validate=True)
             except (binascii.Error, ValueError) as exc:
@@ -138,8 +195,28 @@ class AgentRuntime:
                 raise InvalidFileError(
                     f"{file.name or 'File'} exceeds {self.settings.max_inline_file_bytes} bytes"
                 )
-            parts.append(types.Part.from_bytes(data=data, mime_type=file.mime_type))
-        return types.Content(role="user", parts=parts)
+            attachment_id = uuid4()
+            try:
+                await asyncio.to_thread(
+                    get_object_store().put_attachment,
+                    user_id,
+                    session_id,
+                    attachment_id,
+                    data,
+                    mime_type,
+                )
+            except ObjectStoreError:
+                raise
+            attachments.append(
+                {
+                    "id": str(attachment_id),
+                    "name": file.name or "image",
+                    "mime_type": mime_type,
+                    "size": len(data),
+                }
+            )
+            parts.append(types.Part.from_bytes(data=data, mime_type=mime_type))
+        return types.Content(role="user", parts=parts), attachments
 
     async def close(self) -> None:
         await self.runner.close()

@@ -2,9 +2,15 @@ export const API_URL =
   process.env.NEXT_PUBLIC_HESTIA_API_URL?.replace(/\/$/, "") ??
   "http://127.0.0.1:8484/api/v1";
 
-export function generatedImageUrl(source: string) {
+export function generatedImageUrl(source: string, sessionId: string) {
   const match = source.match(/^hestia-image:\/\/([0-9a-f-]{36})$/i);
-  return match ? `${API_URL}/generated-images/${match[1]}` : source;
+  return match
+    ? `${API_URL}/sessions/${encodeURIComponent(sessionId)}/images/${match[1]}`
+    : source;
+}
+
+export function attachmentUrl(sessionId: string, path: string) {
+  return `${API_URL}/sessions/${encodeURIComponent(sessionId)}/${path.replace(/^\/+/, "")}`;
 }
 
 export type InlineFile = {
@@ -30,6 +36,14 @@ export type Session = {
   updated_at: number;
 };
 
+export type StoredAttachment = {
+  id: string;
+  name: string;
+  mime_type: string;
+  size: number;
+  url: string;
+};
+
 export type StoredEvent = {
   id: string;
   kind: string;
@@ -38,6 +52,7 @@ export type StoredEvent = {
   partial: boolean;
   text_delta?: string;
   timestamp: number;
+  attachments?: StoredAttachment[];
 };
 
 const headers = (idToken: string) => ({

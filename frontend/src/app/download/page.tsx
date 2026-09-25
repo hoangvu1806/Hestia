@@ -1,7 +1,17 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { MarketingShell } from "@/components/marketing-shell";
 import { SectionHero } from "@/components/section-hero";
+import { pageMetadata } from "@/lib/site";
+
+export const metadata: Metadata = pageMetadata({
+  path: "/download",
+  title: "Hestia mobile apps",
+  description:
+    "See the roadmap for Hestia on Android and iPhone, or use the complete evidence-based cooking experience in your browser today.",
+  keywords: ["cooking app", "food science app", "Hestia Android", "Hestia iPhone"],
+});
 
 export default function DownloadPage() {
   return <MarketingShell><SectionHero eyebrow="Hestia, everywhere" title="A calmer cooking companion is coming to mobile." copy="Native Android and iOS experiences are in development. The web app is available today on desktop, tablet, and mobile browsers." aside={<div className="release-stamp"><span>MOBILE</span><strong>2027</strong><small>Development roadmap</small></div>} />

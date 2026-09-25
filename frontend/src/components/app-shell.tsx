@@ -23,6 +23,7 @@ import { ThemeToggle } from "./theme-toggle";
 
 import type { Dictionary } from "@/i18n/dictionaries";
 import {
+  attachmentUrl,
   createSession,
   ensureSession,
   fileToInline,
@@ -31,6 +32,8 @@ import {
   type InlineFile,
   listSessions,
   type Session,
+  type StoredAttachment,
+  type StoredEvent,
   streamMessage,
   updateSession,
 } from "@/lib/hestia-api";
@@ -40,12 +43,89 @@ type Message = {
   role: "user" | "assistant";
   content: string;
   image?: string;
+  attachments?: StoredAttachment[];
   status?: string;
   streaming?: boolean;
   error?: boolean;
   progress?: Array<{ label: string; done: boolean }>;
   activity?: number;
 };
+
+function restoredMessages(events: StoredEvent[]): Message[] {
+  return events.flatMap<Message>((event) => {
+    const content = event.text_delta?.trim() || "";
+    const attachments = event.attachments || [];
+    if (event.author === "user" && (content || attachments.length)) {
+      return [{
+        id: event.id,
+        role: "user",
+        content,
+        attachments,
+      }];
+    }
+    if (event.author === "root_agent" && event.final && content) {
+      return [{ id: event.id, role: "assistant", content }];
+    }
+    return [];
+  });
+}
+
+function PrivateImage({
+  alt,
+  className,
+  height,
+  src,
+  width,
+}: {
+  alt: string;
+  className?: string;
+  height: number;
+  src: string;
+  width: number;
+}) {
+  const { user } = useAuth();
+  const [objectUrl, setObjectUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    const controller = new AbortController();
+    let createdUrl: string | null = null;
+    user.getIdToken()
+      .then((token) => fetch(src, {
+        headers: { Authorization: `Bearer ${token}` },
+        signal: controller.signal,
+      }))
+      .then((response) => {
+        if (!response.ok) throw new Error("image_load_failed");
+        return response.blob();
+      })
+      .then((blob) => {
+        createdUrl = URL.createObjectURL(blob);
+        setObjectUrl(createdUrl);
+      })
+      .catch((error: unknown) => {
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
+          setObjectUrl(null);
+        }
+      });
+    return () => {
+      controller.abort();
+      if (createdUrl) URL.revokeObjectURL(createdUrl);
+    };
+  }, [src, user]);
+
+  if (!objectUrl) return null;
+  return (
+    <Image
+      alt={alt}
+      className={className}
+      height={height}
+      src={objectUrl}
+      unoptimized
+      width={width}
+    />
+  );
+}
 
 const navItems = [
   ["chat", "chat", "/chat"],
@@ -290,15 +370,21 @@ export function AppShell({
 
   useEffect(() => {
     if (!user) return;
+    let active = true;
     const key = sessionKey(user.uid);
     const pending = user.getIdToken().then(async (token) => {
       const resolved = await ensureSession(token, localStorage.getItem(key));
-      const available = await listSessions(token);
-      setSessions([...available].sort((a, b) => b.updated_at - a.updated_at));
+      const [available, history] = await Promise.all([
+        listSessions(token),
+        getSessionEvents(token, resolved),
+      ]);
+      if (active) {
+        setSessions([...available].sort((a, b) => b.updated_at - a.updated_at));
+        setMessages(restoredMessages(history.events));
+      }
       return resolved;
     });
     connectionPromise.current = pending;
-    let active = true;
 
     pending
       .then((resolved) => {
@@ -358,22 +444,12 @@ export function AppShell({
   }
 
   async function openConversation(nextSession: Session) {
-    if (!user || busy || nextSession.id === sessionId.current) return;
+    if (!user || busy) return;
     setConnection("connecting");
     try {
       const token = await user.getIdToken();
       const result = await getSessionEvents(token, nextSession.id);
-      const restored = result.events.flatMap<Message>((event) => {
-        const content = event.text_delta?.trim();
-        if (!content) return [];
-        if (event.author === "user") {
-          return [{ id: event.id, role: "user" as const, content }];
-        }
-        if (event.author === "root_agent" && event.final) {
-          return [{ id: event.id, role: "assistant" as const, content }];
-        }
-        return [];
-      });
+      const restored = restoredMessages(result.events);
       sessionId.current = nextSession.id;
       setActiveSessionId(nextSession.id);
       connectionPromise.current = Promise.resolve(nextSession.id);
@@ -825,23 +901,46 @@ export function AppShell({
                         width={420}
                       />
                     ) : null}
+                    {message.attachments?.map((attachment) => (
+                      <PrivateImage
+                        alt={attachment.name}
+                        className="message-image"
+                        height={280}
+                        key={attachment.id}
+                        src={attachmentUrl(activeSessionId || "", attachment.url)}
+                        width={420}
+                      />
+                    ))}
                     {message.content ? (
                       <div className="message-text">
                         <ReactMarkdown
                           components={{
                             pre: MarkdownPre,
-                            img: ({ alt, src }) => (
-                              <figure className="generated-illustration">
-                                <Image
-                                  alt={alt || chat.aiIllustration}
-                                  height={768}
-                                  src={generatedImageUrl(typeof src === "string" ? src : "")}
-                                  unoptimized
-                                  width={1024}
-                                />
-                                <figcaption>{chat.aiIllustration}</figcaption>
-                              </figure>
-                            ),
+                            img: ({ alt, src }) => {
+                              const source = typeof src === "string" ? src : "";
+                              const generated = /^hestia-image:\/\//i.test(source);
+                              return (
+                                <figure className="generated-illustration">
+                                  {generated ? (
+                                    <PrivateImage
+                                      alt={alt || chat.aiIllustration}
+                                      height={768}
+                                      src={generatedImageUrl(source, activeSessionId || "")}
+                                      width={1024}
+                                    />
+                                  ) : (
+                                    <Image
+                                      alt={alt || ""}
+                                      height={768}
+                                      src={source}
+                                      unoptimized
+                                      width={1024}
+                                    />
+                                  )}
+                                  <figcaption>{chat.aiIllustration}</figcaption>
+                                </figure>
+                              );
+                            },
                             a: ({ children, href, title }) => {
                               const compound = title === "hestia-foodb"
                                 ? href?.match(/^https:\/\/foodb\.ca\/compounds\/(FDB\d+)$/i)

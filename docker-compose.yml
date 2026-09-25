@@ -1,0 +1,144 @@
+name: hestia
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-hestia}
+      POSTGRES_USER: ${POSTGRES_USER:-hestia}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the root .env file}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - data
+    security_opt:
+      - no-new-privileges:true
+
+  backend:
+    image: ${HESTIA_BACKEND_IMAGE:-hestia-backend:local}
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: runtime
+      cache_from:
+        - type=local,src=.docker-cache/backend
+      cache_to:
+        - type=local,dest=.docker-cache/backend,mode=max
+    restart: unless-stopped
+    env_file:
+      - ${HESTIA_ENV_FILE:-./backend/.env}
+    environment:
+      HESTIA_HOST: 0.0.0.0
+      HESTIA_PORT: 8484
+      HESTIA_CORS_ORIGINS: ${HESTIA_CORS_ORIGINS:-http://localhost:8080}
+      HESTIA_FIREBASE_CREDENTIALS_PATH: /run/secrets/firebase_service_account
+      HESTIA_SESSION_DATABASE_URL: ${HESTIA_SESSION_DATABASE_URL:?Set HESTIA_SESSION_DATABASE_URL in the root .env file}
+      HESTIA_S3_ENDPOINT_URL: ${HESTIA_S3_ENDPOINT_URL:?Set HESTIA_S3_ENDPOINT_URL in the root .env file}
+      HESTIA_S3_ACCESS_KEY_ID: ${HESTIA_S3_ACCESS_KEY_ID:?Set HESTIA_S3_ACCESS_KEY_ID in the root .env file}
+      HESTIA_S3_SECRET_ACCESS_KEY: ${HESTIA_S3_SECRET_ACCESS_KEY:?Set HESTIA_S3_SECRET_ACCESS_KEY in the root .env file}
+      HESTIA_S3_BUCKET: ${HESTIA_S3_BUCKET:-hestia}
+      HESTIA_S3_REGION: ${HESTIA_S3_REGION:-us-east-1}
+    secrets:
+      - firebase_service_account
+    volumes:
+      - generated_images:/app/.runtime/generated-images
+    expose:
+      - "8484"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8484/api/v1/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - app
+      - data
+
+  frontend:
+    image: ${HESTIA_FRONTEND_IMAGE:-hestia-frontend:local}
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: runtime
+      args:
+        NEXT_PUBLIC_HESTIA_API_URL: /api/v1
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://hestia.hoangvu.id.vn}
+        NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION: ${NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION:-}
+        NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY:?Set NEXT_PUBLIC_FIREBASE_API_KEY in the root .env file}
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN:?Set NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN in the root .env file}
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${NEXT_PUBLIC_FIREBASE_PROJECT_ID:?Set NEXT_PUBLIC_FIREBASE_PROJECT_ID in the root .env file}
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET:-}
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID:?Set NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID in the root .env file}
+        NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID:?Set NEXT_PUBLIC_FIREBASE_APP_ID in the root .env file}
+        NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID:-}
+      cache_from:
+        - type=local,src=.docker-cache/frontend
+      cache_to:
+        - type=local,dest=.docker-cache/frontend,mode=max
+    restart: unless-stopped
+    ports:
+      - "${HESTIA_HTTP_PORT:-8080}:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - app
+
+  food-data-import:
+    image: ${HESTIA_BACKEND_IMAGE:-hestia-backend:local}
+    profiles: ["tools"]
+    env_file:
+      - ${HESTIA_ENV_FILE:-./backend/.env}
+    environment:
+      HESTIA_SESSION_DATABASE_URL: ${HESTIA_SESSION_DATABASE_URL:?Set HESTIA_SESSION_DATABASE_URL in the root .env file}
+    command:
+      - python
+      - /app/scripts/migrate_food_intelligence_to_postgres.py
+      - --source
+      - /data/processed/foodb_compounds.sqlite3
+    volumes:
+      - ./backend/dataset:/data:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - data
+    restart: "no"
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+
+secrets:
+  firebase_service_account:
+    file: ${FIREBASE_SERVICE_ACCOUNT_FILE:-./backend/secrets/firebase/service-account.json}
+
+volumes:
+  postgres_data:
+  generated_images:
+
+networks:
+  app:
+  data:
+    internal: true

@@ -12,6 +12,7 @@ from schemas.session import (
 )
 from services.agent_runtime import AgentRuntime, SessionNotFoundError, get_agent_runtime
 from services.events import serialize_event
+from services.object_store import ObjectStoreError
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 Runtime = Annotated[AgentRuntime, Depends(get_agent_runtime)]
@@ -55,6 +56,10 @@ async def get_events(
         session = await runtime.get_session(user_id, session_id)
     except SessionNotFoundError as exc:
         raise not_found(exc) from exc
+    try:
+        await runtime.hydrate_legacy_attachments(user_id, session_id, session)
+    except ObjectStoreError as exc:
+        raise HTTPException(status_code=503, detail="Attachment storage unavailable.") from exc
     return SessionEventsResponse(
         session_id=session.id,
         events=[serialize_event(event) for event in session.events],

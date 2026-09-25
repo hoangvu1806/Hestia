@@ -30,6 +30,14 @@ class TokenUsage(BaseModel):
     reasoning_tokens: int = 0
 
 
+class Attachment(BaseModel):
+    id: str
+    name: str
+    mime_type: str
+    size: int
+    url: str
+
+
 class AgentEvent(BaseModel):
     id: str
     invocation_id: str
@@ -46,6 +54,7 @@ class AgentEvent(BaseModel):
     model: str | None = None
     error: str | None = None
     timestamp: float
+    attachments: list[Attachment] = Field(default_factory=list)
 
 
 class MessageResponse(BaseModel):

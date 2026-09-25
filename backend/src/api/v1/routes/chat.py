@@ -14,6 +14,7 @@ from services.agent_runtime import (
     get_agent_runtime,
 )
 from services.events import add_usage, serialize_event
+from services.object_store import ObjectStoreError
 
 router = APIRouter(prefix="/sessions/{session_id}/messages", tags=["chat"])
 logger = logging.getLogger(__name__)
@@ -57,6 +58,8 @@ async def create_message(
         raise HTTPException(status_code=404, detail="Session not found.") from exc
     except InvalidFileError as exc:
         raise HTTPException(status_code=422, detail="Invalid attachment.") from exc
+    except ObjectStoreError as exc:
+        raise HTTPException(status_code=503, detail="Attachment storage unavailable.") from exc
     except Exception as exc:
         logger.exception("Message execution failed")
         raise HTTPException(status_code=503, detail="Request could not be completed.") from exc
@@ -110,6 +113,9 @@ async def stream_message(
         )
     except InvalidFileError:
         yield sse("error", {"code": "invalid_attachment"})
+    except ObjectStoreError:
+        logger.exception("Attachment storage failed")
+        yield sse("error", {"code": "attachment_storage_unavailable"})
     except Exception:  # Streaming errors stay internal and use a stable public code.
         logger.exception("Message stream failed")
         yield sse("error", {"code": "request_failed"})
