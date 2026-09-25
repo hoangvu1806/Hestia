@@ -8,8 +8,8 @@ from .tools import (
     get_pubchem_hazard_summary,
     lookup_chemical_identity,
     lookup_openfoodtox,
-    search_reaction_literature,
     search_food_compounds,
+    search_reaction_literature,
 )
 
 food_analysis_agent = LlmAgent(

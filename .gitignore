@@ -11,6 +11,8 @@ CV/
 .env.test.local
 .env.production.local
 !.env.example
+*-firebase-adminsdk-*.json
+backend/secrets/
 
 # Temporary and cache directories
 .tmp/

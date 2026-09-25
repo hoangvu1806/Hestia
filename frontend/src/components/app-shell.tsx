@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import rehypeKatex from "rehype-katex";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import {
@@ -14,21 +15,24 @@ import {
   useState,
 } from "react";
 
+import { useAuth } from "./auth-provider";
 import { Brand } from "./brand";
 import { Icon } from "./icons";
-import { LocaleSwitcher } from "./locale-switcher";
 import { MarkdownPre } from "./mermaid-diagram";
 import { ThemeToggle } from "./theme-toggle";
 
-import type { Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries";
 import {
-  browserIdentity,
   createSession,
   ensureSession,
   fileToInline,
+  generatedImageUrl,
+  getSessionEvents,
   type InlineFile,
+  listSessions,
+  type Session,
   streamMessage,
+  updateSession,
 } from "@/lib/hestia-api";
 
 type Message = {
@@ -44,16 +48,55 @@ type Message = {
 };
 
 const navItems = [
-  ["chat", "chat"],
-  ["ingredients", "ingredients"],
-  ["saved", "bookmark"],
+  ["chat", "chat", "/chat"],
+  ["ingredients", "ingredients", "/ingredients"],
+  ["saved", "bookmark", "/home"],
 ] as const;
 
-const sessionKey = "hestia-session-id";
+const sessionKey = (uid: string) => `hestia-session-id:${uid}`;
 const foodbTag = /\[(?:<)?([^:\]<>\n]+):(FDB\d+)(?:>)?\]/gi;
 const foodbFoodTag = /\[(?:<)?([^:\]<>\n]+):(FOOD\d+)(?:>)?\]/gi;
 const markdownCode = /(```[\s\S]*?```|`[^`\n]+`)/g;
 const duplicatedMathOpen = /\$\s+\$(?=\s*\\(?:le|ge|lt|gt|approx|sim|pm|times|frac|text|circ))/g;
+const markdownLink = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)(?:\s+"[^"]*")?\)/g;
+
+type EvidenceSource = { href: string; label: string; host: string };
+
+function sessionTitle(session: Session) {
+  const title = session.state.title;
+  return typeof title === "string" && title.trim() ? title : "New conversation";
+}
+
+function relativeDate(timestamp: number) {
+  const date = new Date(timestamp * 1000);
+  const today = new Date();
+  if (date.toDateString() === today.toDateString()) return "Today";
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(date);
+}
+
+function normalizeMathNotation(markdown: string) {
+  return markdown
+    .replace(duplicatedMathOpen, "$")
+    .replace(
+      /^\s*\\?\[((?=\\(?:text|frac|dfrac|sqrt|mathrm|mathbf|operatorname))[^\n]+?)\\?\]\s*$/gm,
+      (_, formula: string) => `$$\n${formula.trim()}\n$$`,
+    )
+    .replace(/\\\[/g, () => "\n$$\n")
+    .replace(/\\\]/g, () => "\n$$\n")
+    .replace(/\\\((.+?)\\\)/g, (_, formula: string) => `$${formula}$`)
+    .replace(
+      /\(([^()\n]*\\(?:text|times|frac|dfrac|cdot|approx|mathrm)[^()\n]*)\)/g,
+      (_, formula: string) => `($${formula.trim()}$)`,
+    );
+}
+
+function markdownUrlTransform(value: string) {
+  if (/^hestia-image:\/\/[0-9a-f-]{36}$/i.test(value)) return value;
+  return defaultUrlTransform(value);
+}
 
 function decorateFoodbTags(markdown: string) {
   return markdown
@@ -61,8 +104,7 @@ function decorateFoodbTags(markdown: string) {
     .map((part, index) =>
       index % 2
         ? part
-        : part
-            .replace(duplicatedMathOpen, "$")
+        : normalizeMathNotation(part)
             .replace(foodbTag, (_, name: string, id: string) =>
               `[${name.trim()}](https://foodb.ca/compounds/${id.toUpperCase()} "hestia-foodb")`,
             )
@@ -121,6 +163,52 @@ function FoodbFood({ id, name }: { id: string; name: string }) {
   );
 }
 
+function sourceHost(href: string) {
+  try {
+    return new URL(href).hostname.replace(/^www\./, "");
+  } catch {
+    return "source";
+  }
+}
+
+function evidenceSources(markdown: string): EvidenceSource[] {
+  const sources = new Map<string, EvidenceSource>();
+  for (const match of markdown.matchAll(markdownLink)) {
+    const href = match[2];
+    if (!sources.has(href)) {
+      sources.set(href, {
+        href,
+        label: match[1].replace(/[*_`]/g, "").trim(),
+        host: sourceHost(href),
+      });
+    }
+  }
+  return [...sources.values()].slice(0, 8);
+}
+
+function EvidenceRail({ markdown, title }: { markdown: string; title: string }) {
+  const sources = evidenceSources(markdown);
+  if (!sources.length) return null;
+  return (
+    <aside aria-label={title} className="evidence-rail">
+      <div className="evidence-rail-title">
+        <span aria-hidden="true" />
+        <strong>{title}</strong>
+        <small>{sources.length}</small>
+      </div>
+      <div className="evidence-source-list">
+        {sources.map((source, index) => (
+          <a href={source.href} key={source.href} rel="noreferrer" target="_blank">
+            <span>{String(index + 1).padStart(2, "0")}</span>
+            <strong>{source.label}</strong>
+            <small>{source.host}</small>
+          </a>
+        ))}
+      </div>
+    </aside>
+  );
+}
+
 function progressiveText(onText: (text: string) => void) {
   let received = "";
   let displayed = "";
@@ -173,10 +261,19 @@ function progressiveText(onText: (text: string) => void) {
   };
 }
 
-export function AppShell({ dictionary, locale }: { dictionary: Dictionary; locale: Locale }) {
+export function AppShell({
+  dictionary,
+  initialPrompt = "",
+}: {
+  dictionary: Dictionary;
+  initialPrompt?: string;
+}) {
   const { brand, chat, composer, header, profile, sidebar, welcome } = dictionary;
+  const { signOut, user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
-  const [draft, setDraft] = useState("");
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [draft, setDraft] = useState(initialPrompt);
   const [pendingFile, setPendingFile] = useState<InlineFile | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -187,23 +284,27 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
   const textarea = useRef<HTMLTextAreaElement>(null);
   const conversation = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const userId = useRef<string | null>(null);
   const sessionId = useRef<string | null>(null);
   const connectionPromise = useRef<Promise<string> | null>(null);
   const activeRequest = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    const id = browserIdentity();
-    const storedSession = localStorage.getItem(sessionKey);
-    userId.current = id;
-    const pending = ensureSession(id, storedSession);
+    if (!user) return;
+    const key = sessionKey(user.uid);
+    const pending = user.getIdToken().then(async (token) => {
+      const resolved = await ensureSession(token, localStorage.getItem(key));
+      const available = await listSessions(token);
+      setSessions([...available].sort((a, b) => b.updated_at - a.updated_at));
+      return resolved;
+    });
     connectionPromise.current = pending;
     let active = true;
 
     pending
       .then((resolved) => {
         sessionId.current = resolved;
-        localStorage.setItem(sessionKey, resolved);
+        setActiveSessionId(resolved);
+        localStorage.setItem(key, resolved);
         if (active) setConnection("ready");
       })
       .catch(() => {
@@ -214,7 +315,7 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
       active = false;
       activeRequest.current?.abort();
     };
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -229,21 +330,58 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
     if (sessionId.current) return sessionId.current;
     if (connectionPromise.current) return connectionPromise.current;
 
-    const id = userId.current || browserIdentity();
-    userId.current = id;
+    if (!user) throw new Error("authentication_required");
     setConnection("connecting");
-    const pending = ensureSession(id, localStorage.getItem(sessionKey));
+    const key = sessionKey(user.uid);
+    const pending = user.getIdToken().then((token) =>
+      ensureSession(token, localStorage.getItem(key)),
+    );
     connectionPromise.current = pending;
     try {
       const resolved = await pending;
       sessionId.current = resolved;
-      localStorage.setItem(sessionKey, resolved);
+      setActiveSessionId(resolved);
+      localStorage.setItem(key, resolved);
       setConnection("ready");
       return resolved;
     } catch (error) {
       connectionPromise.current = null;
       setConnection("error");
       throw error;
+    }
+  }
+
+  async function refreshSessions(token?: string) {
+    if (!user) return;
+    const available = await listSessions(token || await user.getIdToken());
+    setSessions([...available].sort((a, b) => b.updated_at - a.updated_at));
+  }
+
+  async function openConversation(nextSession: Session) {
+    if (!user || busy || nextSession.id === sessionId.current) return;
+    setConnection("connecting");
+    try {
+      const token = await user.getIdToken();
+      const result = await getSessionEvents(token, nextSession.id);
+      const restored = result.events.flatMap<Message>((event) => {
+        const content = event.text_delta?.trim();
+        if (!content) return [];
+        if (event.author === "user") {
+          return [{ id: event.id, role: "user" as const, content }];
+        }
+        if (event.author === "root_agent" && event.final) {
+          return [{ id: event.id, role: "assistant" as const, content }];
+        }
+        return [];
+      });
+      sessionId.current = nextSession.id;
+      setActiveSessionId(nextSession.id);
+      connectionPromise.current = Promise.resolve(nextSession.id);
+      localStorage.setItem(sessionKey(user.uid), nextSession.id);
+      setMessages(restored);
+      setConnection("ready");
+    } catch {
+      setConnection("error");
     }
   }
 
@@ -298,6 +436,7 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
   async function send(text = draft) {
     const cleanText = text.trim();
     if (busy || (!cleanText && !pendingFile)) return;
+    const isFirstMessage = messages.length === 0;
 
     const userMessageId = crypto.randomUUID();
     const assistantMessageId = crypto.randomUUID();
@@ -322,7 +461,13 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
     let renderer: ReturnType<typeof progressiveText> | null = null;
     try {
       const currentSession = await activeSession();
-      const currentUser = userId.current || browserIdentity();
+      if (!user) throw new Error("authentication_required");
+      const idToken = await user.getIdToken();
+      if (isFirstMessage && cleanText) {
+        await updateSession(idToken, currentSession, {
+          title: cleanText.length > 54 ? `${cleanText.slice(0, 51).trim()}…` : cleanText,
+        });
+      }
       const controller = new AbortController();
       activeRequest.current = controller;
       let streamedText = "";
@@ -355,13 +500,16 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
         ) {
           return chat.mappingCompounds;
         }
+        if (names.includes("search_nutrient_retention")) return chat.checkingRetention;
+        if (names.includes("solve_food_chemistry")) return chat.solvingChemistry;
+        if (names.includes("generate_food_illustration")) return chat.generatingIllustration;
         if (names.includes("finish_task")) return chat.synthesizingEvidence;
         const name = names[0] || "evidence";
         return chat.usingEvidenceTool.replace("{tool}", name.replaceAll("_", " "));
       };
 
       await streamMessage(
-        currentUser,
+        idToken,
         currentSession,
         { text: cleanText, files: file ? [file] : [] },
         async ({ event, data }) => {
@@ -460,6 +608,7 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
     } finally {
       activeRequest.current = null;
       setBusy(false);
+      if (user) void refreshSessions();
       textarea.current?.focus();
     }
   }
@@ -474,12 +623,14 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
     setPreview(null);
 
     try {
-      const currentUser = userId.current || browserIdentity();
-      userId.current = currentUser;
-      const nextSession = await createSession(currentUser);
+      if (!user) throw new Error("authentication_required");
+      const token = await user.getIdToken();
+      const nextSession = await createSession(token, { title: "New conversation" });
       sessionId.current = nextSession;
+      setActiveSessionId(nextSession);
       connectionPromise.current = Promise.resolve(nextSession);
-      localStorage.setItem(sessionKey, nextSession);
+      localStorage.setItem(sessionKey(user.uid), nextSession);
+      await refreshSessions(token);
       setConnection("ready");
     } catch {
       setConnection("error");
@@ -559,11 +710,11 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
 
         <nav aria-label={sidebar.workspace} className="sidebar-nav">
           <p className="nav-label">{sidebar.workspace}</p>
-          {navItems.map(([key, icon], index) => (
-            <button className={index === 0 ? "nav-item active" : "nav-item"} key={key} type="button">
+          {navItems.map(([key, icon, href], index) => (
+            <Link className={index === 0 ? "nav-item active" : "nav-item"} href={href} key={key}>
               <Icon height={18} name={icon} width={18} />
               {sidebar[key]}
-            </button>
+            </Link>
           ))}
         </nav>
 
@@ -572,22 +723,30 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
             <span>{sidebar.recent}</span>
             <Icon height={15} name="clock" width={15} />
           </div>
-          {[sidebar.historyOne, sidebar.historyTwo, sidebar.historyThree].map((item, index) => (
-            <button className="history-item" key={item} type="button">
-              <span>{item}</span>
-              <small>{index === 0 ? "Today" : index === 1 ? "Yesterday" : "May 12"}</small>
+          {sessions.length ? sessions.slice(0, 12).map((item) => (
+            <button
+              className={item.id === activeSessionId ? "history-item active" : "history-item"}
+              key={item.id}
+              onClick={() => void openConversation(item)}
+              type="button"
+            >
+              <span>{sessionTitle(item)}</span>
+              <small>{relativeDate(item.updated_at)}</small>
             </button>
-          ))}
+          )) : <p className="history-empty">Your conversations will appear here.</p>}
         </section>
 
         <div className="sidebar-footer">
-          <button className="nav-item" type="button">
+          <Link className="nav-item" href="/settings">
             <Icon height={18} name="settings" width={18} />
             {sidebar.settings}
-          </button>
+          </Link>
           <div className="profile">
-            <span className="avatar">HC</span>
-            <span><strong>{profile.name}</strong><small>{profile.status}</small></span>
+            {user?.photoURL ? (
+              <Image alt="" className="avatar-photo" height={34} src={user.photoURL} unoptimized width={34} />
+            ) : <span className="avatar">{user?.displayName?.slice(0, 2).toUpperCase() || "HC"}</span>}
+            <span><strong>{user?.displayName || profile.name}</strong><small>{user?.email || profile.status}</small></span>
+            <button aria-label="Sign out" className="profile-signout" onClick={() => void signOut()} type="button">↗</button>
           </div>
         </div>
       </aside>
@@ -602,9 +761,13 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
             </span>
           </div>
           <div className="header-actions">
-            <LocaleSwitcher label={header.language} locale={locale} />
+            <Link className="locale-button" href="/home">HOME</Link>
             <ThemeToggle label={header.theme} />
-            <span className="header-avatar">HC</span>
+            <Link aria-label="Open chat settings" className="header-account-link" href="/settings">
+              {user?.photoURL ? (
+                <Image alt="" className="header-avatar photo" height={38} src={user.photoURL} unoptimized width={38} />
+              ) : <span className="header-avatar">{user?.displayName?.slice(0, 2).toUpperCase() || "HC"}</span>}
+            </Link>
           </div>
         </header>
 
@@ -645,9 +808,9 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
                 <article className={`message ${message.role}`} key={message.id}>
                   <div className="message-author">
                     {message.role === "assistant" ? (
-                      <Image alt="Hestia" height={30} src="/logo.png" width={30} />
+                      <Image alt="Hestia" height={30} src="/logo-transparent.png" width={30} />
                     ) : (
-                      <span>HC</span>
+                      <span>{user?.displayName?.slice(0, 2).toUpperCase() || "HC"}</span>
                     )}
                     <strong>{message.role === "assistant" ? chat.assistant : chat.you}</strong>
                   </div>
@@ -667,6 +830,18 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
                         <ReactMarkdown
                           components={{
                             pre: MarkdownPre,
+                            img: ({ alt, src }) => (
+                              <figure className="generated-illustration">
+                                <Image
+                                  alt={alt || chat.aiIllustration}
+                                  height={768}
+                                  src={generatedImageUrl(typeof src === "string" ? src : "")}
+                                  unoptimized
+                                  width={1024}
+                                />
+                                <figcaption>{chat.aiIllustration}</figcaption>
+                              </figure>
+                            ),
                             a: ({ children, href, title }) => {
                               const compound = title === "hestia-foodb"
                                 ? href?.match(/^https:\/\/foodb\.ca\/compounds\/(FDB\d+)$/i)
@@ -680,15 +855,23 @@ export function AppShell({ dictionary, locale }: { dictionary: Dictionary; local
                               if (food) {
                                 return <FoodbFood id={food[1].toUpperCase()} name={String(children)} />;
                               }
-                              return <a href={href} rel="noreferrer" target="_blank">{children}</a>;
+                              return (
+                                <a className="evidence-link" href={href} rel="noreferrer" target="_blank">
+                                  {children}<span aria-hidden="true">↗</span>
+                                </a>
+                              );
                             },
                           }}
                           rehypePlugins={[[rehypeKatex, { output: "htmlAndMathml", strict: false }]]}
                           remarkPlugins={[remarkGfm, remarkMath]}
                           skipHtml
+                          urlTransform={markdownUrlTransform}
                         >
                           {decorateFoodbTags(message.content)}
                         </ReactMarkdown>
+                        {message.role === "assistant" && !message.streaming ? (
+                          <EvidenceRail markdown={message.content} title={chat.sourcesUsed} />
+                        ) : null}
                       </div>
                     ) : null}
                     {message.progress?.length ? (

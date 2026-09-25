@@ -5,7 +5,6 @@ import base64
 import binascii
 from collections.abc import AsyncIterator
 from contextlib import aclosing
-from pathlib import Path
 from uuid import uuid4
 
 from google.adk.agents.run_config import RunConfig, StreamingMode
@@ -15,8 +14,8 @@ from google.adk.events import Event
 from google.adk.events.event_actions import EventActions
 from google.adk.memory import InMemoryMemoryService
 from google.adk.runners import Runner
+from google.adk.sessions.database_session_service import DatabaseSessionService
 from google.adk.sessions.session import Session
-from google.adk.sessions.sqlite_session_service import SqliteSessionService
 from google.genai import types
 
 from core.config import Settings, get_settings
@@ -36,8 +35,14 @@ class AgentRuntime:
         from agents.food_risk_agent import root_agent
 
         self.settings = settings
-        Path(settings.session_db_path).parent.mkdir(parents=True, exist_ok=True)
-        self.sessions = SqliteSessionService(str(settings.session_db_path))
+        self.sessions = DatabaseSessionService(
+            settings.session_database_url,
+            pool_size=3,
+            max_overflow=2,
+            pool_timeout=10,
+            pool_recycle=1800,
+            connect_args={"timeout": 10, "command_timeout": 60},
+        )
         self.runner = Runner(
             app=App(name=settings.adk_app_name, root_agent=root_agent),
             session_service=self.sessions,
@@ -138,6 +143,9 @@ class AgentRuntime:
 
     async def close(self) -> None:
         await self.runner.close()
+        close = getattr(self.sessions, "close", None)
+        if close is not None:
+            await close()
 
 
 _runtime: AgentRuntime | None = None

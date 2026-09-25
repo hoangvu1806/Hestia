@@ -1,245 +1,233 @@
-<div align="center">
-
 # Hestia
 
-**Evidence-Grounded Multimodal Culinary Assistant & Chemical Hazard Screening**
+Hestia is a web application for ingredient research, cooking guidance, and evidence-based food-safety screening. It combines a static Next.js client with a FastAPI API, Firebase authentication, PostgreSQL-backed food data, and a Google ADK agent runtime.
 
-[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688.svg)](https://fastapi.tiangolo.com/)
-[![Google ADK](https://img.shields.io/badge/Google%20ADK-2.2%2B-4285F4.svg)](https://github.com/google/adk)
-[![Next.js 16](https://img.shields.io/badge/Next.js-16%20App%20Router-black.svg)](https://nextjs.org/)
-[![React 19](https://img.shields.io/badge/React-19-61DAFB.svg)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6.svg)](https://www.typescriptlang.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+The project is designed to distinguish observed facts, database matches, and model inference. Chemical records are treated as compositional evidence, not as proof that a reaction occurred or that a serving is safe.
 
-[Architecture](#system-architecture) • [Key Features](#key-features) • [Quickstart](#quickstart) • [Multi-Agent Design](#multi-agent-system) • [API & Streaming](#api--event-streaming)
+## What is included
 
-</div>
+- Multimodal chat with image attachments and Server-Sent Events streaming
+- Ingredient search across TheMealDB, USDA FoodData Central, and a local FooDB index
+- Food-compound profiles with explicit quantified and reported evidence labels
+- Firebase ID-token verification and per-user session isolation
+- PostgreSQL persistence for conversations and food-intelligence data
+- Specialist agents for food chemistry, safety analysis, and literature retrieval
+- English and Vietnamese interface preferences, light and dark themes
+- Static frontend export suitable for deployment behind any static file server
 
----
-
-## Overview
-
-**Hestia** is an evidence-grounded culinary and food-safety assistant designed to solve a fundamental flaw in modern AI kitchen companions: **large language model hallucination of culinary risks and non-existent chemical reactions.**
-
-Instead of letting LLMs guess cooking chemistry or generate vague warnings, Hestia enforces **evidence-grounded screening**:
-1. **Multimodal Recognition**: Identifies ingredients and physical states directly from user photos.
-2. **Deterministic Entity Matching**: Resolves ingredients against canonical knowledge bases (**FooDB** with 70,000+ compounds, **EFSA OpenFoodTox 3.0**, and **PubChem**).
-3. **Multi-Agent Orchestration**: Deploys specialized agents under strict tool budgets to verify candidate chemical transformations and pathogen survival via scientific literature (**Europe PMC**, **Semantic Scholar**).
-4. **Auditable Answer Contract**: Provides practical culinary guidance with verifiable FooDB citation tags (`[<Compound:FDBxxxxxx>]`) and dynamic **Mermaid.js** hazard pathway diagrams.
-
-> **Principle**: *Evidence-grounded screening, not ungrounded molecular simulation. Without empirical evidence, reaction yield, and intake exposure data, the system never fabricates a chemical verdict.*
-
----
-
-## System Architecture
+## Architecture
 
 ```text
-                                  User Client
-                        (Photo + Intended Cooking Dish)
-                                      │
-                                      ▼
-                      ┌───────────────────────────────┐
-                      │    Next.js 16 App Router      │
-                      │  - Multimodal Upload & Chat   │
-                      │  - Mermaid Reaction Visualizer│
-                      │  - Bilingual i18n (EN / VI)   │
-                      └───────────────┬───────────────┘
-                                      │  Server-Sent Events (SSE) Stream
-                                      ▼
-                      ┌───────────────────────────────┐
-                      │        FastAPI Backend        │
-                      │  - Session Manager (SQLite)   │
-                      │  - Event Serialization Engine │
-                      └───────────────┬───────────────┘
-                                      │
-                                      ▼
-                      ┌───────────────────────────────┐
-                      │    Google ADK Root Agent      │
-                      │  - Multimodal Vision (LiteLLM)│
-                      │  - Conversational Guardrails  │
-                      └───────┬───────────────┬───────┘
-                              │               │
-                 (Concrete Cooking/Risk Case) │ (Explicit Literature Query)
-                              ▼               ▼
-                  ┌───────────────────────┐  ┌───────────────────────┐
-                  │ Food Analysis Agent   │  │   Research Agent      │
-                  │ (Strict 4-tool budget)│  │ (Ai2 Asta / MCP)      │
-                  └───┬───────────────┬───┘  └───────────┬───────────┘
-                      │               │                  │
-                      ▼               ▼                  ▼
-              ┌──────────────┐ ┌──────────────┐ ┌───────────────────┐
-              │ FooDB SQLite │ │ OpenFoodTox  │ │ Europe PMC /      │
-              │ (Composition)│ │ EFSA Hazard  │ │ Semantic Scholar  │
-              └──────────────┘ └──────────────┘ └───────────────────┘
+Browser
+  │
+  ├── Firebase Authentication
+  │
+  └── Next.js static application (port 3434)
+          │
+          ├── REST: sessions, food library, generated images
+          └── SSE: streamed chat events
+                  │
+                  ▼
+             FastAPI (port 8484)
+                  │
+                  ├── Google ADK agent runtime
+                  ├── PostgreSQL sessions
+                  ├── FooDB / OpenFoodTox index
+                  └── External data and literature services
 ```
 
----
-
-## Key Features
-
-- **Multimodal Ingredient Vision**: Analyzes ingredient photos, preserving uncertainty (e.g. distinguishing spring onions vs leeks) and physical states (raw, blanched, minced, charred).
-- **Hierarchical Multi-Agent Architecture**:
-  - `root_agent`: Direct conversational orchestrator; handles casual questions, dish brainstorming, and compiles final natural answers.
-  - `food_analysis_agent`: Chemistry specialist enforcing a strict 4-tool budget to avoid runaway loops.
-  - `research_agent`: Literature retrieval specialist querying Semantic Scholar via Ai2 Asta MCP.
-- **Conservative Entity Resolution**: Custom fuzzy matching (normalized SequenceMatcher + token subset containment with safety score margins) mapping user ingredient names to FooDB entries without false collapsing.
-- **Real-Time Streaming UX**: Low-latency Server-Sent Events (SSE) delivering `text_delta`, `tool_call`, `tool_result`, and `done` state updates.
-- **Interactive Visual Pathway**: Automatically generates Mermaid diagrams for supported hazardous pathways (e.g., acrylamide formation, solanine accumulation, cross-contamination risks).
-- **Production-Grade Monorepo**: Type-safe Next.js frontend paired with async FastAPI backend, tested with Pytest and strict TypeScript compiler.
-
----
-
-## Monorepo Structure
+## Repository layout
 
 ```text
-Hestia/
-├── backend/                  # FastAPI & Google ADK backend
-│   ├── adk_agents/           # ADK multi-agent configuration
-│   ├── dataset/              # FooDB & OpenFoodTox datasets & docs
-│   ├── experiments/          # CLI tools (image_to_compounds.py)
-│   ├── src/
-│   │   ├── agents/           # Production multi-agent definitions
-│   │   ├── api/v1/           # Versioned REST & SSE routes
-│   │   ├── core/             # Configuration & environment settings
-│   │   ├── schemas/          # Pydantic v2 request/response models
-│   │   ├── services/         # Agent runtime, sessions, and events
-│   │   └── main.py           # Application entrypoint
-│   ├── tests/                # Pytest test suite
-│   ├── pyproject.toml        # Backend dependencies & metadata
-│   └── README.md             # Backend detailed documentation
-├── frontend/                 # Next.js 16 Web application
-│   ├── src/
-│   │   ├── app/[locale]/     # Statically generated localized routes
-│   │   ├── components/       # Chat shell, Mermaid viewer, theme toggle
-│   │   ├── i18n/             # English & Vietnamese translation dicts
-│   │   └── lib/              # SSE streaming client & API adapters
-│   ├── package.json          # Frontend dependencies & scripts
-│   └── README.md             # Frontend detailed documentation
-├── docs/                     # Product Whitepapers & Architecture Specs
-│   ├── hestia-core-agent-idea.md
-│   └── hestia_chemistry_first_whitepaper_prd_v2.html
-└── README.md                 # Project root documentation
+backend/
+  adk_agents/       ADK development entrypoint
+  dataset/          Dataset documentation and local import inputs
+  scripts/          Database migration utilities
+  src/
+    agents/         Production agent definitions and tools
+    api/v1/         HTTP and SSE routes
+    auth/           Firebase token verification
+    core/           Application configuration
+    schemas/        Public request and response models
+    services/       Agent, session, event, and food-library services
+  tests/            Backend test suite
+frontend/
+  public/           Static assets
+  src/app/          Next.js routes and global styles
+  src/components/   Application and marketing components
+  src/i18n/         Interface dictionaries
+  src/lib/          Firebase and API clients
+docs/               Product and architecture notes
 ```
 
----
+## Requirements
 
-## Quickstart
+- Python 3.11 or later
+- Node.js 20 or later
+- npm
+- PostgreSQL
+- A Firebase project with Google sign-in enabled
+- Credentials for the configured model provider
 
-### Prerequisites
-- Python 3.11 or higher
-- Node.js 20 or higher & npm
-- Git
+The food library can use the public TheMealDB test key and USDA `DEMO_KEY` for local development. Production deployments should use their own API keys and respect each provider's rate limits and terms.
 
-### 1. Backend Setup
+## Local setup
+
+### 1. Configure the backend
 
 ```powershell
 cd backend
-
-# Copy environment template
 Copy-Item .env.example .env
-
-# Install dependencies in editable mode
 python -m pip install -e ".[dev]"
+```
 
-# Run FastAPI server (runs on port 8484)
+Place the Firebase Admin SDK service-account file at:
+
+```text
+backend/secrets/firebase/service-account.json
+```
+
+The `backend/secrets/` directory is ignored by Git. Do not commit service-account credentials. A different location can be configured with `HESTIA_FIREBASE_CREDENTIALS_PATH`; relative paths are resolved from `backend/`.
+
+Set the required values in `backend/.env`:
+
+```dotenv
+HESTIA_SESSION_DATABASE_URL=postgresql+asyncpg://USER:PASSWORD@HOST:5432/DATABASE
+HESTIA_FIREBASE_PROJECT_ID=your-firebase-project-id
+HESTIA_FIREBASE_CREDENTIALS_PATH=secrets/firebase/service-account.json
+
+CUSTOM_API_KEY=your-provider-key
+CUSTOM_BASE_URL=https://openrouter.ai/api/v1
+CUSTOM_LLM_MODEL_1=provider/vision-capable-model
+CUSTOM_LLM_MODEL_2=provider/reasoning-model
+CUSTOM_IMAGE_GEN_MODEL_NAME=provider/image-model
+
+ASTA_API_KEY=your-asta-key
+```
+
+`CUSTOM_LLM_MODEL_1` must support image input and tool calling. The database password must be URL-encoded when it contains reserved characters.
+
+Start the API:
+
+```powershell
 python -m uvicorn main:app --app-dir src --host 0.0.0.0 --port 8484 --reload --reload-dir src
 ```
 
-> The API health check is accessible at `http://localhost:8484/api/v1/health` and Swagger UI at `http://localhost:8484/docs`.
+Useful endpoints:
 
-### 2. Frontend Setup
+- API documentation: `http://127.0.0.1:8484/docs`
+- Health check: `http://127.0.0.1:8484/api/v1/health`
+
+### 2. Configure the frontend
 
 ```powershell
 cd frontend
-
-# Copy environment template
 Copy-Item .env.example .env.local
-
-# Install dependencies
 npm install
+```
 
-# Run development server (serves on port 3434)
+Fill in the public Firebase web configuration in `frontend/.env.local`. These values identify the Firebase web application; they are separate from the private Admin SDK service-account file.
+
+```dotenv
+NEXT_PUBLIC_HESTIA_API_URL=http://127.0.0.1:8484/api/v1
+NEXT_PUBLIC_FIREBASE_API_KEY=...
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
+NEXT_PUBLIC_FIREBASE_APP_ID=...
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=...
+```
+
+Build and serve the static application:
+
+```powershell
 npm run dev
 ```
 
-Open `http://localhost:3434` in your browser.
+Open `http://localhost:3434`.
 
----
+`npm run dev` performs a production-style static export before serving `frontend/out/`. Use `npm run build` when only the export is required and `npm run start` to serve an existing export.
 
-## Multi-Agent System
+## Database import
 
-Hestia employs a **Google ADK** multi-agent setup configured in `backend/src/agents/food_risk_agent`:
+The running application reads food-intelligence data from PostgreSQL. Local SQLite files are import inputs only and are not used at runtime.
 
-| Agent | Model Role | Primary Responsibility |
-| :--- | :--- | :--- |
-| **`root_agent`** | Multimodal Vision (`CUSTOM_LLM_MODEL_1`) | Natural language dialogue, image perception, intent routing, and synthesizing the final culinary response. |
-| **`food_analysis_agent`** | Reasoning Specialist (`CUSTOM_LLM_MODEL_2`) | Investigates chemical profiles, queries FooDB SQLite, checks EFSA OpenFoodTox endpoints, and enforces tool budget. |
-| **`research_agent`** | Academic Specialist (`CUSTOM_LLM_MODEL_2`) | Traverses scientific literature via Semantic Scholar / Ai2 Asta MCP when explicit research citations are requested. |
-
-### Tool Budgeting & Guardrails
-To prevent runaway loops and uncontrolled token usage, `food_analysis_agent` implements callback hooks:
-- **`_count_evidence_tool`**: Tracks evidence retrieval count in session state.
-- **`_finish_when_budget_used`**: Enforces a hard limit of 4 tool calls per turn, automatically switching to `finish_task` when the budget is reached.
-
----
-
-## API & Event Streaming
-
-Chat interactions connect via Server-Sent Events (SSE) at:
-`POST /api/v1/sessions/{session_id}/messages/stream`
-
-### Stream Event Contract:
-- `ready`: Session initialized.
-- `text_delta`: Incremental tokens of the final synthesized answer.
-- `tool_call`: Dispatched tool action metadata.
-- `tool_result`: Returned evidence from scientific tools.
-- `error`: Structured failure state without exposing raw stack traces.
-- `done`: Emits aggregate token usage and final session snapshot.
-
----
-
-## Datasets & Indexing
-
-1. **FooDB**: Over 70,000 food-to-compound relationships.
-2. **EFSA OpenFoodTox 3.0**: European Food Safety Authority chemical hazards database.
-
-To rebuild local SQLite indices from raw archives:
 ```powershell
 cd backend
-python experiments/image_to_compounds.py build-index --force
-python experiments/image_to_compounds.py build-hazards --force
+$env:PYTHONPATH = "src"
+python scripts/migrate_food_intelligence_to_postgres.py `
+  --source dataset/processed/foodb_compounds.sqlite3
 ```
-See [`backend/dataset/README.md`](backend/dataset/README.md) for licensing and source details.
 
----
+The migration stages the imported tables in a separate schema, validates row counts, builds indexes, and then swaps the schema into place. See [backend/dataset/README.md](backend/dataset/README.md) for source and licensing notes.
 
-## Testing & Quality Assurance
+## API overview
 
-### Run Backend Tests:
+All application routes are under `/api/v1`.
+
+```text
+GET    /health
+GET    /library/discover
+GET    /library/search
+GET    /library/meals/{meal_id}
+GET    /library/ingredients/profile
+POST   /sessions
+GET    /sessions
+GET    /sessions/{session_id}
+PATCH  /sessions/{session_id}
+DELETE /sessions/{session_id}
+GET    /sessions/{session_id}/events
+POST   /sessions/{session_id}/messages
+POST   /sessions/{session_id}/messages/stream
+GET    /generated-images/{image_id}
+```
+
+Authenticated routes expect a Firebase ID token:
+
+```http
+Authorization: Bearer <firebase-id-token>
+```
+
+The streaming message endpoint emits named SSE events such as `ready`, `text_delta`, `tool_call`, `tool_result`, `error`, and `done`.
+
+## Development checks
+
+Backend:
+
 ```powershell
 cd backend
-python -m pytest tests
+$env:PYTEST_DISABLE_PLUGIN_AUTOLOAD = "1"
+python -m pytest tests -q
+python -m ruff check src tests
 ```
 
-### Run Frontend Type Check & Lint:
+Frontend:
+
 ```powershell
 cd frontend
 npm run lint
+npm run build
 ```
 
----
+## Security notes
 
-## Scientific Acknowledgments
+- Keep `.env`, `.env.local`, Firebase Admin SDK credentials, and database exports out of version control.
+- Rotate a service-account key immediately if it is exposed in a commit, build artifact, log, or screenshot.
+- The frontend Firebase configuration is public by design; access control must be enforced by Firebase rules and backend token verification.
+- Generated analysis is not a substitute for laboratory testing, medical advice, or official food-safety guidance.
 
-Hestia's evidence-grounding methodology is inspired by research in food informatics and chemical reasoning:
-- **[FoodAtlas](https://github.com/AI-Institute-Food-Systems/foodatlas)**: Grounded food knowledge graphs.
-- **[ChemCrow](https://github.com/ur-whitelab/chemcrow-public)**: Tool-grounded chemistry reasoning.
-- **[WFSR Food Safety LLM](https://github.com/WFSRDataScience/LLMForChemicalFoodSafetyHazardExtraction)**: Chemical food-safety hazard extraction from scientific literature.
-- **[NICE-Food KG](https://github.com/rivm-syso/nicekg_processing)**: Connecting nutritional and contaminant data.
+## Data sources
 
----
+- [FooDB](https://foodb.ca/) for food and compound relationships
+- [USDA FoodData Central](https://fdc.nal.usda.gov/) for nutrient records
+- [TheMealDB](https://www.themealdb.com/) for recipes and ingredient imagery
+- [EFSA OpenFoodTox](https://www.efsa.europa.eu/en/data-report/chemical-hazards-database-openfoodtox) for toxicology records
+- [PubChem](https://pubchem.ncbi.nlm.nih.gov/) for chemical identity and hazard references
+- [Semantic Scholar](https://www.semanticscholar.org/) through Ai2 Asta for literature retrieval
 
-## Disclaimer
+Review the terms and attribution requirements of each source before redistributing data or deploying the application publicly.
 
-*Hestia is an experimental research and educational tool. It provides evidence-grounded screening based on public scientific datasets, not clinical or laboratory diagnostics. Always follow certified public food-safety guidelines when handling and preparing food.*
+## Project status
+
+Hestia is under active development. Interfaces, database schemas, and agent behavior may change without backward-compatibility guarantees.

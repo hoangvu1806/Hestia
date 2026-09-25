@@ -7,6 +7,7 @@ __pycache__/
 htmlcov/
 .env
 .runtime/
+secrets/
 
 # Downloaded/generated datasets (keep dataset/README.md tracked).
 dataset/raw/
