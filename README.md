@@ -1,84 +1,143 @@
-# Hestia
+# Hestia — Evidence-Based AI Culinary Intelligence & Food Science
 
-Hestia is a web application for ingredient research, cooking guidance, and evidence-based food-safety screening. It combines a static Next.js client with a FastAPI API, Firebase authentication, PostgreSQL-backed food data, private S3-compatible image storage, and a Google ADK agent runtime.
+[![Next.js](https://img.shields.io/badge/Next.js-16.2.0-black?style=flat&logo=next.js)](https://nextjs.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![Google ADK](https://img.shields.io/badge/Google-ADK%20Agents-4285F4?style=flat&logo=google)](https://github.com/google/agent-development-kit)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=flat&logo=postgresql)](https://www.postgresql.org/)
+[![Firebase](https://img.shields.io/badge/Firebase-Auth-FFCA28?style=flat&logo=firebase)](https://firebase.google.com/)
+[![MinIO](https://img.shields.io/badge/MinIO-S3%20Storage-C72C48?style=flat&logo=minio)](https://min.io/)
+[![SEO Optimized](https://img.shields.io/badge/SEO-Schema.org%20%7C%20JSON--LD-success)](https://schema.org)
+[![LLMs.txt](https://img.shields.io/badge/LLMs.txt-Standard%20v1.0-blueviolet)](https://llmstxt.org)
 
-The project is designed to distinguish observed facts, database matches, and model inference. Chemical records are treated as compositional evidence, not as proof that a reaction occurred or that a serving is safe.
+**Hestia** is a web application for culinary intelligence, ingredient research, cooking chemistry, and evidence-based food safety screening. It combines a static Next.js frontend, a FastAPI backend powered by Google ADK multi-agent architecture, Firebase Authentication, PostgreSQL-backed food knowledge graphs (FooDB & USDA), private S3-compatible image storage, and rigorous search engine (SEO) & AI search (`llms.txt`) optimization.
 
-## What is included
+The platform distinguishes observed facts, database records, calculations, and generative inference—treating chemical records as compositional evidence rather than unsubstantiated claims.
 
-- Multimodal chat with image attachments and Server-Sent Events streaming
-- Ingredient search across TheMealDB, USDA FoodData Central, and a local FooDB index
-- Food-compound profiles with explicit quantified and reported evidence labels
-- Firebase ID-token verification and per-user session isolation
-- PostgreSQL persistence for conversations and food-intelligence data
-- Persistent user uploads and AI-generated images in private S3-compatible storage
-- Specialist agents for food chemistry, safety analysis, and literature retrieval
-- English and Vietnamese interface preferences, light and dark themes
-- Static frontend export suitable for deployment behind any static file server
-- Route-specific canonical metadata, Open Graph cards, structured data, and crawl controls
-- Build-generated `sitemap.xml`, `robots.txt`, web app manifest, and an AI-readable `llms.txt`
+---
 
-## Architecture
+## 🌟 Key Capabilities
 
-```text
-Browser
-  │
-  ├── Firebase Authentication
-  │
-  └── Next.js static application (port 3434)
-          │
-          ├── REST: sessions, food library, generated images
-          └── SSE: streamed chat events
-                  │
-                  ▼
-             FastAPI (port 8484)
-                  │
-                  ├── Google ADK agent runtime
-                  ├── PostgreSQL sessions
-                  ├── MinIO / S3 chat images
-                  ├── FooDB / OpenFoodTox index
-                  └── External data and literature services
-```
+- **Multimodal Ingredient Recognition**: Upload counter or pantry photos to segment ingredients, identify compounds, and flag ambiguous items with transparent confidence boundaries.
+- **Cooking Chemistry Pathways**: Explains browning (Maillard cascade, caramelization), protein denaturation, starch gelatinization, and lipid oxidation in actionable kitchen terms.
+- **Evidence-Based Food Safety**: Real-time evaluation of thermal pathogen inactivation kinetics ($D$ and $z$ values), temperature danger zones (4°C to 60°C / 40°F to 140°F), and cross-contamination risks.
+- **Biochemical Food Explorer**: Explore over 70,000+ biochemical compound records from FooDB, USDA FoodData Central nutritional profiles, and TheMealDB culinary taxonomy.
+- **Nutrient Retention Kinetics**: Transparent mathematical modeling of micronutrient retention (Vitamins C, B-complex, carotenoids) across boiling, steaming, baking, and air frying.
+- **Persistent Private Sessions**: Firebase ID-token verification with isolated per-user conversation history and MinIO S3 object storage.
+- **Bilingual & Accessible**: Full English and Vietnamese language localization with system-aware light and dark themes.
+- **Top-Tier Search & AI Engine Optimization**: Automated `sitemap.xml`, multi-bot `robots.txt`, rich Schema.org JSON-LD (WebSite, Organization, WebApplication, BreadcrumbList, FAQPage, DataCatalog, DefinedTermSet), and `llms.txt` / `llms-full.txt` for AI search visibility (ChatGPT Search, Perplexity, Gemini).
 
-## Repository layout
+---
+
+## 🏗️ Architecture Overview
 
 ```text
-backend/
-  adk_agents/       ADK development entrypoint
-  dataset/          Dataset documentation and local import inputs
-  scripts/          Database migration utilities
-  src/
-    agents/         Production agent definitions and tools
-    api/v1/         HTTP and SSE routes
-    auth/           Firebase token verification
-    core/           Application configuration
-    schemas/        Public request and response models
-    services/       Agent, session, event, and food-library services
-  tests/            Backend test suite
-frontend/
-  public/           Static assets
-  src/app/          Next.js routes and global styles
-  src/components/   Application and marketing components
-  src/i18n/         Interface dictionaries
-  src/lib/          Firebase and API clients
-docs/               Product and architecture notes
+                               ┌──────────────────────────────────────────────┐
+                               │                Web Browser                   │
+                               │  (Desktop / Tablet / Mobile Chrome & Safari) │
+                               └──────────────────────┬───────────────────────┘
+                                                      │
+                                   ┌──────────────────┴──────────────────┐
+                                   │                                     │
+                                   ▼                                     ▼
+                      ┌─────────────────────────┐          ┌───────────────────────────┐
+                      │  Firebase Authentication│          │  Next.js Static Frontend  │
+                      │  (Google Sign-In / OIDC)│          │  (Nginx Proxy / Port 8080)│
+                      └─────────────────────────┘          └─────────────┬─────────────┘
+                                                                         │
+                                       ┌─────────────────────────────────┴─────────────────┐
+                                       │ REST: /api/v1/sessions, /library, /images        │
+                                       │ SSE:  /api/v1/sessions/{id}/messages/stream       │
+                                       ▼                                                   │
+                        ┌──────────────────────────────┐                                   │
+                        │     FastAPI API Gateway      │                                   │
+                        │         (Port 8484)          │                                   │
+                        └──────────────┬───────────────┘                                   │
+                                       │                                                   │
+            ┌──────────────────────────┼──────────────────────────┐                        │
+            ▼                          ▼                          ▼                        ▼
+┌──────────────────────┐   ┌──────────────────────┐   ┌──────────────────────┐   ┌───────────────────┐
+│ Google ADK Multi-    │   │ PostgreSQL Database  │   │ MinIO / S3 Object    │   │ External APIs:    │
+│ Agent Runtime:       │   │ (FooDB Compounds,    │   │ Storage (Private     │   │ • FooDB & USDA    │
+│ • Root Agent         │   │  Sessions, Events,   │   │  Chat & Generated    │   │ • TheMealDB       │
+│ • Food Analysis Agent│   │  Nutrient Retention) │   │  Image Blobs)        │   │ • EFSA / PubChem  │
+│ • Research Agent     │   │                      │   │                      │   │ • Ai2 Asta Scholar│
+└──────────────────────┘   └──────────────────────┘   └──────────────────────┘   └───────────────────┘
 ```
 
-## Requirements
+---
 
-- Python 3.11 or later
-- Node.js 20 or later
-- npm
-- PostgreSQL
-- Private S3-compatible object storage such as MinIO
-- A Firebase project with Google sign-in enabled
-- Credentials for the configured model provider
+## 🔍 Search Engine (SEO) & AI Discoverability (`llms.txt`)
 
-The food library can use the public TheMealDB test key and USDA `DEMO_KEY` for local development. Production deployments should use their own API keys and respect each provider's rate limits and terms.
+Hestia is engineered with technical SEO and LLM discoverability:
 
-## Local setup
+### 1. Automated Discovery Files
+- **[`/sitemap.xml`](https://hestia.hoangvu.id.vn/sitemap.xml)**: Dynamically generated XML sitemap with route priorities, change frequencies, Google Image Search tags, and multi-language alternate links (`hreflang="en"`, `hreflang="vi"`, `hreflang="x-default"`).
+- **[`/robots.txt`](https://hestia.hoangvu.id.vn/robots.txt)**: Granular crawl rules distinguishing standard web bots (Googlebot, Bingbot, Applebot) and AI search agents (GPTBot, PerplexityBot, ClaudeBot, Google-Extended).
+- **[`/llms.txt`](https://hestia.hoangvu.id.vn/llms.txt)**: Standard machine-readable digest following the [llmstxt.org](https://llmstxt.org) standard for AI citation and agentic synthesis.
+- **[`/llms-full.txt`](https://hestia.hoangvu.id.vn/llms-full.txt)**: In-depth technical specification detailing chemical reaction kinematics, food safety models, and database schema mappings.
+- **[`/manifest.webmanifest`](https://hestia.hoangvu.id.vn/manifest.webmanifest)**: Progressive Web App manifest with icons, shortcuts, and display metadata.
 
-### 1. Configure the backend
+### 2. Schema.org Structured Data (JSON-LD)
+- `WebSite`: Includes Google Sitelinks SearchBox (`SearchAction`) targeting `/ingredients?q={query}`.
+- `Organization`: Global branding, logo image objects, and social links.
+- `WebApplication`: Category classification, feature list, aggregate ratings, and operating system targets.
+- `BreadcrumbList`: Full hierarchy breadcrumbs across all subpages.
+- `FAQPage`: Structured rich-snippet FAQs on Home, Science, and About pages.
+- `DataCatalog` & `Dataset`: Explicit schema declaring FooDB and USDA FoodData Central integration.
+- `DefinedTermSet`: Formal terminology definitions for cooking chemistry concepts (Maillard reaction, protein denaturation, danger zone).
+
+---
+
+## 📁 Repository Structure
+
+```text
+Hestia/
+├── backend/
+│   ├── adk_agents/       # Google ADK agent prototyping & definitions
+│   ├── dataset/          # Food dataset sources, documentation & import scripts
+│   ├── scripts/          # PostgreSQL migration & schema swapping scripts
+│   ├── src/
+│   │   ├── agents/       # Production Google ADK specialist agents & tools
+│   │   ├── api/v1/       # REST and SSE endpoints (chat, library, sessions)
+│   │   ├── auth/         # Firebase Admin SDK token verification
+│   │   ├── core/         # Settings, environment variables & logging
+│   │   ├── schemas/      # Pydantic request & response models
+│   │   ├── services/     # Agent runtime, food library, MinIO & event services
+│   │   └── main.py       # FastAPI application factory
+│   ├── tests/            # Pytest test suite & benchmarks
+│   ├── Dockerfile        # Production multi-stage Python container
+│   └── pyproject.toml    # Python dependencies & Ruff configuration
+│
+├── frontend/
+│   ├── public/           # Static assets, hero images, robots.txt, sitemap.xml, llms.txt
+│   ├── src/
+│   │   ├── app/          # Next.js App Router (home, ingredients, science, about, download, chat)
+│   │   ├── components/   # UI components (app shell, food library, mermaid, json-ld)
+│   │   ├── i18n/         # Bilingual dictionaries (en.json, vi.json)
+│   │   └── lib/          # SEO configuration, Schema.org builders, Firebase & API client
+│   ├── Dockerfile        # Production multi-stage Next.js export container
+│   ├── nginx.conf        # Production Nginx reverse proxy & caching configuration
+│   └── package.json      # Node.js dependencies & scripts
+│
+├── .github/workflows/    # CI/CD pipelines (Lint, Test, Docker Build & GHCR Publish)
+├── docker-compose.yml    # Complete orchestration stack
+└── README.md             # Project documentation
+```
+
+---
+
+## 🚀 Quick Start (Local Development)
+
+### Prerequisites
+- Python 3.11+
+- Node.js 20+ & npm
+- PostgreSQL 15+
+- MinIO or AWS S3 bucket
+- Firebase Project with Google Authentication enabled
+
+---
+
+### Step 1: Backend Setup
 
 ```powershell
 cd backend
@@ -86,49 +145,41 @@ Copy-Item .env.example .env
 python -m pip install -e ".[dev]"
 ```
 
-Place the Firebase Admin SDK service-account file at:
-
+Place your Firebase Admin SDK service account key at:
 ```text
 backend/secrets/firebase/service-account.json
 ```
 
-The `backend/secrets/` directory is ignored by Git. Do not commit service-account credentials. A different location can be configured with `HESTIA_FIREBASE_CREDENTIALS_PATH`; relative paths are resolved from `backend/`.
-
-Set the required values in `backend/.env`:
-
+Configure `backend/.env` with your credentials:
 ```dotenv
-HESTIA_SESSION_DATABASE_URL=postgresql+asyncpg://USER:PASSWORD@HOST:5432/DATABASE
+HESTIA_SESSION_DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/hestia
 HESTIA_FIREBASE_PROJECT_ID=your-firebase-project-id
 HESTIA_FIREBASE_CREDENTIALS_PATH=secrets/firebase/service-account.json
-HESTIA_S3_ENDPOINT_URL=http://100.x.x.x:9000
-HESTIA_S3_ACCESS_KEY_ID=your-access-key
-HESTIA_S3_SECRET_ACCESS_KEY=your-secret-key
+HESTIA_S3_ENDPOINT_URL=http://localhost:9000
+HESTIA_S3_ACCESS_KEY_ID=minioadmin
+HESTIA_S3_SECRET_ACCESS_KEY=minioadmin
 HESTIA_S3_BUCKET=hestia
-HESTIA_S3_REGION=us-east-1
 
-CUSTOM_API_KEY=your-provider-key
+CUSTOM_API_KEY=your-api-key
 CUSTOM_BASE_URL=https://openrouter.ai/api/v1
-CUSTOM_LLM_MODEL_1=provider/vision-capable-model
-CUSTOM_LLM_MODEL_2=provider/reasoning-model
-CUSTOM_IMAGE_GEN_MODEL_NAME=provider/image-model
-
+CUSTOM_LLM_MODEL_1=openrouter/google/gemini-3.5-flash-lite
+CUSTOM_LLM_MODEL_2=openrouter/qwen/qwen3.6-35b-a3b
+CUSTOM_IMAGE_GEN_MODEL_NAME=bytedance/sdxl-lightning
 ASTA_API_KEY=your-asta-key
 ```
 
-`CUSTOM_LLM_MODEL_1` must support image input and tool calling. The database password must be URL-encoded when it contains reserved characters.
-
-Start the API:
-
+Run the FastAPI application:
 ```powershell
 python -m uvicorn main:app --app-dir src --host 0.0.0.0 --port 8484 --reload --reload-dir src
 ```
 
-Useful endpoints:
+Endpoints:
+- API Documentation: `http://localhost:8484/docs`
+- Health Check: `http://localhost:8484/api/v1/health`
 
-- API documentation: `http://127.0.0.1:8484/docs`
-- Health check: `http://127.0.0.1:8484/api/v1/health`
+---
 
-### 2. Configure the frontend
+### Step 2: Frontend Setup
 
 ```powershell
 cd frontend
@@ -136,11 +187,10 @@ Copy-Item .env.example .env.local
 npm install
 ```
 
-Fill in the public Firebase web configuration in `frontend/.env.local`. These values identify the Firebase web application; they are separate from the private Admin SDK service-account file.
-
+Configure `frontend/.env.local`:
 ```dotenv
 NEXT_PUBLIC_HESTIA_API_URL=http://127.0.0.1:8484/api/v1
-NEXT_PUBLIC_SITE_URL=https://hestia.example.com
+NEXT_PUBLIC_SITE_URL=https://hestia.hoangvu.id.vn
 NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=
 NEXT_PUBLIC_FIREBASE_API_KEY=...
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
@@ -148,171 +198,65 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
 NEXT_PUBLIC_FIREBASE_APP_ID=...
-NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=...
 ```
 
-Build and serve the static application:
-
+Start the frontend development server:
 ```powershell
 npm run dev
 ```
 
-Open `http://localhost:3434`.
+Open `http://localhost:3434` in your browser.
 
-`npm run dev` performs a production-style static export before serving `frontend/out/`. Use `npm run build` when only the export is required and `npm run start` to serve an existing export.
+---
 
-### Search and discovery configuration
+## 🐳 Docker Deployment
 
-`NEXT_PUBLIC_SITE_URL` is the canonical production origin used by page metadata, Open Graph URLs, `robots.txt`, and `sitemap.xml`. Set it to the final HTTPS origin before building the frontend. Do not use a staging or localhost URL in a production image.
-
-If the site is verified with Google Search Console, put only the verification token in `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`. After deployment, submit `/sitemap.xml` in Search Console and verify that the canonical public pages return `200` without authentication.
-
-The public discovery files are generated or copied into the static export:
-
-```text
-/sitemap.xml          Indexable editorial and ingredient routes
-/robots.txt           Crawl policy and sitemap location
-/manifest.webmanifest Install metadata for browsers
-/llms.txt             Concise, machine-readable product and source guide
-```
-
-Authenticated routes such as `/chat`, `/login`, and `/settings` emit `noindex` metadata and are intentionally excluded from the sitemap. Add a route to `frontend/src/lib/site.ts` only when it has unique, public, indexable content. Search ranking cannot be guaranteed by technical metadata alone; content quality, reputation, links, performance, and correct production hosting remain material.
-
-## Docker deployment
-
-Docker Compose runs the static frontend behind Nginx, proxies `/api` to FastAPI, and keeps PostgreSQL on a named volume. Uploaded and AI-generated chat images are stored in the configured private MinIO/S3 bucket. Only the frontend port is published.
+To launch the full production stack (Nginx, Next.js Static Export, FastAPI, PostgreSQL, MinIO):
 
 ```powershell
 Copy-Item compose.env.example .env
 Copy-Item backend/.env.example backend/.env
-```
-
-Complete both environment files and place the Firebase Admin SDK key at `backend/secrets/firebase/service-account.json`. Then build and start the stack:
-
-```powershell
+# Update environment variables and place Firebase service-account.json
 docker compose build
 docker compose up -d
+```
+
+Check status:
+```powershell
 docker compose ps
 ```
 
-Open `http://localhost:8080`. Change `HESTIA_HTTP_PORT` in the root `.env` file when another host port is required.
+The unified web application is accessible at `http://localhost:8080`.
 
-The images use multi-stage builds and BuildKit cache mounts. Compose also stores reusable build layers in `.docker-cache/`, so source-only changes reuse Python wheels, npm packages, and Next.js compilation data. To force a clean rebuild:
+---
 
-```powershell
-Remove-Item -Recurse -Force .docker-cache
-docker compose build --no-cache
-```
-
-To deploy images published by GitHub Actions instead of building on the server, set these values in the root `.env` file and run `docker compose pull` before `docker compose up -d`:
-
-```dotenv
-HESTIA_BACKEND_IMAGE=ghcr.io/OWNER/hestia-backend:latest
-HESTIA_FRONTEND_IMAGE=ghcr.io/OWNER/hestia-frontend:latest
-```
-
-If a local FooDB SQLite import exists under `backend/dataset/processed/`, import it once with the tools profile:
+## 🧪 Testing & Code Quality
 
 ```powershell
-docker compose --profile tools run --rm food-data-import
-```
-
-Back up the `postgres_data` volume and the configured object-storage bucket before destructive upgrades. The `generated_images` volume remains mounted only for backward-compatible reads of images created by older releases. Put a TLS-terminating reverse proxy or load balancer in front of port `8080` for public traffic.
-
-## Continuous integration and delivery
-
-The GitHub Actions workflows under `.github/workflows/` provide:
-
-- backend tests and Ruff checks
-- frontend lint and production export
-- independent backend and frontend container builds
-- BuildKit layer caching through the GitHub Actions cache
-- GHCR publication for `main`, `dev`, and version tags
-- image provenance and SBOM generation
-
-The publishing workflow requires `NEXT_PUBLIC_SITE_URL` and the public Firebase frontend values to be configured as GitHub repository variables. `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` is optional. Runtime secrets such as the model API key, database password, Asta key, MinIO credentials, and Firebase Admin SDK JSON are never built into the images.
-
-## Database import
-
-The running application reads food-intelligence data from PostgreSQL. Local SQLite files are import inputs only and are not used at runtime.
-
-```powershell
+# Backend Checks
 cd backend
-$env:PYTHONPATH = "src"
-python scripts/migrate_food_intelligence_to_postgres.py `
-  --source dataset/processed/foodb_compounds.sqlite3
-```
-
-The migration stages the imported tables in a separate schema, validates row counts, builds indexes, and then swaps the schema into place. See [backend/dataset/README.md](backend/dataset/README.md) for source and licensing notes.
-
-## API overview
-
-All application routes are under `/api/v1`.
-
-```text
-GET    /health
-GET    /library/discover
-GET    /library/search
-GET    /library/meals/{meal_id}
-GET    /library/ingredients/profile
-POST   /sessions
-GET    /sessions
-GET    /sessions/{session_id}
-PATCH  /sessions/{session_id}
-DELETE /sessions/{session_id}
-GET    /sessions/{session_id}/events
-POST   /sessions/{session_id}/messages
-POST   /sessions/{session_id}/messages/stream
-GET    /sessions/{session_id}/attachments/{attachment_id}
-GET    /sessions/{session_id}/images/{image_id}
-```
-
-Authenticated routes expect a Firebase ID token:
-
-```http
-Authorization: Bearer <firebase-id-token>
-```
-
-The streaming message endpoint emits named SSE events such as `ready`, `text_delta`, `tool_call`, `tool_result`, `error`, and `done`.
-
-## Development checks
-
-Backend:
-
-```powershell
-cd backend
-$env:PYTEST_DISABLE_PLUGIN_AUTOLOAD = "1"
-python -m pytest tests -q
 python -m ruff check src tests
-```
+python -m pytest tests -q
 
-Frontend:
-
-```powershell
+# Frontend Checks
 cd frontend
 npm run lint
 npm run build
 ```
 
-## Security notes
+---
 
-- Keep `.env`, `.env.local`, Firebase Admin SDK credentials, and database exports out of version control.
-- Keep the MinIO bucket private. Chat image endpoints verify the Firebase user and session before reading an object.
-- Rotate a service-account key immediately if it is exposed in a commit, build artifact, log, or screenshot.
-- The frontend Firebase configuration is public by design; access control must be enforced by Firebase rules and backend token verification.
-- Generated analysis is not a substitute for laboratory testing, medical advice, or official food-safety guidance.
+## 📚 Data Sources & Attribution
 
-## Data sources
+- **[FooDB](https://foodb.ca/)**: Comprehensive food constituent and chemical compound database.
+- **[USDA FoodData Central](https://fdc.nal.usda.gov/)**: Standard Reference nutrient profiles and retention values.
+- **[TheMealDB](https://www.themealdb.com/)**: International recipe taxonomy and food imagery.
+- **[EFSA OpenFoodTox](https://www.efsa.europa.eu/en/data-report/chemical-hazards-database-openfoodtox)**: Toxicological hazard benchmark data.
+- **[PubChem](https://pubchem.ncbi.nlm.nih.gov/)**: Chemical structure identification and safety sheets.
+- **[Semantic Scholar / Ai2](https://www.semanticscholar.org/)**: Peer-reviewed scientific literature retrieval.
 
-- [FooDB](https://foodb.ca/) for food and compound relationships
-- [USDA FoodData Central](https://fdc.nal.usda.gov/) for nutrient records
-- [TheMealDB](https://www.themealdb.com/) for recipes and ingredient imagery
-- [EFSA OpenFoodTox](https://www.efsa.europa.eu/en/data-report/chemical-hazards-database-openfoodtox) for toxicology records
-- [PubChem](https://pubchem.ncbi.nlm.nih.gov/) for chemical identity and hazard references
-- [Semantic Scholar](https://www.semanticscholar.org/) through Ai2 Asta for literature retrieval
+---
 
-Review the terms and attribution requirements of each source before redistributing data or deploying the application publicly.
+## ⚖️ License & Disclaimer
 
-## Project status
-
-Hestia is under active development. Interfaces, database schemas, and agent behavior may change without backward-compatibility guarantees.
+Hestia output is provided for educational and culinary intelligence purposes only. It is **not** a substitute for laboratory microbial testing, medical diagnosis, or certified food safety inspection. Always verify critical internal meat temperatures with a calibrated food thermometer.

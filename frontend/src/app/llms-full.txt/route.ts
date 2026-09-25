@@ -1,0 +1,102 @@
+import { absoluteUrl, site } from "@/lib/site";
+
+export const dynamic = "force-static";
+
+export function GET() {
+  const content = `# Hestia — Full Architectural, Chemical & Food Safety Specification
+
+> Hestia is an evidence-aware multimodal culinary intelligence system that merges computational food chemistry, toxicology screening, nutrient retention modeling, and practical kitchen workflows.
+
+Canonical URL: ${site.url}
+Version: 1.0.0
+Author: ${site.author}
+License: Proprietary Web Platform & Open Data Attribution
+
+---
+
+## 1. System Philosophy & Evidence Hierarchy
+
+Hestia operates on a 5-tier epistemology to prevent AI hallucinations and provide verified culinary advice:
+
+1. **Direct Physical Observation**: Visual elements extracted from user images (shape, cut, color, visible moisture, browning state). Ambiguities (such as clear liquids or ground spice mixes) are marked as UNCONFIRMED.
+2. **User-Asserted Facts**: Direct statements from the user (e.g., "this beef has been refrigerated for 2 days", "I am allergic to allium").
+3. **Deterministic Database Records**: Hard data retrieved from curated databases (FooDB compound IDs, USDA FDC nutrient weights, PubChem CIDs).
+4. **Calculated Physical Models**: Deterministic mathematical calculations (thermal diffusivity, Arrhenius reaction rates, dilution ratios, stoichiometry, USDA nutrient retention factors).
+5. **Supported Scientific Inference**: Peer-reviewed scientific literature retrieved via Semantic Scholar / Ai2 Asta and EFSA hazard guidelines.
+6. **Model Hypothesis / Speculative Synthesis**: Generative reasoning clearly demarcated from established facts.
+
+---
+
+## 2. Scientific Knowledge Modules
+
+### 2.1 Browning & Maillard Reaction Chemistry
+- **Maillard Cascade**: Condensation of reducing sugars (aldoses/ketoses) with nucleophilic amino groups of amino acids/peptides -> Amadori / Heyns compounds -> dicarbonyls (deoxyosones) -> Strecker degradation -> melanoidins and aroma compounds (pyrazines, thiazoles, furans).
+- **Critical Kitchen Controls**:
+  - Surface moisture: Free surface water buffers temperature at 100°C (latent heat of vaporization: 2260 kJ/kg). Drying surfaces (salting, patting dry, air chilling) accelerates Maillard initiation above 140°C (284°F).
+  - pH: Alkaline environments (e.g., sodium bicarbonate / baking soda) deprotonate amino groups, accelerating nucleophilic addition.
+  - Temperature window: 140°C – 165°C optimal; >180°C increases pyrolysis and acrylamide / heterocyclic amine formation.
+
+### 2.2 Protein Denaturation & Gelation
+- **Thermal Transitions in Myofibrillar Proteins**:
+  - Myosin head denaturation: 40°C – 50°C.
+  - Collagen shortening / triple helix shrinkage: 60°C – 65°C.
+  - Actin denaturation & major moisture expulsion: 66°C – 73°C.
+  - Gelatin conversion: Prolonged holding above 70°C in moist heat converts insoluble collagen into soluble gelatin.
+
+### 2.3 Food Safety & Thermal Pathogen Inactivation
+- **Temperature Danger Zone**: 4°C to 60°C (40°F to 140°F). Rapid bacterial proliferation (Salmonella enterica, Clostridium perfringens, Staphylococcus aureus, Bacillus cereus).
+- **Log-Reduction Kinetics (D & z Values)**:
+  - Salmonella spp. in poultry: 7-log10 lethality achieved instantaneously at 74°C (165°F core) or through time-temperature pasteurization (e.g., 63.6°C for 3.0 minutes at 5% fat).
+  - Spore-forming pathogens: Bacillus cereus in cooked rice — rapid cooling from 60°C to 21°C within 2 hours, and 21°C to 4°C within an additional 4 hours.
+
+### 2.4 Nutrient Retention Factors
+- **Water-Soluble Micronutrients (Vitamin C, Thiamine B1, Folate B9)**:
+  - High sensitivity to water leaching and heat duration.
+  - Steaming and microwaving preserve 80-90% retention vs 40-60% in high-volume boiling.
+- **Lipid-Soluble Vitamins & Carotenoids (Vitamins A, D, E, K, Lycopene, Beta-carotene)**:
+  - Heat and mild lipid presence disrupt cellular chromoplasts, increasing bioavailability without significant thermal degradation under moderate cooking conditions.
+
+---
+
+## 3. Data Integration & Source Registry
+
+| Data Provider | Scope | Coverage | Integration Mechanism |
+| :--- | :--- | :--- | :--- |
+| **FooDB** | Food Constituents & Compounds | 70,000+ compounds, 790+ foods | Local PostgreSQL indexed snapshot |
+| **USDA FoodData Central** | Nutrient Composition | 300,000+ food profiles | REST API & Standard Reference |
+| **TheMealDB** | International Recipes & Taxonomy | Global culinary dishes | JSON API & Ingredient taxonomy |
+| **EFSA OpenFoodTox** | Chemical Toxicological Values | Toxicological reference points | Curated database indexing |
+| **PubChem** | Compound Chemistry & Identifiers | SMILES, InChIKey, CIDs | PUG-REST API |
+| **Semantic Scholar / Ai2** | Food Science Papers & Literature | Millions of peer-reviewed articles | Ai2 Asta API |
+
+---
+
+## 4. Public Web Architecture & Sitemap Directory
+
+1. **Overview & Home**: ${absoluteUrl("/home")}
+2. **Food Compound & Nutrient Library**: ${absoluteUrl("/ingredients")}
+3. **Culinary Chemistry & Safety Portal**: ${absoluteUrl("/science")}
+4. **Mission & About**: ${absoluteUrl("/about")}
+5. **Mobile Application Roadmap**: ${absoluteUrl("/download")}
+6. **Workspace Sign-In**: ${absoluteUrl("/login")}
+7. **Interactive Assistant**: ${absoluteUrl("/chat")} (Authenticated)
+8. **Sitemap Index**: ${absoluteUrl("/sitemap.xml")}
+9. **Robots Policy**: ${absoluteUrl("/robots.txt")}
+10. **Standard LLM Digest**: ${absoluteUrl("/llms.txt")}
+
+---
+
+## 5. Responsible AI and Safety Disclaimers
+
+1. **Visual Limitations**: Model predictions on cooked state, doneness, or bacterial safety based on imagery alone must NOT be treated as definitive safety proofs. Calibrated meat thermometers remain mandatory for critical CCPs (Critical Control Points).
+2. **Medical Advice**: Hestia output is culinary education and food science analysis, not clinical dietary guidance or medical allergy diagnosis.
+3. **Database Boundaries**: Presence of a biochemical constituent in FooDB does not indicate high serving-level concentration unless quantified in literature.
+`;
+
+  return new Response(content, {
+    headers: {
+      "Cache-Control": "public, max-age=86400, s-maxage=86400",
+      "Content-Type": "text/plain; charset=utf-8",
+    },
+  });
+}

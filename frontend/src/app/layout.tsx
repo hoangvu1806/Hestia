@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
 import type { ReactNode } from "react";
 
@@ -6,7 +6,7 @@ import "katex/dist/katex.min.css";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth-provider";
 import { JsonLd } from "@/components/json-ld";
-import { absoluteUrl, site } from "@/lib/site";
+import { absoluteUrl, getOrganizationSchema, getWebSiteSchema, site } from "@/lib/site";
 
 const themeScript = `(() => { try { const saved = localStorage.getItem('hestia-theme'); const systemDark = matchMedia('(prefers-color-scheme: dark)').matches; document.documentElement.dataset.theme = saved || (systemDark ? 'dark' : 'light'); document.documentElement.lang = localStorage.getItem('hestia-locale') || 'en'; } catch (_) {} })();`;
 
@@ -24,31 +24,55 @@ const cormorant = Cormorant_Garamond({
   weight: ["500", "600", "700"],
 });
 
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fffaf6" },
+    { media: "(prefers-color-scheme: dark)", color: "#16110e" },
+  ],
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
-  title: { default: site.title, template: "%s | Hestia" },
+  title: {
+    default: site.title,
+    template: "%s | Hestia Culinary Intelligence",
+  },
   description: site.description,
   applicationName: site.name,
-  authors: [{ name: "Hestia" }],
-  creator: "Hestia",
-  publisher: "Hestia",
-  category: "Food science and culinary technology",
+  authors: [{ name: site.author }],
+  creator: site.creator,
+  publisher: site.publisher,
+  category: "Food Science & Culinary Technology",
+  classification: "Culinary AI, Food Chemistry, Food Safety & Nutrition",
   referrer: "origin-when-cross-origin",
-  keywords: [
-    "evidence-based cooking",
-    "food science",
-    "cooking chemistry",
-    "food safety",
-    "ingredient analysis",
-    "culinary AI",
-    "nutrition data",
-  ],
-  alternates: { canonical: "/home" },
+  keywords: site.keywords,
+  alternates: {
+    canonical: absoluteUrl("/home"),
+    languages: {
+      "en-US": absoluteUrl("/home"),
+      "vi-VN": absoluteUrl("/home"),
+      "x-default": absoluteUrl("/home"),
+    },
+  },
   icons: {
-    icon: [{ url: "/logo.png", type: "image/png" }],
-    apple: "/logo.png",
+    icon: [
+      { url: "/logo.png", type: "image/png", sizes: "1600x1600" },
+      { url: "/logo-transparent.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: [
+      { url: "/logo.png", sizes: "180x180", type: "image/png" },
+    ],
+    shortcut: ["/logo.png"],
   },
   manifest: "/manifest.webmanifest",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   robots: {
     index: true,
     follow: true,
@@ -62,17 +86,19 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    url: "/home",
+    url: absoluteUrl("/home"),
     siteName: site.name,
     title: site.title,
     description: site.description,
     locale: site.locale,
+    alternateLocale: ["vi_VN"],
     images: [
       {
-        url: "/hestia-hero.png",
-        alt: "Hestia culinary intelligence",
+        url: absoluteUrl("/hestia-hero.png"),
+        alt: "Hestia culinary intelligence and evidence-based cooking",
         width: 1672,
         height: 941,
+        type: "image/png",
       },
     ],
   },
@@ -80,44 +106,44 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: site.title,
     description: site.description,
-    images: ["/hestia-hero.png"],
+    site: "@hestia_ai",
+    creator: "@hestia_ai",
+    images: [
+      {
+        url: absoluteUrl("/hestia-hero.png"),
+        alt: "Hestia culinary intelligence",
+      },
+    ],
   },
   verification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
-    ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }
+    ? {
+        google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+      }
     : undefined,
 };
 
-const organizationSchema = {
+const rootStructuredData = {
   "@context": "https://schema.org",
   "@graph": [
-    {
-      "@type": "Organization",
-      "@id": `${site.url}/#organization`,
-      name: site.name,
-      url: site.url,
-      logo: {
-        "@type": "ImageObject",
-        url: absoluteUrl("/logo.png"),
-      },
-    },
-    {
-      "@type": "WebSite",
-      "@id": `${site.url}/#website`,
-      url: site.url,
-      name: site.name,
-      description: site.description,
-      publisher: { "@id": `${site.url}/#organization` },
-      inLanguage: ["en", "vi"],
-    },
+    getOrganizationSchema(),
+    getWebSiteSchema(),
   ],
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        {/* Resource Preconnect for Core Web Vitals Optimization */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://foodb.ca" />
+        <link rel="dns-prefetch" href="https://www.themealdb.com" />
+        <link rel="dns-prefetch" href="https://lh3.googleusercontent.com" />
+      </head>
       <body className={`${jakarta.variable} ${cormorant.variable}`}>
-        <JsonLd data={organizationSchema} />
+        <JsonLd data={rootStructuredData} />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

@@ -1,140 +1,158 @@
-# Hestia Backend
+# Hestia Backend — FastAPI & Google ADK Culinary Intelligence Engine
 
-FastAPI backend for Hestia, built around Google ADK sessions, events and streaming.
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat&logo=python)](https://python.org)
+[![Google ADK](https://img.shields.io/badge/Google-ADK%20Agents-4285F4?style=flat&logo=google)](https://github.com/google/agent-development-kit)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-AsyncPG-336791?style=flat&logo=postgresql)](https://www.postgresql.org/)
+[![MinIO](https://img.shields.io/badge/MinIO-Object%20Store-C72C48?style=flat&logo=minio)](https://min.io/)
 
-## Run locally
+High-performance asynchronous backend powering **Hestia** — built around Google Agent Development Kit (ADK), PostgreSQL session & food compound storage, and Server-Sent Events (SSE) streaming.
+
+---
+
+## 🏗️ Architecture & Multi-Agent Design
+
+The backend uses a specialist multi-agent coordination topology:
+
+```text
+               User Prompt / Ingredient Image
+                            │
+                            ▼
+                  ┌───────────────────┐
+                  │    Root Agent     │ <── Top-level conversational coordinator
+                  └─────────┬─────────┘
+                            │
+            ┌───────────────┴───────────────┐
+            │ Calls Agent Tool              │ Calls Agent Tool
+            ▼                               ▼
+  ┌───────────────────┐           ┌───────────────────┐
+  │   Food Analysis   │           │     Research      │
+  │       Agent       │           │       Agent       │
+  └─────────┬─────────┘           └─────────┬─────────┘
+            │                               │
+  ┌─────────┴─────────┐           ┌─────────┴─────────┐
+  │ • FooDB Compounds │           │ • Ai2 Asta Scholar│
+  │ • USDA Retention  │           │ • PubChem CIDs    │
+  │ • EFSA Tox Hazards│           │ • EFSA Hazard Data│
+  │ • D/z Inactivation│           │ • Chemical SMILES │
+  └───────────────────┘           └───────────────────┘
+```
+
+1. **Root Agent**: Handles conversational flow, user interaction, clarification questions, and synthesizing final, practical kitchen instructions.
+2. **Food Analysis Agent**: Dissects ingredients into chemical constituents, computes thermal retention factors, models Maillard/protein reactions, and screens food-safety risks.
+3. **Research Agent**: Queries scientific databases, verifies chemical identifiers via PubChem, and retrieves peer-reviewed food science literature through Semantic Scholar / Ai2 Asta.
+
+---
+
+## 📁 Directory Structure
+
+```text
+backend/
+├── adk_agents/       # Prototyping directory for Google ADK agents
+├── dataset/          # Raw dataset documentation and SQLite import sources
+├── scripts/          # Database migration & schema swapping scripts
+├── src/
+│   ├── agents/       # Production ADK agents and custom tool definitions
+│   │   ├── root_agent.py
+│   │   ├── food_analysis_agent.py
+│   │   ├── research_agent.py
+│   │   ├── image_tools.py
+│   │   └── tools.py
+│   ├── api/          # FastAPI routes
+│   │   ├── dependencies.py # Firebase token & session dependencies
+│   │   └── v1/
+│   │       ├── router.py   # Aggregated v1 API router
+│   │       └── routes/     # chat.py, library.py, sessions.py, health.py
+│   ├── auth/         # Firebase Admin SDK authentication boundary
+│   ├── core/         # Pydantic Settings & application configuration
+│   ├── schemas/      # Request/response contracts (Chat, Session, Health)
+│   ├── services/     # Agent runtime, PostgreSQL adapters, MinIO storage
+│   └── main.py       # FastAPI application factory
+├── tests/            # Automated test suite (Pytest & AsyncIO)
+├── Dockerfile        # Production multi-stage Docker build
+└── pyproject.toml    # Dependencies and Ruff linting rules
+```
+
+---
+
+## 🛠️ Local Development Setup
+
+### 1. Configure Environment
 
 ```powershell
+cd backend
 Copy-Item .env.example .env
 python -m pip install -e ".[dev]"
-python -m uvicorn main:app --app-dir src --host 0.0.0.0 --port 8484 --reload --reload-dir src
 ```
 
-Các lệnh trên sử dụng trực tiếp Python environment đang active trong terminal;
-dự án không tạo hoặc quản lý virtual environment riêng.
+Place your Firebase Admin SDK service-account credentials at `backend/secrets/firebase/service-account.json`.
 
-Open `http://localhost:8000/docs` or check:
-
-```powershell
-Invoke-RestMethod http://localhost:8000/api/v1/health
-```
-
-## Structure
-
-```text
-src/
-├── agents/            # Google ADK root and specialist agents
-├── api/v1/routes/     # Versioned REST and SSE endpoints
-├── auth/              # Boundary reserved for authentication
-├── core/              # Configuration
-├── schemas/           # Public request/response contracts
-├── services/          # ADK runner, session and event adapters
-└── main.py            # FastAPI application factory
-tests/
-```
-
-## API v1
-
-All endpoints use `/api/v1`. Until authentication is implemented, pass a development identity
-through `X-Hestia-User-Id`; it falls back to `local-user`.
-
-```text
-POST   /api/v1/sessions
-GET    /api/v1/sessions
-GET    /api/v1/sessions/{session_id}
-PATCH  /api/v1/sessions/{session_id}
-DELETE /api/v1/sessions/{session_id}
-GET    /api/v1/sessions/{session_id}/events
-POST   /api/v1/sessions/{session_id}/messages
-POST   /api/v1/sessions/{session_id}/messages/stream
-```
-
-The streaming endpoint is Server-Sent Events. It emits `text_delta`, `tool_call`, `tool_result`,
-`state`, `message`, `error`, and `done` events. Each event identifies its author and invocation;
-model usage is included when ADK provides it, while `done` contains aggregate token usage and the
-latest session-state snapshot. Inline images are sent as `{mime_type, data}` where `data` is base64.
-
-## Image-to-compounds experiment
-
-FooDB data and licensing notes are documented in `dataset/README.md`. Configure one
-vision-capable model using LiteLLM's provider/model naming in `.env`:
-
+Update `backend/.env`:
 ```dotenv
-CUSTOM_API_KEY=...
+HESTIA_SESSION_DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/hestia
+HESTIA_FIREBASE_PROJECT_ID=your-firebase-project-id
+HESTIA_FIREBASE_CREDENTIALS_PATH=secrets/firebase/service-account.json
+HESTIA_S3_ENDPOINT_URL=http://localhost:9000
+HESTIA_S3_ACCESS_KEY_ID=your-access-key
+HESTIA_S3_SECRET_ACCESS_KEY=your-secret-key
+HESTIA_S3_BUCKET=hestia
+
+CUSTOM_API_KEY=your-provider-key
 CUSTOM_BASE_URL=https://openrouter.ai/api/v1
 CUSTOM_LLM_MODEL_1=openrouter/google/gemini-3.5-flash-lite
 CUSTOM_LLM_MODEL_2=openrouter/qwen/qwen3.6-35b-a3b
+CUSTOM_IMAGE_GEN_MODEL_NAME=bytedance/sdxl-lightning
+ASTA_API_KEY=your-asta-key
 ```
 
-Run the CLI. The short form treats a bare image path as the `analyze` command:
+### 2. Run Database Migration
+
+Import FooDB SQLite records into PostgreSQL:
+```powershell
+$env:PYTHONPATH = "src"
+python scripts/migrate_food_intelligence_to_postgres.py --source dataset/processed/foodb_compounds.sqlite3
+```
+
+### 3. Start Development Server
 
 ```powershell
-python experiments/image_to_compounds.py analyze path\to\ingredients.jpg
-python experiments/image_to_compounds.py path\to\ingredients.jpg
+python -m uvicorn main:app --app-dir src --host 0.0.0.0 --port 8484 --reload --reload-dir src
 ```
 
-Query FooDB directly without making a model request:
+---
+
+## 📡 API v1 Reference
+
+All endpoints are nested under `/api/v1`.
+
+### Health Check
+- `GET /api/v1/health`: Checks backend responsiveness and database connectivity.
+
+### Food & Ingredient Library
+- `GET /api/v1/library/discover`: Discovers curated meal categories and ingredients.
+- `GET /api/v1/library/search?q={query}`: Full-text search across dishes, ingredients, and FooDB compounds.
+- `GET /api/v1/library/meals/{meal_id}`: Retrieves comprehensive dish details, recipe steps, and constituent compounds.
+- `GET /api/v1/library/ingredients/profile?name={name}`: Retrieves USDA nutrient breakdown and FooDB chemical markers.
+
+### Sessions & Chat
+- `POST /api/v1/sessions`: Create a new private conversation session.
+- `GET /api/v1/sessions`: List user's sessions.
+- `GET /api/v1/sessions/{session_id}`: Get session metadata.
+- `PATCH /api/v1/sessions/{session_id}`: Update session title or state.
+- `DELETE /api/v1/sessions/{session_id}`: Delete session and associated image attachments.
+- `GET /api/v1/sessions/{session_id}/events`: Retrieve event history.
+- `POST /api/v1/sessions/{session_id}/messages`: Submit message synchronously.
+- `POST /api/v1/sessions/{session_id}/messages/stream`: Submit message and receive streaming SSE events.
+
+---
+
+## 🧪 Code Quality & Tests
 
 ```powershell
-python experiments/image_to_compounds.py lookup garlic "garden onion" -n 10
-python experiments/image_to_compounds.py lookup garlic --quantified-only
-python experiments/image_to_compounds.py analyze test.jpg --attention -n 10
+# Run Ruff lint and format checks
+python -m ruff check src tests
+
+# Run Unit Tests
+$env:PYTEST_DISABLE_PLUGIN_AUTOLOAD = "1"
+python -m pytest tests -q
 ```
-
-Useful operational commands:
-
-```powershell
-python experiments/image_to_compounds.py info
-python experiments/image_to_compounds.py build-index --force
-python experiments/image_to_compounds.py build-hazards --force
-python experiments/image_to_compounds.py analyze test.jpg --json
-python experiments/image_to_compounds.py analyze test.jpg -o result.json
-```
-
-## Multi-agent food-risk app
-
-Start the Google ADK web UI from the `backend` directory:
-
-```powershell
-adk web adk_agents
-```
-
-Open `http://127.0.0.1:8000` and select `food_risk_agent`. It behaves as a normal chatbot for
-greetings, casual conversation and simple cooking questions. Attach an image and ask for deep
-chemical/risk analysis only when needed. `CUSTOM_LLM_MODEL_1` must support vision and tool calling;
-specialists use `CUSTOM_LLM_MODEL_2`.
-
-The copied source agent can also be inspected with `adk web src/agents`. The original
-`adk_agents/food_risk_agent` folder is intentionally kept unchanged as the working prototype.
-
-On Windows, ADK automatically disables reload. After changing agent code, stop the current server
-with `Ctrl+C` and run `adk web adk_agents` again so Python does not retain a failed/cached import.
-
-`root_agent` answers ordinary chat itself. For an explicit specialist request it may call one of
-two agent tools: food-risk analysis or academic search. Their evidence is returned to
-`root_agent`, which always writes the final natural answer. There is no fixed output schema or
-custom renderer.
-It retrieves FooDB composition records, resolves arbitrary structures through PubChem, searches
-Ai2 Asta/Semantic Scholar for papers and supporting snippets, and checks EFSA
-OpenFoodTox/PubChem hazard evidence. Set `ASTA_API_KEY` in `.env`; it is sent only as the Asta MCP
-`x-api-key` header. A proposed reaction is not accepted merely because the model knows it or
-because two compounds coexist.
-
-This is evidence-grounded screening, not molecular simulation: without experimental conditions,
-yield and exposure data it must not predict a product concentration or declare a serving unsafe.
-
-The design follows the literature-retrieval pattern used by
-[WFSR's food-safety hazard extractor](https://github.com/WFSRDataScience/LLMForChemicalFoodSafetyHazardExtraction)
-and the tool-grounded chemistry pattern demonstrated by
-[ChemCrow](https://github.com/ur-whitelab/chemcrow-public). General reaction planners such as
-[ASKCOS](https://github.com/ASKCOS/askcos-core) and datasets such as
-[ORD](https://github.com/open-reaction-database/ord-schema) are not used as cooking simulators:
-they target synthetic laboratory reactions and do not establish reaction yield in a food matrix.
-
-The default output is a colored terminal table. `--json` writes clean machine-readable
-JSON to stdout, while `-o` saves JSON to a file. Diagnostics and progress go to stderr.
-For `analyze`, the same configured LiteLLM model performs vision detection and one batched
-semantic reconciliation pass for names that cannot be matched safely by text. `lookup`
-remains local-only and never calls the model.
-This remains an exploratory lookup, not a food-safety verdict: image recognition,
-fuzzy name matching, and FooDB coverage can all be incomplete.

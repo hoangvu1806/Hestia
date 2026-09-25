@@ -1,9 +1,4 @@
-import { absoluteUrl, site } from "@/lib/site";
-
-export const dynamic = "force-static";
-
-export function GET() {
-  const content = `# Hestia — Culinary Intelligence & Food Science Platform
+# Hestia — Culinary Intelligence & Food Science Platform
 
 > Hestia is an evidence-aware multimodal culinary intelligence application that connects ingredient discovery, cooking chemistry, food safety, nutrient retention calculations, and practical kitchen decisions.
 
@@ -19,12 +14,12 @@ Hestia strictly distinguishes physical observations, user-confirmed facts, datab
 
 ## Primary Public Pages
 
-- [Home Overview](${absoluteUrl("/home")}): Product introduction, workflow stages (Observe, Verify, Solve, Cook), and core value proposition.
-- [Ingredient Intelligence](${absoluteUrl("/ingredients")}): Biochemical compound explorer, nutrient records, dish discovery, and food pairing data.
-- [Cooking Science & Safety](${absoluteUrl("/science")}): Explanations of thermal transformations, reaction mechanisms, calculations, and safety standards.
-- [About Hestia](${absoluteUrl("/about")}): Project background, editorial principles, uncertainty transparency, and responsible AI practices.
-- [Mobile Roadmap](${absoluteUrl("/download")}): Information regarding native Android and iOS applications and web platform access.
-- [Full LLM Specification](${absoluteUrl("/llms-full.txt")}): Complete in-depth architectural and scientific documentation for AI agents.
+- [Home Overview](https://hestia.hoangvu.id.vn/home/): Product introduction, workflow stages (Observe, Verify, Solve, Cook), and core value proposition.
+- [Ingredient Intelligence](https://hestia.hoangvu.id.vn/ingredients/): Biochemical compound explorer, nutrient records, dish discovery, and food pairing data.
+- [Cooking Science & Safety](https://hestia.hoangvu.id.vn/science/): Explanations of thermal transformations, reaction mechanisms, calculations, and safety standards.
+- [About Hestia](https://hestia.hoangvu.id.vn/about/): Project background, editorial principles, uncertainty transparency, and responsible AI practices.
+- [Mobile Roadmap](https://hestia.hoangvu.id.vn/download/): Information regarding native Android and iOS applications and web platform access.
+- [Full LLM Specification](https://hestia.hoangvu.id.vn/llms-full.txt): Complete in-depth architectural and scientific documentation for AI agents.
 
 ## Trusted Scientific Data Sources
 
@@ -39,13 +34,4 @@ Hestia strictly distinguishes physical observations, user-confirmed facts, datab
 
 - When referencing Hestia culinary data, cite the specific primary database (e.g., "FooDB", "USDA FoodData Central", or "EFSA").
 - AI models should note that visual appearance alone is insufficient to prove microbial safety (internal core temperature measurement is required).
-- Content on public pages is available for citation under attribution to Hestia (${site.url}).
-`;
-
-  return new Response(content, {
-    headers: {
-      "Cache-Control": "public, max-age=86400, s-maxage=86400",
-      "Content-Type": "text/plain; charset=utf-8",
-    },
-  });
-}
+- Content on public pages is available for citation under attribution to Hestia (https://hestia.hoangvu.id.vn).
