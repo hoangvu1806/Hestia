@@ -1,50 +1,41 @@
-import { absoluteUrl, site } from "@/lib/site";
+import { absoluteUrl } from "@/lib/site";
 
 export const dynamic = "force-static";
 
 export function GET() {
-  const content = `# Hestia — Culinary Intelligence & Food Science Platform
+  const content = `# Hestia
 
-> Hestia is an evidence-aware multimodal culinary intelligence application that connects ingredient discovery, cooking chemistry, food safety, nutrient retention calculations, and practical kitchen decisions.
+> Hestia is an open-source culinary intelligence application for ingredient exploration, cooking science, food-safety context, and evidence-aware kitchen guidance.
 
-Hestia strictly distinguishes physical observations, user-confirmed facts, database records, deterministic calculations, scientific literature evidence, and model inference. Its guidance is informational and is designed to make cooking understandable and safe.
+## Canonical website
 
-## Core Capabilities
+- [Hestia](${absoluteUrl("/")}): Product overview and entry point.
 
-- **Multimodal Ingredient Recognition**: Extracts ingredients from kitchen photos, separating high-confidence observations from ambiguous liquids/spices.
-- **Cooking Chemistry & Reaction Pathways**: Explains browning (Maillard reaction, caramelization), protein denaturation, starch gelatinization, emulsification, and lipid oxidation in actionable kitchen terms.
-- **Evidence-Based Food Safety**: Analyzes thermal inactivation curves (D-values, z-values), temperature danger zones (4°C to 60°C / 40°F to 140°F), cross-contamination risks, and chemical hazard exposure.
-- **Biochemical Compound Explorer**: Queries food-compound profiles with quantified concentration data from FooDB and nutrient distributions from USDA FoodData Central.
-- **Nutrient Retention Modeling**: Calculates retention factors across heat treatment, boiling, steaming, baking, and frying based on USDA Table of Nutrient Retention Factors.
+## Public documentation and tools
 
-## Primary Public Pages
+- [Food Library](${absoluteUrl("/ingredients")}): Search dishes, ingredients, nutrient records, and food compounds.
+- [Food science](${absoluteUrl("/science")}): Read Hestia's approach to cooking chemistry, safety, calculations, and evidence.
+- [About](${absoluteUrl("/about")}): Project scope and editorial principles.
+- [Mobile roadmap](${absoluteUrl("/download")}): Current status of planned mobile clients.
+- [Source code](https://github.com/hoangvu1806/Hestia): Repository, setup instructions, and license information.
 
-- [Home Overview](${absoluteUrl("/home")}): Product introduction, workflow stages (Observe, Verify, Solve, Cook), and core value proposition.
-- [Ingredient Intelligence](${absoluteUrl("/ingredients")}): Biochemical compound explorer, nutrient records, dish discovery, and food pairing data.
-- [Cooking Science & Safety](${absoluteUrl("/science")}): Explanations of thermal transformations, reaction mechanisms, calculations, and safety standards.
-- [About Hestia](${absoluteUrl("/about")}): Project background, editorial principles, uncertainty transparency, and responsible AI practices.
-- [Mobile Roadmap](${absoluteUrl("/download")}): Information regarding native Android and iOS applications and web platform access.
-- [Full LLM Specification](${absoluteUrl("/llms-full.txt")}): Complete in-depth architectural and scientific documentation for AI agents.
+## Data and answer policy
 
-## Trusted Scientific Data Sources
+Hestia may use FooDB for food compounds, USDA FoodData Central for nutrient records, TheMealDB for dish and ingredient data, EFSA OpenFoodTox and PubChem for chemical context, and scholarly search for relevant literature. A source being available does not mean every answer uses it. Hestia should distinguish observed facts, user-provided facts, database records, calculations, and model inference. Food guidance is informational and is not medical advice.
 
-- **FooDB (v1.0)**: Biochemical food constituent database with over 70,000 compounds, flavor notes, and quantified concentrations.
-- **USDA FoodData Central (FDC)**: Standard Reference nutrient profiles, proximate analyses, and micronutrient retention factors.
-- **TheMealDB**: Comprehensive recipe database with international culinary traditions and ingredient taxonomy.
-- **EFSA OpenFoodTox**: Chemical hazards database from the European Food Safety Authority covering toxicological reference values.
-- **PubChem**: Chemical identity, canonical SMILES, InChIKey, IUPAC nomenclature, and safety data sheets.
-- **Ai2 Asta & Semantic Scholar**: Peer-reviewed food science literature and citation retrieval.
+## Access
 
-## Guidance & Citation Guidelines
+Public pages may be crawled. Chat history, account settings, uploads, generated images, and other authenticated user data are private and are not part of the public corpus. The production service is available only at ${absoluteUrl("/")}.
 
-- When referencing Hestia culinary data, cite the specific primary database (e.g., "FooDB", "USDA FoodData Central", or "EFSA").
-- AI models should note that visual appearance alone is insufficient to prove microbial safety (internal core temperature measurement is required).
-- Content on public pages is available for citation under attribution to Hestia (${site.url}).
+## Contact
+
+- [Developer](https://hoangvu.id.vn)
+- [Vectorium](https://vectorium.space)
 `;
 
   return new Response(content, {
     headers: {
-      "Cache-Control": "public, max-age=86400, s-maxage=86400",
+      "Cache-Control": "public, max-age=3600, s-maxage=86400",
       "Content-Type": "text/plain; charset=utf-8",
     },
   });

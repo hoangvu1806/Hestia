@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 const configuredUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
 
-export const SITE_URL = configuredUrl || "https://hestia.hoangvu.id.vn";
+export const SITE_URL = configuredUrl || "https://hestia.vectorium.space";
 
 export const site = {
   name: "Hestia",
@@ -13,11 +13,10 @@ export const site = {
   locale: "en_US",
   locales: ["en_US", "vi_VN"] as const,
   url: SITE_URL,
-  author: "Hestia AI Culinary Science Team",
+  author: "Hestia contributors",
   creator: "Hestia",
-  publisher: "Hestia Culinary Technologies",
+  publisher: "Hestia",
   keywords: [
-    // Core English Keywords
     "evidence-based cooking",
     "culinary AI",
     "AI cooking assistant",
@@ -41,8 +40,6 @@ export const site = {
     "EFSA OpenFoodTox",
     "PubChem food chemistry",
     "Semantic Scholar food research",
-
-    // Vietnamese Keywords for Localized Search
     "nấu ăn khoa học",
     "trợ lý nấu ăn AI",
     "khoa học thực phẩm",
@@ -70,13 +67,13 @@ export interface RouteConfig {
 
 export const indexableRoutes: readonly RouteConfig[] = [
   {
-    path: "/home",
+    path: "/",
     title: "Hestia — Evidence-Based Cooking & Food Science Intelligence",
     description:
       "Turn ingredient photos and cooking questions into practical kitchen decisions grounded in food chemistry, safety data, and peer-reviewed scientific evidence.",
     changeFrequency: "weekly",
     priority: 1.0,
-    image: "/hestia-hero.png",
+    image: "/hestia-hero.webp",
     imageAlt: "Hestia evidence-based culinary intelligence platform overview",
     keywords: [
       "AI cooking assistant",
@@ -93,7 +90,7 @@ export const indexableRoutes: readonly RouteConfig[] = [
       "Search dishes and ingredients, compare USDA nutrient records, and explore biochemical compounds from FooDB, USDA FoodData Central, and TheMealDB.",
     changeFrequency: "daily",
     priority: 0.95,
-    image: "/ingredient-intelligence.png",
+    image: "/ingredient-intelligence.webp",
     imageAlt: "Hestia ingredient intelligence and compound database explorer",
     keywords: [
       "food compound database",
@@ -110,7 +107,7 @@ export const indexableRoutes: readonly RouteConfig[] = [
       "Understand browning reactions, protein denaturation, nutrient retention kinetics, heat transfer, pH, water activity, and food safety danger zones in practical kitchen terms.",
     changeFrequency: "weekly",
     priority: 0.9,
-    image: "/hestia-hero.png",
+    image: "/hestia-hero.webp",
     imageAlt: "Hestia cooking chemistry and food-safety science pathways",
     keywords: [
       "Maillard reaction guide",
@@ -127,7 +124,7 @@ export const indexableRoutes: readonly RouteConfig[] = [
       "Learn how Hestia connects practical cooking execution with peer-reviewed food science, transparent assumptions, verified chemical databases, and visible uncertainty.",
     changeFrequency: "monthly",
     priority: 0.8,
-    image: "/logo-transparent.png",
+    image: "/logo-transparent.webp",
     imageAlt: "About Hestia culinary intelligence team and mission",
     keywords: [
       "about Hestia",
@@ -143,7 +140,7 @@ export const indexableRoutes: readonly RouteConfig[] = [
       "Explore the roadmap for Hestia native Android and iOS mobile applications, or experience the complete culinary intelligence platform in your web browser today.",
     changeFrequency: "monthly",
     priority: 0.7,
-    image: "/hestia-hero.png",
+    image: "/hestia-hero.webp",
     imageAlt: "Hestia mobile applications for Android and iOS",
     keywords: [
       "cooking app Android",
@@ -151,17 +148,6 @@ export const indexableRoutes: readonly RouteConfig[] = [
       "culinary assistant mobile",
       "Hestia app download",
     ],
-  },
-  {
-    path: "/login",
-    title: "Sign In — Access Your Hestia Culinary Intelligence Workspace | Hestia",
-    description:
-      "Sign in to Hestia with Google to access persistent cooking conversations, saved recipes, ingredient scans, and personalized food science notes.",
-    changeFrequency: "monthly",
-    priority: 0.5,
-    image: "/logo-transparent.png",
-    imageAlt: "Sign in to Hestia workspace",
-    keywords: ["Hestia login", "sign in culinary AI", "Hestia account"],
   },
 ] as const;
 
@@ -180,7 +166,7 @@ export function pageMetadata({
   title,
   description,
   keywords = [],
-  image = "/hestia-hero.png",
+  image = "/hestia-hero.webp",
   imageAlt = "Hestia culinary intelligence",
   type = "website",
 }: {
@@ -197,21 +183,14 @@ export function pageMetadata({
   const combinedKeywords = Array.from(new Set([...keywords, ...site.keywords]));
 
   return {
-    title,
+    title: { absolute: title },
     description,
     keywords: combinedKeywords,
     authors: [{ name: site.author }],
     creator: site.creator,
     publisher: site.publisher,
     category: "Food & Cooking Technology",
-    alternates: {
-      canonical,
-      languages: {
-        "en-US": canonical,
-        "vi-VN": canonical,
-        "x-default": canonical,
-      },
-    },
+    alternates: { canonical },
     openGraph: {
       type,
       url: canonical,
@@ -226,7 +205,7 @@ export function pageMetadata({
           alt: imageAlt,
           width: 1672,
           height: 941,
-          type: "image/png",
+          type: "image/webp",
         },
       ],
     },
@@ -234,8 +213,6 @@ export function pageMetadata({
       card: "summary_large_image",
       title,
       description,
-      creator: "@hestia_ai",
-      site: "@hestia_ai",
       images: [
         {
           url: imageUrl,
@@ -271,10 +248,6 @@ export const privatePageMetadata: Metadata = {
   },
 };
 
-// -----------------------------------------------------------------------------
-// Schema.org Structured Data Generators (JSON-LD)
-// -----------------------------------------------------------------------------
-
 export function getOrganizationSchema() {
   return {
     "@context": "https://schema.org",
@@ -285,12 +258,12 @@ export function getOrganizationSchema() {
     logo: {
       "@type": "ImageObject",
       "@id": `${SITE_URL}/#logo`,
-      url: absoluteUrl("/logo.png"),
+      url: absoluteUrl("/logo.webp"),
       caption: site.name,
       width: 1600,
       height: 1600,
     },
-    image: absoluteUrl("/hestia-hero.png"),
+    image: absoluteUrl("/hestia-hero.webp"),
     description: site.description,
     slogan: site.tagline,
     knowsAbout: [
@@ -335,7 +308,7 @@ export function getWebApplicationSchema() {
     "@id": `${SITE_URL}/#webapplication`,
     name: "Hestia Culinary Intelligence",
     alternateName: "Hestia AI Cooking Assistant",
-    url: absoluteUrl("/home"),
+    url: absoluteUrl("/"),
     applicationCategory: "LifestyleApplication",
     applicationSubCategory: "Cooking & Food Science Assistant",
     operatingSystem: "All modern web browsers (Chrome, Safari, Firefox, Edge)",
@@ -351,19 +324,6 @@ export function getWebApplicationSchema() {
       "Persistent authenticated cooking sessions and private chat history",
       "Bilingual interface (English & Vietnamese) with light and dark themes",
     ],
-    offers: {
-      "@type": "Offer",
-      price: "0",
-      priceCurrency: "USD",
-      availability: "https://schema.org/InStock",
-    },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "4.9",
-      ratingCount: "256",
-      bestRating: "5",
-      worstRating: "1",
-    },
     provider: { "@id": `${SITE_URL}/#organization` },
     inLanguage: ["en", "vi"],
   };

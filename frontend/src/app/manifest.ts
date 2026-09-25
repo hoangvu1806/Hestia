@@ -8,7 +8,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "Hestia",
     description:
       "Evidence-based cooking guidance, food chemistry explanations, nutrient retention calculations, and food-safety screening.",
-    start_url: "/home/",
+    start_url: "/",
     display: "standalone",
     background_color: "#fffaf6",
     theme_color: "#ff654f",
@@ -18,15 +18,15 @@ export default function manifest(): MetadataRoute.Manifest {
     orientation: "portrait-primary",
     icons: [
       {
-        src: "/logo.png",
+        src: "/logo.webp",
         sizes: "1600x1600",
-        type: "image/png",
+        type: "image/webp",
         purpose: "any",
       },
       {
-        src: "/logo-transparent.png",
+        src: "/logo-transparent.webp",
         sizes: "512x512",
-        type: "image/png",
+        type: "image/webp",
         purpose: "maskable",
       },
     ],
@@ -36,21 +36,21 @@ export default function manifest(): MetadataRoute.Manifest {
         short_name: "Chat",
         description: "Open the culinary AI assistant",
         url: "/chat/",
-        icons: [{ src: "/logo.png", sizes: "192x192" }],
+        icons: [{ src: "/logo.webp", sizes: "192x192", type: "image/webp" }],
       },
       {
         name: "Food Library",
         short_name: "Ingredients",
         description: "Explore food compounds and nutrient data",
         url: "/ingredients/",
-        icons: [{ src: "/logo.png", sizes: "192x192" }],
+        icons: [{ src: "/logo.webp", sizes: "192x192", type: "image/webp" }],
       },
       {
         name: "Food Science",
         short_name: "Science",
         description: "Learn cooking chemistry and food-safety mechanisms",
         url: "/science/",
-        icons: [{ src: "/logo.png", sizes: "192x192" }],
+        icons: [{ src: "/logo.webp", sizes: "192x192", type: "image/webp" }],
       },
     ],
   };

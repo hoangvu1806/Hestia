@@ -49,11 +49,11 @@ export default function LoginPage() {
   return (
     <main className="login-page">
       <header className="login-header">
-        <Link href="/home"><Brand name="Hestia" tagline="Culinary intelligence" /></Link>
+        <Link href="/"><Brand name="Hestia" tagline="Culinary intelligence" /></Link>
         <ThemeToggle label="Change color theme" />
       </header>
       <section className="login-visual" aria-label="Hestia culinary workspace preview">
-        <Image alt="Fresh ingredients arranged for evidence-led cooking" fill priority sizes="(max-width: 800px) 100vw, 54vw" src="/hestia-hero.png" />
+        <Image alt="Fresh ingredients arranged for evidence-led cooking" fill priority sizes="(max-width: 800px) 100vw, 54vw" src="/hestia-hero.webp" />
         <div className="login-visual-copy">
           <span>YOUR PRIVATE KITCHEN NOTEBOOK</span>
           <h1>Good cooking starts with a question worth keeping.</h1>
@@ -62,7 +62,7 @@ export default function LoginPage() {
       </section>
       <section className="login-panel">
         <div className="login-card">
-          <div className="account-seal" aria-hidden="true"><Image alt="" height={52} src="/logo-transparent.png" width={52} /></div>
+          <div className="account-seal" aria-hidden="true"><Image alt="" height={52} src="/logo-transparent.webp" width={52} /></div>
           <span className="eyebrow">Welcome to Hestia</span>
           <h2>Continue to your culinary workspace</h2>
           <p>Sign in once to keep every conversation private, available, and ready to continue.</p>

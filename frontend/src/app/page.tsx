@@ -1,5 +1,1 @@
-import { permanentRedirect } from "next/navigation";
-
-export default function IndexPage() {
-  permanentRedirect("/home");
-}
+export { default, metadata } from "./_home-page";

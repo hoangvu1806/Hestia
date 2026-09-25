@@ -130,12 +130,12 @@ function PrivateImage({
 const navItems = [
   ["chat", "chat", "/chat"],
   ["ingredients", "ingredients", "/ingredients"],
-  ["saved", "bookmark", "/home"],
 ] as const;
 
 const sessionKey = (uid: string) => `hestia-session-id:${uid}`;
 const foodbTag = /\[(?:<)?([^:\]<>\n]+):(FDB\d+)(?:>)?\]/gi;
 const foodbFoodTag = /\[(?:<)?([^:\]<>\n]+):(FOOD\d+)(?:>)?\]/gi;
+const libraryTag = /\[<(ingredient|dish|nutrient|compound):([^|>\]\n]+)(?:\|([^>\]\n]+))?>\]/gi;
 const markdownCode = /(```[\s\S]*?```|`[^`\n]+`)/g;
 const duplicatedMathOpen = /\$\s+\$(?=\s*\\(?:le|ge|lt|gt|approx|sim|pm|times|frac|text|circ))/g;
 const markdownLink = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)(?:\s+"[^"]*")?\)/g;
@@ -178,68 +178,51 @@ function markdownUrlTransform(value: string) {
   return defaultUrlTransform(value);
 }
 
-function decorateFoodbTags(markdown: string) {
+function libraryHref(kind: string, name: string, id?: string) {
+  const mode = kind === "dish"
+    ? "meals"
+    : kind === "nutrient"
+      ? "nutrients"
+      : kind === "compound"
+        ? "chemistry"
+        : "foods";
+  const params = new URLSearchParams({ q: name.trim(), kind: mode });
+  if (kind === "nutrient") params.set("nutrient", name.trim().toLowerCase());
+  if (id?.trim()) params.set("entity", id.trim());
+  return `/ingredients?${params.toString()}`;
+}
+
+function decorateLibraryTags(markdown: string) {
   return markdown
     .split(markdownCode)
     .map((part, index) =>
       index % 2
         ? part
         : normalizeMathNotation(part)
+            .replace(libraryTag, (_, kind: string, name: string, id?: string) =>
+              `[${name.trim()}](${libraryHref(kind.toLowerCase(), name, id)} "hestia-library:${kind.toLowerCase()}:${id?.trim() || ""}")`,
+            )
             .replace(foodbTag, (_, name: string, id: string) =>
-              `[${name.trim()}](https://foodb.ca/compounds/${id.toUpperCase()} "hestia-foodb")`,
+              `[${name.trim()}](${libraryHref("compound", name, id.toUpperCase())} "hestia-library:compound:${id.toUpperCase()}")`,
             )
             .replace(foodbFoodTag, (_, name: string, id: string) =>
-              `[${name.trim()}](https://foodb.ca/foods/${id.toUpperCase()} "hestia-food")`,
+              `[${name.trim()}](${libraryHref("ingredient", name, id.toUpperCase())} "hestia-library:ingredient:${id.toUpperCase()}")`,
             ),
     )
     .join("");
 }
 
-function FoodbCompound({ id, name }: { id: string; name: string }) {
-  const [open, setOpen] = useState(false);
-  const imageUrl = `https://foodb.ca/structures/${id}/image.svg`;
-
+function LibraryEntity({ href, kind, name }: { href: string; kind: string; name: string }) {
   return (
-    <span
-      className={open ? "compound-reference open" : "compound-reference"}
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
-      }}
-      onMouseLeave={() => setOpen(false)}
+    <Link
+      className={`library-entity ${kind}`}
+      href={href}
+      title={`Open ${name} in the Hestia Library`}
     >
-      <button
-        aria-expanded={open}
-        className="compound-chip"
-        onClick={() => setOpen((value) => !value)}
-        onFocus={() => setOpen(true)}
-        type="button"
-      >
-        {name}
-      </button>
-      <span aria-label={`${name} ${id}`} className="compound-popover" role="tooltip">
-        <span className="compound-structure">
-          <Image alt={`Chemical structure of ${name}`} height={102} src={imageUrl} unoptimized width={158} />
-        </span>
-        <span className="compound-meta">
-          <strong>{name}</strong>
-          <small>{id}</small>
-        </span>
-      </span>
-    </span>
-  );
-}
-
-function FoodbFood({ id, name }: { id: string; name: string }) {
-  return (
-    <a
-      className="food-reference"
-      href={`https://foodb.ca/foods/${id}`}
-      rel="noreferrer"
-      target="_blank"
-      title={`${id} · FooDB food`}
-    >
-      {name}
-    </a>
+      <small>{kind}</small>
+      <span>{name}</span>
+      <b aria-hidden="true">↗</b>
+    </Link>
   );
 }
 
@@ -357,6 +340,7 @@ export function AppShell({
   const [pendingFile, setPendingFile] = useState<InlineFile | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const [connection, setConnection] = useState<"connecting" | "ready" | "error">(
     "connecting",
   );
@@ -367,6 +351,22 @@ export function AppShell({
   const sessionId = useRef<string | null>(null);
   const connectionPromise = useRef<Promise<string> | null>(null);
   const activeRequest = useRef<AbortController | null>(null);
+  const accountMenu = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function closeAccount(event: PointerEvent) {
+      if (!accountMenu.current?.contains(event.target as Node)) setAccountOpen(false);
+    }
+    function closeWithEscape(event: globalThis.KeyboardEvent) {
+      if (event.key === "Escape") setAccountOpen(false);
+    }
+    window.addEventListener("pointerdown", closeAccount);
+    window.addEventListener("keydown", closeWithEscape);
+    return () => {
+      window.removeEventListener("pointerdown", closeAccount);
+      window.removeEventListener("keydown", closeWithEscape);
+    };
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -822,7 +822,6 @@ export function AppShell({
               <Image alt="" className="avatar-photo" height={34} src={user.photoURL} unoptimized width={34} />
             ) : <span className="avatar">{user?.displayName?.slice(0, 2).toUpperCase() || "HC"}</span>}
             <span><strong>{user?.displayName || profile.name}</strong><small>{user?.email || profile.status}</small></span>
-            <button aria-label="Sign out" className="profile-signout" onClick={() => void signOut()} type="button">↗</button>
           </div>
         </div>
       </aside>
@@ -837,13 +836,29 @@ export function AppShell({
             </span>
           </div>
           <div className="header-actions">
-            <Link className="locale-button" href="/home">HOME</Link>
+            <Link className="locale-button" href="/">HOME</Link>
             <ThemeToggle label={header.theme} />
-            <Link aria-label="Open chat settings" className="header-account-link" href="/settings">
-              {user?.photoURL ? (
-                <Image alt="" className="header-avatar photo" height={38} src={user.photoURL} unoptimized width={38} />
-              ) : <span className="header-avatar">{user?.displayName?.slice(0, 2).toUpperCase() || "HC"}</span>}
-            </Link>
+            <div className="chat-account" ref={accountMenu}>
+              <button
+                aria-expanded={accountOpen}
+                aria-haspopup="menu"
+                aria-label="Open account menu"
+                className="header-account-link"
+                onClick={() => setAccountOpen((current) => !current)}
+                type="button"
+              >
+                {user?.photoURL ? (
+                  <Image alt="" className="header-avatar photo" height={38} src={user.photoURL} unoptimized width={38} />
+                ) : <span className="header-avatar">{user?.displayName?.slice(0, 2).toUpperCase() || "HC"}</span>}
+              </button>
+              {accountOpen ? <div aria-label="Account menu" className="account-popover chat-account-popover" role="menu">
+                <div className="account-popover-identity">
+                  {user?.photoURL ? <Image alt="" height={42} src={user.photoURL} unoptimized width={42} /> : <span>{user?.displayName?.slice(0, 1).toUpperCase() || "H"}</span>}
+                  <div><small>Signed in as</small><strong>{user?.displayName || profile.name}</strong><small>{user?.email || profile.status}</small></div>
+                </div>
+                <button className="account-sign-out" onClick={() => void signOut()} role="menuitem" type="button"><span>Sign out</span><b>→</b></button>
+              </div> : null}
+            </div>
           </div>
         </header>
 
@@ -884,7 +899,7 @@ export function AppShell({
                 <article className={`message ${message.role}`} key={message.id}>
                   <div className="message-author">
                     {message.role === "assistant" ? (
-                      <Image alt="Hestia" height={30} src="/logo-transparent.png" width={30} />
+                      <Image alt="Hestia" height={30} src="/logo-transparent.webp" width={30} />
                     ) : (
                       <span>{user?.displayName?.slice(0, 2).toUpperCase() || "HC"}</span>
                     )}
@@ -942,17 +957,9 @@ export function AppShell({
                               );
                             },
                             a: ({ children, href, title }) => {
-                              const compound = title === "hestia-foodb"
-                                ? href?.match(/^https:\/\/foodb\.ca\/compounds\/(FDB\d+)$/i)
-                                : null;
-                              const food = title === "hestia-food"
-                                ? href?.match(/^https:\/\/foodb\.ca\/foods\/(FOOD\d+)$/i)
-                                : null;
-                              if (compound) {
-                                return <FoodbCompound id={compound[1].toUpperCase()} name={String(children)} />;
-                              }
-                              if (food) {
-                                return <FoodbFood id={food[1].toUpperCase()} name={String(children)} />;
+                              const entity = title?.match(/^hestia-library:(ingredient|dish|nutrient|compound):/i);
+                              if (entity && href) {
+                                return <LibraryEntity href={href} kind={entity[1].toLowerCase()} name={String(children)} />;
                               }
                               return (
                                 <a className="evidence-link" href={href} rel="noreferrer" target="_blank">
@@ -966,7 +973,7 @@ export function AppShell({
                           skipHtml
                           urlTransform={markdownUrlTransform}
                         >
-                          {decorateFoodbTags(message.content)}
+                          {decorateLibraryTags(message.content)}
                         </ReactMarkdown>
                         {message.role === "assistant" && !message.streaming ? (
                           <EvidenceRail markdown={message.content} title={chat.sourcesUsed} />

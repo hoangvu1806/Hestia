@@ -25,7 +25,7 @@ export const metadata: Metadata = pageMetadata({
     "transparent cooking intelligence",
     "kitchen AI ethics",
   ],
-  image: "/logo-transparent.png",
+  image: "/logo-transparent.webp",
   imageAlt: "Hestia culinary intelligence team and philosophy",
 });
 
@@ -33,7 +33,7 @@ const aboutFaqs = [
   {
     question: "Why was Hestia created?",
     answer:
-      "Most cooking assistants simply generate text recipes with no verification. Hestia was designed to bridge culinary execution and food science by verifying claims against chemical databases (FooDB), nutrient retention datasets (USDA), and peer-reviewed literature.",
+      "Hestia was created to connect practical cooking decisions with relevant food data, calculations, and scientific sources while keeping uncertainty visible.",
   },
   {
     question: "How does Hestia handle uncertainty in cooking recommendations?",
@@ -43,7 +43,7 @@ const aboutFaqs = [
   {
     question: "Who develops Hestia?",
     answer:
-      "Hestia is developed by culinary technologists and software engineers dedicated to making food chemistry, nutrition, and microbial safety transparent, accessible, and practical for every home cook and professional chef.",
+      "Hestia is an open-source project maintained by its contributors. Current developer and project links are listed in the site footer and repository.",
   },
 ];
 
@@ -52,7 +52,7 @@ const structuredData = {
   "@graph": [
     getOrganizationSchema(),
     getBreadcrumbSchema([
-      { name: "Home", path: "/home" },
+      { name: "Home", path: "/" },
       { name: "About Hestia", path: "/about" },
     ]),
     getFaqSchema(aboutFaqs),
