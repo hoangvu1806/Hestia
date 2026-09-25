@@ -18,6 +18,7 @@ backend/secrets/
 .tmp/
 tmp/
 temp/
+.docker-cache/
 *.log
 
 # Python / Backend

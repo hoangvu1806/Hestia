@@ -149,6 +149,60 @@ Open `http://localhost:3434`.
 
 `npm run dev` performs a production-style static export before serving `frontend/out/`. Use `npm run build` when only the export is required and `npm run start` to serve an existing export.
 
+## Docker deployment
+
+Docker Compose runs the static frontend behind Nginx, proxies `/api` to FastAPI, and keeps PostgreSQL and generated images on named volumes. Only the frontend port is published.
+
+```powershell
+Copy-Item compose.env.example .env
+Copy-Item backend/.env.example backend/.env
+```
+
+Complete both environment files and place the Firebase Admin SDK key at `backend/secrets/firebase/service-account.json`. Then build and start the stack:
+
+```powershell
+docker compose build
+docker compose up -d
+docker compose ps
+```
+
+Open `http://localhost:8080`. Change `HESTIA_HTTP_PORT` in the root `.env` file when another host port is required.
+
+The images use multi-stage builds and BuildKit cache mounts. Compose also stores reusable build layers in `.docker-cache/`, so source-only changes reuse Python wheels, npm packages, and Next.js compilation data. To force a clean rebuild:
+
+```powershell
+Remove-Item -Recurse -Force .docker-cache
+docker compose build --no-cache
+```
+
+To deploy images published by GitHub Actions instead of building on the server, set these values in the root `.env` file and run `docker compose pull` before `docker compose up -d`:
+
+```dotenv
+HESTIA_BACKEND_IMAGE=ghcr.io/OWNER/hestia-backend:latest
+HESTIA_FRONTEND_IMAGE=ghcr.io/OWNER/hestia-frontend:latest
+```
+
+If a local FooDB SQLite import exists under `backend/dataset/processed/`, import it once with the tools profile:
+
+```powershell
+docker compose --profile tools run --rm food-data-import
+```
+
+Back up the `postgres_data` and `generated_images` volumes before destructive upgrades. The default Compose file is suitable for a single-host deployment. Put a TLS-terminating reverse proxy or load balancer in front of port `8080` for public traffic.
+
+## Continuous integration and delivery
+
+The GitHub Actions workflows under `.github/workflows/` provide:
+
+- backend tests and Ruff checks
+- frontend lint and production export
+- independent backend and frontend container builds
+- BuildKit layer caching through the GitHub Actions cache
+- GHCR publication for `main`, `dev`, and version tags
+- image provenance and SBOM generation
+
+The publishing workflow requires the public Firebase frontend values to be configured as GitHub repository variables named after the corresponding `NEXT_PUBLIC_FIREBASE_*` settings. Runtime secrets such as the model API key, database password, Asta key, and Firebase Admin SDK JSON are never built into the images.
+
 ## Database import
 
 The running application reads food-intelligence data from PostgreSQL. Local SQLite files are import inputs only and are not used at runtime.
