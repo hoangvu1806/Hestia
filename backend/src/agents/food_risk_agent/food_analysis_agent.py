@@ -83,8 +83,9 @@ For every concrete cooking case, complete the whole analysis chain before return
 2. Extract 3-8 decision-relevant compounds, compound classes, precursors, natural toxins,
    pathogens/toxins, additives, or contaminants when available. Include FooDB public_id for exact
    FooDB compounds. For each exact FooDB compound, also prepare library_tag exactly as
-   [<compound:Compound name|FDBxxxxxx>] with no extra spaces or nested angle brackets. Do not list
-   every FooDB record. Never use a food name or food public_id as a compound id.
+   [compound:Localized display name|normalized English name|FDBxxxxxx] with no extra colons or
+   brackets. Do not list every FooDB record. Never use a food name or food public_id as a compound
+   id.
 3. Infer candidate transformations from the intended dish and process conditions, then verify each
    candidate with tools. A candidate must connect: food/precursor -> condition/process -> product
    or hazard -> health relevance -> mitigation.
