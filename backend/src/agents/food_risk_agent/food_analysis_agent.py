@@ -15,7 +15,9 @@ from .tools import (
     lookup_chemical_identity,
     lookup_openfoodtox,
     search_food_compounds,
+    search_nutrient_retention,
     search_reaction_literature,
+    solve_food_chemistry,
 )
 
 
@@ -31,10 +33,8 @@ def _count_evidence_tool(
         tool_context.state[key] = int(tool_context.state.get(key, 0)) + 1
 
 
-def _finish_when_budget_used(
-    callback_context: Context, llm_request: LlmRequest
-) -> None:
-    if int(callback_context.state.get("temp:food_analysis_tool_count", 0)) < 4:
+def _finish_when_budget_used(callback_context: Context, llm_request: LlmRequest) -> None:
+    if int(callback_context.state.get("temp:food_analysis_tool_count", 0)) < 6:
         return None
     llm_request.config.tool_config = types.ToolConfig(
         function_calling_config=types.FunctionCallingConfig(
@@ -61,6 +61,8 @@ food_analysis_agent = LlmAgent(
         lookup_openfoodtox,
         get_pubchem_hazard_summary,
         search_reaction_literature,
+        search_nutrient_retention,
+        solve_food_chemistry,
     ],
     after_tool_callback=_count_evidence_tool,
     before_model_callback=_finish_when_budget_used,
@@ -86,20 +88,39 @@ For every concrete cooking case, complete the whole analysis chain before return
 3. Infer candidate transformations from the intended dish and process conditions, then verify each
    candidate with tools. A candidate must connect: food/precursor -> condition/process -> product
    or hazard -> health relevance -> mitigation.
-4. Check toxicology or hazard data only for exact relevant chemicals/products, not broad guesses.
-5. Use literature search only for concrete formation or mitigation claims, with small limits.
-6. Classify each finding as supported, plausible but unconfirmed, contradicted, or not assessable.
-7. Keep ordinary recipe advice tied to the verified process: what to do, what to avoid, and what
+4. When quantities are supplied, turn the case into a calculation plan: list known values, unknowns,
+   units, equation, assumptions and the decision the result informs. Use solve_food_chemistry for
+   arithmetic; never rely on mental arithmetic for a displayed quantitative result. If inputs are
+   missing, return a symbolic relationship or range rather than inventing values.
+5. For nutrient-retention questions, retrieve a close USDA process/nutrient factor before
+   calculating. Report the match score and category mismatch as uncertainty.
+6. Check toxicology or hazard data only for exact relevant chemicals/products, not broad guesses.
+7. Use literature search for concrete formation, mechanism or mitigation claims that matter to the
+   conclusion, with small limits. Do this proactively when a consequential claim needs support,
+   even if the user did not explicitly ask for citations. Prefer a directly relevant paper over
+   broad background results.
+8. Classify each finding as measured/reported data, deterministic calculation, supported inference,
+   plausible but unconfirmed, contradicted, or not assessable.
+9. Keep ordinary recipe advice tied to the verified process: what to do, what to avoid, and what
    missing facts would change the answer.
+10. For every request asking how to cook a confirmed dish, produce a complete critical-control
+    analysis even if the user did not ask about risk. Identify only hazards that genuinely apply.
+    For each one return: the risky condition, mechanism or hazard, observable or measurable control,
+    and the concrete prevention step. Include raw-to-cooked handling, core heating, storage,
+    allergen, smoke or charring controls when relevant to the actual dish.
 
 TOOL BUDGET
-- Use at most four evidence tool calls for the entire task and never retry a failed or empty call.
+- Use at most six tool calls for the entire task and never retry a failed or empty call. A
+  calculation is one call even when it returns several derived values.
 - Make one batched get_food_chemical_profile call for all relevant ingredients. Use
   a second profile call only when the first call has unresolved food names and broader names are
   likely to resolve them. Use search_food_compounds only when one exact decision-relevant compound
   is missing from the profile result.
 - Use at most one identity or toxicology lookup and at most one literature search. Prefer
   OpenFoodTox for food toxicology; use PubChem only when identity or hazard text is still needed.
+- Use search_nutrient_retention only for a nutrient-retention decision. Use
+  solve_food_chemistry only when the user supplied enough numeric inputs or a transparent
+  scenario comparison needs arithmetic.
 - Do not search literature for routine hygiene, ordinary doneness, or flavor extraction. Stop as
   soon as the available evidence supports practical advice.
 - When the tool budget is exhausted, immediately call finish_task with the evidence already
@@ -112,6 +133,8 @@ EVIDENCE POLICY
 - Use toxicology lookup only for an exact, relevant candidate.
 - Safety-critical conclusions require evidence that matches the food and process conditions.
 - Never invent thresholds, dose, kinetics, yield, doneness, contamination, or citations.
+- Keep units explicit. Reject dimensional mismatches and distinguish theoretical yield from expected
+  yield, a relative index from concentration, and a category retention factor from a measurement.
 - Do not describe a chronic hazard as acute poisoning or call every microbial hazard a toxin.
 
 OUTPUT
@@ -122,14 +145,26 @@ result field. This returns control and evidence to the root agent. Include:
   and FooDB public_id when available, foob_tag when available, why it matters, source;
 - transformation/pathway list: food or precursor -> process condition -> possible product/hazard
   -> practical implication;
+- calculation ledger when relevant: known values, unknowns, equation, substitutions, result with
+  units, assumptions, sensitivity to missing inputs, and the decision the result changes;
+- evidence ledger: a short claim -> evidence type -> source URL mapping. Preserve exact paper
+  titles, years, FooDB citations, USDA source URL, PubChem URL and EFSA URL returned by tools.
+  Never fabricate a URL or cite a search result that did not support the claim;
 - risk interpretation: acute vs long-term, food safety vs chemical process, evidence strength, and
   whether the issue is supported, plausible, or not established for this dish;
 - cooking guidance and mitigations tied to each pathway;
-- visualization notes only when a supported or plausible harmful pathway would be clearer visually:
-  toxic compound formation, natural toxin, process contaminant, pathogen/toxin survival or
-  reduction, or another harmful transformation. Do not suggest visuals for normal recipe steps,
-  flavor extraction, collagen/gelatin extraction, aroma release, or general hygiene reminders. If
-  there is no harmful pathway worth visualizing, write "no visual needed";
+- mandatory recipe risk-control map when cooking instructions were requested: preparation stage ->
+  relevant hazard or quality chemistry -> trigger -> prevention/control -> evidence source;
+- mandatory visual plan: inspect the shape of the evidence instead of waiting for the user to ask.
+  Recommend a Mermaid flowchart for a pathway or dependent process, Mermaid xychart for two or more
+  comparable sourced or calculated scenarios, a compact Markdown table for repeated fields or
+  trade-offs, pie only for true parts of one whole, and a generated illustration when shape,
+  wrapping, assembly, or plating matters. A confirmed recipe with four or more dependent stages or
+  a critical safety gate should default to a flowchart. Provide a concise title, exact values or
+  4-7 short nodes, the main takeaway, and supporting source. Require `flowchart LR` for five or more
+  stages so the result remains readable. You may recommend one structural/data visual plus one
+  complementary generated illustration. Never turn qualitative confidence into invented
+  percentages and never recommend a decorative visual that answers no user question;
 - missing decisive facts and what they would change;
 - source URLs close to the claims they support.
 

@@ -12,6 +12,18 @@ import {
 let renderQueue = Promise.resolve();
 const mermaidStart = /^\s*(?:flowchart|graph|sequenceDiagram|classDiagram|stateDiagram(?:-v2)?|erDiagram|journey|gantt|pie|mindmap|timeline|gitGraph|quadrantChart|xychart-beta|block-beta|architecture-beta|packet-beta|kanban|sankey-beta|requirementDiagram|C4Context|C4Container|C4Component|C4Dynamic|C4Deployment)\b/i;
 
+function diagramProfile(source: string) {
+  const flowchart = /^\s*(?:flowchart|graph)\b/i.test(source);
+  const connections = (source.match(/-->|---|-\.->|==>/g) || []).length;
+  return { flowchart, dense: flowchart && connections >= 4 };
+}
+
+function optimizeFlowchartLayout(source: string) {
+  const profile = diagramProfile(source);
+  if (!profile.dense) return source;
+  return source.replace(/^(\s*(?:flowchart|graph)\s+)(?:TD|TB)\b/i, "$1LR");
+}
+
 function saferMermaid(source: string) {
   const normalized = source
     .replace(
@@ -40,22 +52,24 @@ function saferMermaid(source: string) {
 function palette(dark: boolean) {
   return dark
     ? {
-        background: "#211d24",
+        background: "transparent",
         primary: "#3b2928",
         secondary: "#20362d",
         tertiary: "#302941",
         text: "#f7f1ed",
-        muted: "#bdb1aa",
-        line: "#d47b68",
+        muted: "#a99d98",
+        line: "#665b60",
+        plot: "#ff8b73, #62d69b, #b79af5",
       }
     : {
-        background: "#fffaf7",
+        background: "transparent",
         primary: "#fff0eb",
         secondary: "#eaf8f0",
         tertiary: "#f2edfb",
         text: "#2a211e",
         muted: "#776b65",
         line: "#c96e59",
+        plot: "#e95b43, #219a67, #7958cc",
       };
 }
 
@@ -64,6 +78,7 @@ function MermaidDiagram({ source }: { source: string }) {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [svg, setSvg] = useState("");
   const [failed, setFailed] = useState(false);
+  const profile = diagramProfile(source);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -76,8 +91,6 @@ function MermaidDiagram({ source }: { source: string }) {
 
   useEffect(() => {
     let active = true;
-    setFailed(false);
-    setSvg("");
 
     const task = async () => {
       const mermaid = (await import("mermaid")).default;
@@ -88,7 +101,7 @@ function MermaidDiagram({ source }: { source: string }) {
         suppressErrorRendering: true,
         theme: "base",
         fontFamily: "Plus Jakarta Sans, Segoe UI, sans-serif",
-        flowchart: { curve: "basis", htmlLabels: false, nodeSpacing: 34, rankSpacing: 44 },
+        flowchart: { curve: "basis", htmlLabels: false, nodeSpacing: 30, rankSpacing: 38 },
         themeVariables: {
           background: colors.background,
           primaryColor: colors.primary,
@@ -107,7 +120,20 @@ function MermaidDiagram({ source }: { source: string }) {
           clusterBkg: colors.tertiary,
           clusterBorder: colors.tertiary,
           edgeLabelBackground: colors.background,
-          fontSize: "14px",
+          fontSize: "15px",
+          xyChart: {
+            backgroundColor: colors.background,
+            titleColor: colors.text,
+            xAxisLabelColor: colors.muted,
+            xAxisTitleColor: colors.text,
+            xAxisTickColor: colors.line,
+            xAxisLineColor: colors.line,
+            yAxisLabelColor: colors.muted,
+            yAxisTitleColor: colors.text,
+            yAxisTickColor: colors.line,
+            yAxisLineColor: colors.line,
+            plotColorPalette: colors.plot,
+          },
         },
         themeCSS: `
           .node rect, .node circle, .node ellipse, .node polygon, .node path {
@@ -120,7 +146,8 @@ function MermaidDiagram({ source }: { source: string }) {
           .cluster rect { stroke-width: 0 !important; rx: 16px; ry: 16px; }
         `,
       });
-      const candidates = [source, saferMermaid(source)].filter(
+      const layoutSource = optimizeFlowchartLayout(source);
+      const candidates = [layoutSource, saferMermaid(layoutSource), source, saferMermaid(source)].filter(
         (candidate, index, items) => items.indexOf(candidate) === index,
       );
       let rendered = "";
@@ -133,7 +160,10 @@ function MermaidDiagram({ source }: { source: string }) {
         }
       }
       if (!rendered) throw new Error("diagram_unavailable");
-      if (active) setSvg(rendered);
+      if (active) {
+        setFailed(false);
+        setSvg(rendered);
+      }
     };
 
     const queued = renderQueue.then(task, task);
@@ -151,7 +181,10 @@ function MermaidDiagram({ source }: { source: string }) {
   }
 
   return (
-    <figure aria-label="Food chemistry pathway" className="mermaid-diagram">
+    <figure
+      aria-label="Food chemistry pathway"
+      className={`mermaid-diagram${profile.flowchart ? " flowchart-diagram" : " data-diagram"}${profile.dense ? " dense-flowchart" : ""}`}
+    >
       {svg ? (
         <div className="mermaid-canvas" dangerouslySetInnerHTML={{ __html: svg }} />
       ) : (
@@ -163,7 +196,8 @@ function MermaidDiagram({ source }: { source: string }) {
 
 type CodeElement = { className?: string; children?: ReactNode };
 
-export function MarkdownPre({ children, node: _, ...props }: ComponentPropsWithoutRef<"pre"> & { node?: unknown }) {
+export function MarkdownPre({ children, node, ...props }: ComponentPropsWithoutRef<"pre"> & { node?: unknown }) {
+  void node;
   if (isValidElement<CodeElement>(children)) {
     const source = String(children.props.children || "").replace(/\n$/, "");
     const explicit = /(?:^|\s)language-mermaid(?:\s|$)/.test(children.props.className || "");

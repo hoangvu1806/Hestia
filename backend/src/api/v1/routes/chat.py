@@ -1,5 +1,5 @@
-from collections.abc import AsyncIterator
 import logging
+from collections.abc import AsyncIterator
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException

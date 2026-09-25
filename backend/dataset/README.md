@@ -7,15 +7,15 @@
 - Version encoded by FooDB in the archive name: 2020-04-07
 - License: Creative Commons Attribution-NonCommercial 4.0 International
 
-The experiment reads `Food.json`, `Compound.json`, and compound rows from
-`Content.json`. It builds `processed/foodb_compounds.sqlite3`, deduplicating each
-food/compound pair while retaining one example of its content evidence.
+The current application reads FooDB from the PostgreSQL `food_intelligence` schema. The imported
+relations deduplicate each food/compound pair while retaining one example of its content evidence.
 
-The archive is for research/non-commercial use. Contact FooDB for commercial use.
-The SQLite file is generated locally and can be rebuilt with:
+The archive is for research/non-commercial use. Contact FooDB for commercial use. A legacy SQLite
+snapshot may be retained as a migration backup, but no runtime code opens it. Import it with:
 
 ```powershell
-python experiments/image_to_compounds.py build-index --force
+$env:PYTHONPATH='src'
+python scripts/migrate_food_intelligence_to_postgres.py --source dataset/processed/foodb_compounds.sqlite3
 ```
 
 ## OpenFoodTox 3.0
@@ -25,9 +25,6 @@ python experiments/image_to_compounds.py build-index --force
 - Workbook: `raw/openfoodtox/OFT3.0_export_repository.xlsx`
 - Version: 3.0, published 2026-04-30
 
-The CLI imports substance identifiers, toxicological-reference record counts, and
-conservative positive/ambiguous endpoint signals into the FooDB SQLite index. Rebuild it with:
-
-```powershell
-python experiments/image_to_compounds.py build-hazards --force
-```
+Substance identifiers, toxicological-reference record counts, and conservative
+positive/ambiguous endpoint signals are stored in
+`food_intelligence.openfoodtox_substance` in PostgreSQL.
