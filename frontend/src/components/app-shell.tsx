@@ -135,7 +135,7 @@ const navItems = [
 const sessionKey = (uid: string) => `hestia-session-id:${uid}`;
 const foodbTag = /\[(?:<)?([^:\]<>\n]+):(FDB\d+)(?:>)?\]/gi;
 const foodbFoodTag = /\[(?:<)?([^:\]<>\n]+):(FOOD\d+)(?:>)?\]/gi;
-const libraryTag = /\[<(ingredient|dish|nutrient|compound):([^|>\]\n]+)(?:\|([^>\]\n]+))?>\]/gi;
+const libraryTag = /\[(?:<)?(ingredient|dish|nutrient|compound)\s*:\s*([^|>\]\n]+?)(?:\s*\|\s*([^|>\]\n]+?))?(?:\s*\|\s*([^>\]\n]+?))?(?:>)?\]/gi;
 const markdownCode = /(```[\s\S]*?```|`[^`\n]+`)/g;
 const duplicatedMathOpen = /\$\s+\$(?=\s*\\(?:le|ge|lt|gt|approx|sim|pm|times|frac|text|circ))/g;
 const markdownLink = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)(?:\s+"[^"]*")?\)/g;
@@ -178,7 +178,7 @@ function markdownUrlTransform(value: string) {
   return defaultUrlTransform(value);
 }
 
-function libraryHref(kind: string, name: string, id?: string) {
+function libraryHref(kind: string, lookupName: string, id?: string) {
   const mode = kind === "dish"
     ? "meals"
     : kind === "nutrient"
@@ -186,10 +186,24 @@ function libraryHref(kind: string, name: string, id?: string) {
       : kind === "compound"
         ? "chemistry"
         : "foods";
-  const params = new URLSearchParams({ q: name.trim(), kind: mode });
-  if (kind === "nutrient") params.set("nutrient", name.trim().toLowerCase());
+  const params = new URLSearchParams({ q: lookupName.trim(), kind: mode });
+  if (kind === "nutrient") params.set("nutrient", lookupName.trim().toLowerCase());
   if (id?.trim()) params.set("entity", id.trim());
   return `/ingredients?${params.toString()}`;
+}
+
+function libraryEntityHref(
+  kind: string,
+  displayName: string,
+  lookupOrId?: string,
+  explicitId?: string,
+) {
+  const possibleLookup = lookupOrId?.trim() || "";
+  const possibleId = explicitId?.trim() || "";
+  const legacyId = /^(?:FDB|FOOD)\d+$/i.test(possibleLookup) ? possibleLookup : "";
+  const lookupName = legacyId ? displayName : possibleLookup || displayName;
+  const id = /^(?:FDB|FOOD)\d+$/i.test(possibleId) ? possibleId : legacyId;
+  return libraryHref(kind, lookupName, id.toUpperCase());
 }
 
 function decorateLibraryTags(markdown: string) {
@@ -199,8 +213,24 @@ function decorateLibraryTags(markdown: string) {
       index % 2
         ? part
         : normalizeMathNotation(part)
-            .replace(libraryTag, (_, kind: string, name: string, id?: string) =>
-              `[${name.trim()}](${libraryHref(kind.toLowerCase(), name, id)} "hestia-library:${kind.toLowerCase()}:${id?.trim() || ""}")`,
+            .replace(
+              libraryTag,
+              (
+                _,
+                kind: string,
+                displayName: string,
+                lookupOrId?: string,
+                explicitId?: string,
+              ) => {
+                const normalizedKind = kind.toLowerCase();
+                const href = libraryEntityHref(
+                  normalizedKind,
+                  displayName,
+                  lookupOrId,
+                  explicitId,
+                );
+                return `[${displayName.trim()}](${href} "hestia-library:${normalizedKind}")`;
+              },
             )
             .replace(foodbTag, (_, name: string, id: string) =>
               `[${name.trim()}](${libraryHref("compound", name, id.toUpperCase())} "hestia-library:compound:${id.toUpperCase()}")`,
