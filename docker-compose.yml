@@ -40,6 +40,11 @@ services:
       HESTIA_CORS_ORIGINS: ${HESTIA_CORS_ORIGINS:-http://localhost:8080}
       HESTIA_FIREBASE_CREDENTIALS_PATH: /run/secrets/firebase_service_account
       HESTIA_SESSION_DATABASE_URL: ${HESTIA_SESSION_DATABASE_URL:?Set HESTIA_SESSION_DATABASE_URL in the root .env file}
+      HESTIA_S3_ENDPOINT_URL: ${HESTIA_S3_ENDPOINT_URL:?Set HESTIA_S3_ENDPOINT_URL in the root .env file}
+      HESTIA_S3_ACCESS_KEY_ID: ${HESTIA_S3_ACCESS_KEY_ID:?Set HESTIA_S3_ACCESS_KEY_ID in the root .env file}
+      HESTIA_S3_SECRET_ACCESS_KEY: ${HESTIA_S3_SECRET_ACCESS_KEY:?Set HESTIA_S3_SECRET_ACCESS_KEY in the root .env file}
+      HESTIA_S3_BUCKET: ${HESTIA_S3_BUCKET:-hestia}
+      HESTIA_S3_REGION: ${HESTIA_S3_REGION:-us-east-1}
     secrets:
       - firebase_service_account
     volumes:

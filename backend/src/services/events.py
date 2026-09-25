@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from google.adk.events import Event
 
-from schemas.chat import AgentEvent, TokenUsage
+from schemas.chat import AgentEvent, Attachment, TokenUsage
 
 
 def _text(event: Event) -> str | None:
@@ -39,6 +39,22 @@ def serialize_event(event: Event) -> AgentEvent:
     text = _text(event)
     has_thought = _has_thought(event)
     state_delta = dict(event.actions.state_delta or {})
+    raw_attachments = (event.custom_metadata or {}).get("attachments", [])
+    attachments = []
+    if event.author == "user" and isinstance(raw_attachments, list):
+        for item in raw_attachments:
+            if not isinstance(item, dict) or not item.get("id"):
+                continue
+            attachment_id = str(item["id"])
+            attachments.append(
+                Attachment(
+                    id=attachment_id,
+                    name=str(item.get("name") or "image"),
+                    mime_type=str(item.get("mime_type") or "application/octet-stream"),
+                    size=int(item.get("size") or 0),
+                    url=f"attachments/{attachment_id}",
+                )
+            )
 
     if event.error_code:
         kind = "error"
@@ -73,6 +89,7 @@ def serialize_event(event: Event) -> AgentEvent:
         model=event.model_version,
         error="request_failed" if event.error_code else None,
         timestamp=event.timestamp,
+        attachments=attachments,
     )
 
 

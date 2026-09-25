@@ -1,6 +1,6 @@
 # Hestia
 
-Hestia is a web application for ingredient research, cooking guidance, and evidence-based food-safety screening. It combines a static Next.js client with a FastAPI API, Firebase authentication, PostgreSQL-backed food data, and a Google ADK agent runtime.
+Hestia is a web application for ingredient research, cooking guidance, and evidence-based food-safety screening. It combines a static Next.js client with a FastAPI API, Firebase authentication, PostgreSQL-backed food data, private S3-compatible image storage, and a Google ADK agent runtime.
 
 The project is designed to distinguish observed facts, database matches, and model inference. Chemical records are treated as compositional evidence, not as proof that a reaction occurred or that a serving is safe.
 
@@ -11,6 +11,7 @@ The project is designed to distinguish observed facts, database matches, and mod
 - Food-compound profiles with explicit quantified and reported evidence labels
 - Firebase ID-token verification and per-user session isolation
 - PostgreSQL persistence for conversations and food-intelligence data
+- Persistent user uploads and AI-generated images in private S3-compatible storage
 - Specialist agents for food chemistry, safety analysis, and literature retrieval
 - English and Vietnamese interface preferences, light and dark themes
 - Static frontend export suitable for deployment behind any static file server
@@ -32,6 +33,7 @@ Browser
                   │
                   ├── Google ADK agent runtime
                   ├── PostgreSQL sessions
+                  ├── MinIO / S3 chat images
                   ├── FooDB / OpenFoodTox index
                   └── External data and literature services
 ```
@@ -66,6 +68,7 @@ docs/               Product and architecture notes
 - Node.js 20 or later
 - npm
 - PostgreSQL
+- Private S3-compatible object storage such as MinIO
 - A Firebase project with Google sign-in enabled
 - Credentials for the configured model provider
 
@@ -95,6 +98,11 @@ Set the required values in `backend/.env`:
 HESTIA_SESSION_DATABASE_URL=postgresql+asyncpg://USER:PASSWORD@HOST:5432/DATABASE
 HESTIA_FIREBASE_PROJECT_ID=your-firebase-project-id
 HESTIA_FIREBASE_CREDENTIALS_PATH=secrets/firebase/service-account.json
+HESTIA_S3_ENDPOINT_URL=http://100.x.x.x:9000
+HESTIA_S3_ACCESS_KEY_ID=your-access-key
+HESTIA_S3_SECRET_ACCESS_KEY=your-secret-key
+HESTIA_S3_BUCKET=hestia
+HESTIA_S3_REGION=us-east-1
 
 CUSTOM_API_KEY=your-provider-key
 CUSTOM_BASE_URL=https://openrouter.ai/api/v1
@@ -151,7 +159,7 @@ Open `http://localhost:3434`.
 
 ## Docker deployment
 
-Docker Compose runs the static frontend behind Nginx, proxies `/api` to FastAPI, and keeps PostgreSQL and generated images on named volumes. Only the frontend port is published.
+Docker Compose runs the static frontend behind Nginx, proxies `/api` to FastAPI, and keeps PostgreSQL on a named volume. Uploaded and AI-generated chat images are stored in the configured private MinIO/S3 bucket. Only the frontend port is published.
 
 ```powershell
 Copy-Item compose.env.example .env
@@ -188,7 +196,7 @@ If a local FooDB SQLite import exists under `backend/dataset/processed/`, import
 docker compose --profile tools run --rm food-data-import
 ```
 
-Back up the `postgres_data` and `generated_images` volumes before destructive upgrades. The default Compose file is suitable for a single-host deployment. Put a TLS-terminating reverse proxy or load balancer in front of port `8080` for public traffic.
+Back up the `postgres_data` volume and the configured object-storage bucket before destructive upgrades. The `generated_images` volume remains mounted only for backward-compatible reads of images created by older releases. Put a TLS-terminating reverse proxy or load balancer in front of port `8080` for public traffic.
 
 ## Continuous integration and delivery
 
@@ -234,7 +242,8 @@ DELETE /sessions/{session_id}
 GET    /sessions/{session_id}/events
 POST   /sessions/{session_id}/messages
 POST   /sessions/{session_id}/messages/stream
-GET    /generated-images/{image_id}
+GET    /sessions/{session_id}/attachments/{attachment_id}
+GET    /sessions/{session_id}/images/{image_id}
 ```
 
 Authenticated routes expect a Firebase ID token:
@@ -267,6 +276,7 @@ npm run build
 ## Security notes
 
 - Keep `.env`, `.env.local`, Firebase Admin SDK credentials, and database exports out of version control.
+- Keep the MinIO bucket private. Chat image endpoints verify the Firebase user and session before reading an object.
 - Rotate a service-account key immediately if it is exposed in a commit, build artifact, log, or screenshot.
 - The frontend Firebase configuration is public by design; access control must be enforced by Firebase rules and backend token verification.
 - Generated analysis is not a substitute for laboratory testing, medical advice, or official food-safety guidance.

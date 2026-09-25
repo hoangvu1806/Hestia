@@ -8,11 +8,17 @@ import urllib.request
 from pathlib import Path
 from uuid import uuid4
 
+from google.adk.tools import ToolContext
+
+from services.object_store import ObjectStoreError, get_object_store
+
 GENERATED_IMAGE_DIR = Path(__file__).resolve().parents[3] / ".runtime" / "generated-images"
 ALLOWED_ASPECT_RATIOS = {"1:1", "3:2", "4:3", "16:9"}
 
 
-def generate_food_illustration(prompt: str, aspect_ratio: str = "4:3") -> dict:
+def generate_food_illustration(
+    prompt: str, tool_context: ToolContext, aspect_ratio: str = "4:3"
+) -> dict:
     """Generate one AI culinary illustration when a visual would aid cooking or plating.
 
     Args:
@@ -64,12 +70,16 @@ def generate_food_illustration(prompt: str, aspect_ratio: str = "4:3") -> dict:
         image_bytes = base64.b64decode(encoded, validate=True)
         if not image_bytes or len(image_bytes) > 20 * 1024 * 1024:
             raise ValueError("Invalid generated image size")
-        GENERATED_IMAGE_DIR.mkdir(parents=True, exist_ok=True)
-        image_id = str(uuid4())
-        (GENERATED_IMAGE_DIR / f"{image_id}.png").write_bytes(image_bytes)
+        image_id = uuid4()
+        get_object_store().put_generated_image(
+            tool_context.user_id,
+            tool_context.session.id,
+            image_id,
+            image_bytes,
+        )
         return {
             "status": "ok",
-            "image_id": image_id,
+            "image_id": str(image_id),
             "markdown": f"![AI-generated culinary illustration](hestia-image://{image_id})",
             "disclosure": "AI-generated illustration, not a photograph or food-safety evidence.",
         }
@@ -80,5 +90,6 @@ def generate_food_illustration(prompt: str, aspect_ratio: str = "4:3") -> dict:
         IndexError,
         ValueError,
         TypeError,
+        ObjectStoreError,
     ) as exc:
         return {"status": "error", "error": f"Image generation failed: {type(exc).__name__}."}

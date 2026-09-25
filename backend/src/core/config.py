@@ -6,11 +6,12 @@ from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
+PROJECT_DIR = BACKEND_DIR.parent
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=(BACKEND_DIR / ".env", BACKEND_DIR / ".env.local"),
+        env_file=(PROJECT_DIR / ".env", BACKEND_DIR / ".env", BACKEND_DIR / ".env.local"),
         env_prefix="HESTIA_",
         extra="ignore",
     )
@@ -34,6 +35,11 @@ class Settings(BaseSettings):
     session_database_url: str
     max_inline_file_bytes: int = 8 * 1024 * 1024
     max_llm_calls: int = 12
+    s3_endpoint_url: str | None = None
+    s3_access_key_id: str | None = None
+    s3_secret_access_key: str | None = None
+    s3_bucket: str = "hestia"
+    s3_region: str = "us-east-1"
 
     @property
     def allowed_origins(self) -> list[str]:
