@@ -28,7 +28,7 @@ export const metadata: Metadata = pageMetadata({
     "emulsification chemistry",
     "culinary physics",
   ],
-  image: "/hestia-hero.png",
+  image: "/hestia-hero.webp",
   imageAlt: "Hestia food chemistry and culinary science pathways",
 });
 
@@ -36,7 +36,7 @@ const scienceTerms = [
   {
     name: "Maillard Reaction",
     description:
-      "A non-enzymatic chemical reaction between amino acids and reducing sugars that produces browned flavors, complex aromas, and melanoidin pigments typically above 140°C (284°F).",
+      "A family of non-enzymatic reactions between amino compounds and reducing sugars that contributes to browning and aroma. Rate depends on temperature, time, moisture, pH, and ingredients.",
     url: "/science",
   },
   {
@@ -63,17 +63,17 @@ const scienceFaqs = [
   {
     question: "How does the Maillard reaction work in home cooking?",
     answer:
-      "The Maillard reaction is a cascade of chemical reactions between reducing sugars and amino acids that occurs rapidly between 140°C and 165°C. Minimizing surface moisture before searing is essential because evaporating surface water consumes thermal energy and delays the browning reaction.",
+      "The Maillard reaction is a network of reactions involving amino compounds and reducing sugars. A drier surface and sufficient heat generally favor browning, but the rate also depends on time, pH, and the food itself.",
   },
   {
     question: "What temperature causes protein denaturation in meat and eggs?",
     answer:
-      "Myosin heads denature at approximately 40°C–50°C (104°F–122°F), collagen shortens at 60°C–65°C (140°F–149°F), and actin denatures around 66°C–73°C (151°F–163°F), expelling intracellular moisture and firming the protein matrix.",
+      "Different proteins denature across different temperature ranges, and the result depends on time, pH, moisture, and food structure. Hestia avoids treating one temperature as universal for every meat or egg preparation.",
   },
   {
     question: "Why does steaming retain more nutrients than boiling?",
     answer:
-      "Water-soluble vitamins (such as Vitamin C and B-complex vitamins) leach directly into surrounding water during submersion boiling. Steaming minimizes direct contact with liquid water, preserving 80% to 95% of water-soluble micronutrients.",
+      "Boiling can move water-soluble nutrients into the cooking liquid. Steaming reduces direct contact with water, but actual retention varies by food, nutrient, cut size, temperature, and cooking time.",
   },
 ];
 
@@ -81,7 +81,7 @@ const structuredData = {
   "@context": "https://schema.org",
   "@graph": [
     getBreadcrumbSchema([
-      { name: "Home", path: "/home" },
+      { name: "Home", path: "/" },
       { name: "Food Science & Chemistry", path: "/science" },
     ]),
     getDefinedTermSetSchema(scienceTerms),

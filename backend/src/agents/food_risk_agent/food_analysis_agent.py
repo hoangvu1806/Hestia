@@ -82,9 +82,9 @@ For every concrete cooking case, complete the whole analysis chain before return
    ingredients most likely to drive chemistry or safety decisions.
 2. Extract 3-8 decision-relevant compounds, compound classes, precursors, natural toxins,
    pathogens/toxins, additives, or contaminants when available. Include FooDB public_id for exact
-   FooDB compounds. For each exact FooDB compound, also prepare foob_tag exactly as
-   [<Compound name:FDBxxxxxx>] with no extra spaces and no nested angle brackets. Do not list every
-   FooDB record. Never use a food name or food public_id as a compound tag.
+   FooDB compounds. For each exact FooDB compound, also prepare library_tag exactly as
+   [<compound:Compound name|FDBxxxxxx>] with no extra spaces or nested angle brackets. Do not list
+   every FooDB record. Never use a food name or food public_id as a compound id.
 3. Infer candidate transformations from the intended dish and process conditions, then verify each
    candidate with tools. A candidate must connect: food/precursor -> condition/process -> product
    or hazard -> health relevance -> mitigation.
@@ -142,7 +142,7 @@ After the analysis is complete, call finish_task with a detailed internal eviden
 result field. This returns control and evidence to the root agent. Include:
 - identified foods and unresolved/uncertain items;
 - decision-relevant compound or precursor table: food, compound/class, exact FooDB compound name
-  and FooDB public_id when available, foob_tag when available, why it matters, source;
+  and FooDB public_id when available, library_tag when available, why it matters, source;
 - transformation/pathway list: food or precursor -> process condition -> possible product/hazard
   -> practical implication;
 - calculation ledger when relevant: known values, unknowns, equation, substitutions, result with

@@ -49,23 +49,16 @@ export const metadata: Metadata = {
   classification: "Culinary AI, Food Chemistry, Food Safety & Nutrition",
   referrer: "origin-when-cross-origin",
   keywords: site.keywords,
-  alternates: {
-    canonical: absoluteUrl("/home"),
-    languages: {
-      "en-US": absoluteUrl("/home"),
-      "vi-VN": absoluteUrl("/home"),
-      "x-default": absoluteUrl("/home"),
-    },
-  },
+  alternates: { canonical: absoluteUrl("/") },
   icons: {
     icon: [
-      { url: "/logo.png", type: "image/png", sizes: "1600x1600" },
-      { url: "/logo-transparent.png", type: "image/png", sizes: "512x512" },
+      { url: "/logo.webp", type: "image/webp", sizes: "1600x1600" },
+      { url: "/logo-transparent.webp", type: "image/webp", sizes: "512x512" },
     ],
     apple: [
-      { url: "/logo.png", sizes: "180x180", type: "image/png" },
+      { url: "/logo.webp", sizes: "180x180", type: "image/webp" },
     ],
-    shortcut: ["/logo.png"],
+    shortcut: ["/logo.webp"],
   },
   manifest: "/manifest.webmanifest",
   formatDetection: {
@@ -86,7 +79,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    url: absoluteUrl("/home"),
+    url: absoluteUrl("/"),
     siteName: site.name,
     title: site.title,
     description: site.description,
@@ -94,11 +87,11 @@ export const metadata: Metadata = {
     alternateLocale: ["vi_VN"],
     images: [
       {
-        url: absoluteUrl("/hestia-hero.png"),
+        url: absoluteUrl("/hestia-hero.webp"),
         alt: "Hestia culinary intelligence and evidence-based cooking",
         width: 1672,
         height: 941,
-        type: "image/png",
+        type: "image/webp",
       },
     ],
   },
@@ -106,11 +99,9 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: site.title,
     description: site.description,
-    site: "@hestia_ai",
-    creator: "@hestia_ai",
     images: [
       {
-        url: absoluteUrl("/hestia-hero.png"),
+        url: absoluteUrl("/hestia-hero.webp"),
         alt: "Hestia culinary intelligence",
       },
     ],
@@ -135,7 +126,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        {/* Resource Preconnect for Core Web Vitals Optimization */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://foodb.ca" />

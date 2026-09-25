@@ -10,7 +10,7 @@ import { ThemeToggle } from "./theme-toggle";
 import { useAuth } from "./auth-provider";
 
 const links = [
-  ["Home", "/home"],
+  ["Home", "/"],
   ["Ask Hestia", "/chat"],
   ["Food science", "/science"],
   ["Ingredients", "/ingredients"],
@@ -58,7 +58,7 @@ export function SiteHeader() {
 
   return (
     <header className="site-header">
-      <Link aria-label="Hestia home" className="site-brand-link" href="/home">
+      <Link aria-label="Hestia home" className="site-brand-link" href="/">
         <Brand name="Hestia" tagline="Culinary intelligence" />
       </Link>
       <button

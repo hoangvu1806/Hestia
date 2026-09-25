@@ -22,7 +22,7 @@ export const metadata: Metadata = pageMetadata({
     "flavor compounds",
     "macronutrients and micronutrients",
   ],
-  image: "/ingredient-intelligence.png",
+  image: "/ingredient-intelligence.webp",
   imageAlt: "Hestia ingredient intelligence, food compounds, and nutrient explorer",
 });
 
@@ -31,7 +31,7 @@ const structuredData = {
   "@graph": [
     getDatasetSchema(),
     getBreadcrumbSchema([
-      { name: "Home", path: "/home" },
+      { name: "Home", path: "/" },
       { name: "Ingredients Explorer", path: "/ingredients" },
     ]),
   ],

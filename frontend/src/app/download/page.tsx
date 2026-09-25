@@ -19,23 +19,16 @@ export const metadata: Metadata = pageMetadata({
     "AI cooking companion app",
     "mobile recipe chemistry",
   ],
-  image: "/hestia-hero.png",
+  image: "/hestia-hero.webp",
   imageAlt: "Hestia mobile application roadmap for Android and iOS",
 });
 
 const mobileAppSchema = {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  name: "Hestia Mobile Companion",
-  applicationCategory: "LifestyleApplication",
-  operatingSystem: "Android, iOS",
+  "@type": "WebPage",
+  name: "Hestia mobile roadmap",
   description:
-    "Native mobile companion for Hestia culinary intelligence, featuring camera-first ingredient capture, live cooking timers, and food safety checkpoints.",
-  offers: {
-    "@type": "Offer",
-    price: "0",
-    priceCurrency: "USD",
-  },
+    "Roadmap information for possible native Android and iOS Hestia clients. No native application is currently released.",
   url: absoluteUrl("/download"),
 };
 
@@ -44,7 +37,7 @@ const structuredData = {
   "@graph": [
     mobileAppSchema,
     getBreadcrumbSchema([
-      { name: "Home", path: "/home" },
+      { name: "Home", path: "/" },
       { name: "Mobile Applications", path: "/download" },
     ]),
   ],

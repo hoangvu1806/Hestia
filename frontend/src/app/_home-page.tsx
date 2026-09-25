@@ -12,7 +12,7 @@ import {
 } from "@/lib/site";
 
 export const metadata: Metadata = pageMetadata({
-  path: "/home",
+  path: "/",
   title: "Hestia — Evidence-Based Cooking & Food Science Intelligence",
   description:
     "Turn ingredient photos and cooking questions into practical guidance grounded in food chemistry, safety data, and scientific evidence.",
@@ -28,7 +28,7 @@ export const metadata: Metadata = pageMetadata({
     "Maillard reaction assistant",
     "smart kitchen AI",
   ],
-  image: "/hestia-hero.png",
+  image: "/hestia-hero.webp",
   imageAlt: "Hestia culinary intelligence and evidence-based cooking assistant",
 });
 
@@ -36,27 +36,27 @@ const homeFaqs = [
   {
     question: "What is Hestia culinary intelligence?",
     answer:
-      "Hestia is an evidence-aware cooking assistant that combines multimodal vision, computational food chemistry, biochemical database records from FooDB and USDA FoodData Central, and food safety standards to answer cooking questions and analyze ingredients.",
+      "Hestia is an evidence-aware cooking assistant that combines image understanding, food and nutrient databases, calculation tools, and literature retrieval to answer cooking questions and explore ingredients.",
   },
   {
     question: "How does Hestia analyze food from ingredient photos?",
     answer:
-      "When you upload an image of ingredients, Hestia segments visible items, determines confidence thresholds, separates verified items from ambiguous items (like clear liquids or ground spices), and maps their biochemical composition to practical cooking techniques.",
+      "When you upload an image, Hestia describes identifiable ingredients and keeps ambiguous items, such as an unknown liquid or spice, explicitly uncertain until more context is available.",
   },
   {
     question: "What databases and evidence sources power Hestia?",
     answer:
-      "Hestia queries FooDB for 70,000+ food compound records, USDA FoodData Central for nutrient profiles and retention factors, TheMealDB for culinary taxonomy, EFSA OpenFoodTox and PubChem for toxicology data, and Semantic Scholar for peer-reviewed food science literature.",
+      "Depending on the question, Hestia can query FooDB, USDA FoodData Central, TheMealDB, EFSA OpenFoodTox, PubChem, and scholarly literature. Each source supports a different kind of claim.",
   },
   {
     question: "How does Hestia ensure food safety recommendations?",
     answer:
-      "Hestia models thermal pathogen inactivation (D-values and z-values), monitors temperature danger zones (4°C to 60°C / 40°F to 140°F), and cross-checks microbial risks against official food safety guidelines without pretending visual appearance alone guarantees safety.",
+      "Hestia can examine relevant process conditions and food-safety evidence while making clear that appearance alone cannot establish whether food is safe.",
   },
   {
     question: "Is Hestia free to use on web and mobile?",
     answer:
-      "Yes, Hestia is accessible directly through any modern web browser without mandatory installation, with dedicated native mobile companions for Android and iOS currently on the development roadmap.",
+      "Hestia is currently available as a web application. Native Android and iOS clients are listed as roadmap items rather than released products.",
   },
 ];
 
@@ -64,7 +64,7 @@ const structuredData = {
   "@context": "https://schema.org",
   "@graph": [
     getWebApplicationSchema(),
-    getBreadcrumbSchema([{ name: "Home", path: "/home" }]),
+    getBreadcrumbSchema([{ name: "Home", path: "/" }]),
     getFaqSchema(homeFaqs),
   ],
 };
@@ -100,7 +100,7 @@ export default function HomePage() {
           fill
           priority
           sizes="100vw"
-          src="/hestia-hero.png"
+          src="/hestia-hero.webp"
         />
         <div className="home-hero-shade" />
         <div className="home-hero-content site-container">
@@ -197,7 +197,7 @@ export default function HomePage() {
             alt="Fresh ingredients arranged for food analysis"
             fill
             sizes="(max-width: 800px) 100vw, 54vw"
-            src="/ingredient-intelligence.png"
+            src="/ingredient-intelligence.webp"
           />
           <div className="scan-marker one">
             <i /> Bok choy <small>high confidence</small>
