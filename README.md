@@ -134,6 +134,10 @@ Copy the environment templates, provide the Firebase Admin key, and start the st
     docker compose up -d
     docker compose ps
 
+Compose does not provision or migrate PostgreSQL. Set `HESTIA_SESSION_DATABASE_URL` to the existing
+database on the VPS or its private network address. That database must already contain both the
+application/session tables and the `food_intelligence` schema.
+
 The default host bindings are local-only:
 
 - frontend: 127.0.0.1:8080
@@ -153,7 +157,7 @@ Then run:
     docker compose pull
     docker compose up -d
 
-Back up the PostgreSQL volume and object-storage bucket before destructive upgrades.
+Back up the external PostgreSQL database and object-storage bucket before destructive upgrades.
 
 ## Search and discovery
 
@@ -168,11 +172,17 @@ Authenticated pages are marked noindex and excluded from the sitemap. The crawle
 
 ## Database import
 
-The running application reads food-intelligence records from PostgreSQL. SQLite files under backend/dataset/processed/ are import sources only.
+The running application reads food-intelligence records from the externally managed PostgreSQL
+database. Docker Compose never creates or migrates that database. SQLite files under
+`backend/dataset/processed/` are manual import sources only and are not committed or included in
+container images.
 
     cd backend
     $env:PYTHONPATH = "src"
     python scripts/migrate_food_intelligence_to_postgres.py --source dataset/processed/foodb_compounds.sqlite3
+
+To restore manually from private object storage, provide `--s3-key` and `--sha256`. The command uses
+the same `HESTIA_S3_*` settings as chat media storage. Back up the database before an import.
 
 See [backend/dataset/README.md](backend/dataset/README.md) for source and licensing notes.
 

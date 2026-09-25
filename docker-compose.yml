@@ -1,26 +1,6 @@
 name: hestia
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-hestia}
-      POSTGRES_USER: ${POSTGRES_USER:-hestia}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the root .env file}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
-    networks:
-      - data
-    security_opt:
-      - no-new-privileges:true
-
   backend:
     image: ${HESTIA_BACKEND_IMAGE:-hestia-backend:local}
     build:
@@ -51,9 +31,6 @@ services:
       - generated_images:/app/.runtime/generated-images
     ports:
       - "${HESTIA_API_BIND_ADDRESS:-127.0.0.1}:${HESTIA_API_PORT:-8484}:8484"
-    depends_on:
-      postgres:
-        condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8484/api/v1/health', timeout=3)"]
       interval: 30s
@@ -67,7 +44,6 @@ services:
       - no-new-privileges:true
     networks:
       - app
-      - data
 
   frontend:
     image: ${HESTIA_FRONTEND_IMAGE:-hestia-frontend:local}
@@ -101,41 +77,12 @@ services:
     networks:
       - app
 
-  food-data-import:
-    image: ${HESTIA_BACKEND_IMAGE:-hestia-backend:local}
-    profiles: ["tools"]
-    env_file:
-      - ${HESTIA_ENV_FILE:-./backend/.env}
-    environment:
-      HESTIA_SESSION_DATABASE_URL: ${HESTIA_SESSION_DATABASE_URL:?Set HESTIA_SESSION_DATABASE_URL in the root .env file}
-    command:
-      - python
-      - /app/scripts/migrate_food_intelligence_to_postgres.py
-      - --source
-      - /data/processed/foodb_compounds.sqlite3
-    volumes:
-      - ./backend/dataset:/data:ro
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - data
-    restart: "no"
-    read_only: true
-    tmpfs:
-      - /tmp:size=64m,mode=1777
-    security_opt:
-      - no-new-privileges:true
-
 secrets:
   firebase_service_account:
     file: ${FIREBASE_SERVICE_ACCOUNT_FILE:-./backend/secrets/firebase/service-account.json}
 
 volumes:
-  postgres_data:
   generated_images:
 
 networks:
   app:
-  data:
-    internal: true
