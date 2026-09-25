@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://hestia.hoangvu.id.vn/home/</loc>
+    <lastmod>2026-09-25T23:14:12+07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://hestia.hoangvu.id.vn/home/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://hestia.hoangvu.id.vn/home/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://hestia.hoangvu.id.vn/home/"/>
+    <image:image>
+      <image:loc>https://hestia.hoangvu.id.vn/hestia-hero.png</image:loc>
+      <image:title>Hestia — Evidence-Based Cooking &amp; Food Science Intelligence</image:title>
+      <image:caption>Visual AI culinary assistant platform connecting ingredient analysis, cooking chemistry, and food safety.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://hestia.hoangvu.id.vn/ingredients/</loc>
+    <lastmod>2026-09-25T23:14:12+07:00</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://hestia.hoangvu.id.vn/ingredients/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://hestia.hoangvu.id.vn/ingredients/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://hestia.hoangvu.id.vn/ingredients/"/>
+    <image:image>
+      <image:loc>https://hestia.hoangvu.id.vn/ingredient-intelligence.png</image:loc>
+      <image:title>Food &amp; Ingredient Compound Explorer</image:title>
+      <image:caption>Biochemical food constituent database explorer with FooDB, USDA FoodData Central, and TheMealDB.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://hestia.hoangvu.id.vn/science/</loc>
+    <lastmod>2026-09-25T23:14:12+07:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://hestia.hoangvu.id.vn/science/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://hestia.hoangvu.id.vn/science/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://hestia.hoangvu.id.vn/science/"/>
+    <image:image>
+      <image:loc>https://hestia.hoangvu.id.vn/hestia-hero.png</image:loc>
+      <image:title>Cooking Chemistry &amp; Food Safety Science</image:title>
+      <image:caption>Scientific mechanisms behind Maillard reactions, protein denaturation, and thermal microbial safety.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://hestia.hoangvu.id.vn/about/</loc>
+    <lastmod>2026-09-25T23:14:12+07:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://hestia.hoangvu.id.vn/about/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://hestia.hoangvu.id.vn/about/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://hestia.hoangvu.id.vn/about/"/>
+    <image:image>
+      <image:loc>https://hestia.hoangvu.id.vn/logo-transparent.png</image:loc>
+      <image:title>About Hestia Culinary Intelligence</image:title>
+      <image:caption>Hestia culinary AI principles, mission, uncertainty transparency, and evidence-first standards.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://hestia.hoangvu.id.vn/download/</loc>
+    <lastmod>2026-09-25T23:14:12+07:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://hestia.hoangvu.id.vn/download/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://hestia.hoangvu.id.vn/download/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://hestia.hoangvu.id.vn/download/"/>
+    <image:image>
+      <image:loc>https://hestia.hoangvu.id.vn/hestia-hero.png</image:loc>
+      <image:title>Hestia Mobile Companion App Roadmap</image:title>
+      <image:caption>Native Android and iOS mobile roadmap for camera-first ingredient capture and kitchen checkpoints.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://hestia.hoangvu.id.vn/login/</loc>
+    <lastmod>2026-09-25T23:14:12+07:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.50</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://hestia.hoangvu.id.vn/login/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://hestia.hoangvu.id.vn/login/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://hestia.hoangvu.id.vn/login/"/>
+  </url>
+</urlset>
