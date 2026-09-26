@@ -5,6 +5,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi.responses import StreamingResponse
 
 from agents.food_risk_agent.image_tools import GENERATED_IMAGE_DIR
 from api.dependencies import current_user_id
@@ -24,11 +25,11 @@ async def require_session(session_id: str, runtime: Runtime, user_id: UserId) ->
 
 
 def image_response(value: StoredObject) -> Response:
-    return Response(
-        content=value.body,
+    return StreamingResponse(
+        value.iter_bytes(),
         media_type=value.content_type,
         headers={
-            "Cache-Control": "private, max-age=86400",
+            "Cache-Control": "private, max-age=86400, immutable",
             "Content-Length": str(value.size),
             "X-Content-Type-Options": "nosniff",
         },
@@ -80,9 +81,7 @@ async def generated_image(
                     payload,
                 )
             except ObjectStoreError as exc:
-                raise HTTPException(
-                    status_code=503, detail="Image storage unavailable."
-                ) from exc
+                raise HTTPException(status_code=503, detail="Image storage unavailable.") from exc
             return Response(
                 content=payload,
                 media_type="image/png",

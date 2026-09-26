@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import hashlib
 import threading
+from collections.abc import Iterator
 from dataclasses import dataclass
 from functools import lru_cache
+from typing import BinaryIO
 from uuid import UUID
 
 import boto3
@@ -19,9 +21,20 @@ class ObjectStoreError(RuntimeError):
 
 @dataclass(frozen=True)
 class StoredObject:
-    body: bytes
+    body: bytes | BinaryIO
     content_type: str
     size: int
+
+    def iter_bytes(self, chunk_size: int = 128 * 1024) -> Iterator[bytes]:
+        """Yield an object without buffering its full payload in application memory."""
+        if isinstance(self.body, bytes):
+            yield self.body
+            return
+        try:
+            while chunk := self.body.read(chunk_size):
+                yield chunk
+        finally:
+            self.body.close()
 
 
 class S3ObjectStore:
@@ -50,6 +63,8 @@ class S3ObjectStore:
                 connect_timeout=5,
                 read_timeout=30,
                 retries={"max_attempts": 3, "mode": "standard"},
+                max_pool_connections=16,
+                tcp_keepalive=True,
                 s3={"addressing_style": "path"},
             ),
         )
@@ -67,10 +82,7 @@ class S3ObjectStore:
         return ""
 
     def _key(self, user_id: str, session_id: str, kind: str, object_id: UUID) -> str:
-        return (
-            f"users/{self._scope(user_id)}/sessions/{self._scope(session_id)}/"
-            f"{kind}/{object_id}"
-        )
+        return f"users/{self._scope(user_id)}/sessions/{self._scope(session_id)}/{kind}/{object_id}"
 
     def ensure_bucket(self) -> None:
         if self._bucket_ready:
@@ -86,9 +98,7 @@ class S3ObjectStore:
                     raise ObjectStoreError("Unable to access the S3 bucket") from exc
                 options: dict[str, object] = {"Bucket": self.bucket}
                 if self.region != "us-east-1":
-                    options["CreateBucketConfiguration"] = {
-                        "LocationConstraint": self.region
-                    }
+                    options["CreateBucketConfiguration"] = {"LocationConstraint": self.region}
                 try:
                     self.client.create_bucket(**options)
                 except (BotoCoreError, ClientError) as create_exc:
@@ -105,9 +115,7 @@ class S3ObjectStore:
     ) -> None:
         self._put(self._key(user_id, session_id, "attachments", attachment_id), body, content_type)
 
-    def get_attachment(
-        self, user_id: str, session_id: str, attachment_id: UUID
-    ) -> StoredObject:
+    def get_attachment(self, user_id: str, session_id: str, attachment_id: UUID) -> StoredObject:
         return self._get(self._key(user_id, session_id, "attachments", attachment_id))
 
     def attachment_exists(self, user_id: str, session_id: str, attachment_id: UUID) -> bool:
@@ -129,9 +137,7 @@ class S3ObjectStore:
     ) -> None:
         self._put(self._key(user_id, session_id, "generated", image_id), body, "image/png")
 
-    def get_generated_image(
-        self, user_id: str, session_id: str, image_id: UUID
-    ) -> StoredObject:
+    def get_generated_image(self, user_id: str, session_id: str, image_id: UUID) -> StoredObject:
         return self._get(self._key(user_id, session_id, "generated", image_id))
 
     def _put(self, key: str, body: bytes, content_type: str) -> None:
@@ -153,14 +159,10 @@ class S3ObjectStore:
         try:
             response = self.client.get_object(Bucket=self.bucket, Key=key)
             body = response["Body"]
-            try:
-                payload = body.read()
-            finally:
-                body.close()
             return StoredObject(
-                body=payload,
+                body=body,
                 content_type=response.get("ContentType") or "application/octet-stream",
-                size=len(payload),
+                size=int(response.get("ContentLength") or 0),
             )
         except self.client.exceptions.NoSuchKey as exc:
             raise FileNotFoundError(key) from exc

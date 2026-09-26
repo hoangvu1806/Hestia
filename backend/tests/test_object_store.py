@@ -45,6 +45,7 @@ def test_attachment_is_stored_and_loaded_with_content_metadata() -> None:
     client = Mock()
     client.get_object.return_value = {
         "Body": BytesIO(b"image-bytes"),
+        "ContentLength": 11,
         "ContentType": "image/webp",
     }
     store = object_store_with_client(client)
@@ -69,6 +70,25 @@ def test_attachment_is_stored_and_loaded_with_content_metadata() -> None:
         CacheControl="private, max-age=86400",
     )
     client.get_object.assert_called_once_with(Bucket="test-bucket", Key=expected_key)
-    assert loaded.body == b"image-bytes"
+    assert b"".join(loaded.iter_bytes(chunk_size=4)) == b"image-bytes"
     assert loaded.content_type == "image/webp"
     assert loaded.size == 11
+
+
+def test_object_body_is_read_lazily_in_bounded_chunks() -> None:
+    body = Mock()
+    body.read.side_effect = [b"first", b"second", b""]
+    client = Mock()
+    client.get_object.return_value = {
+        "Body": body,
+        "ContentLength": 11,
+        "ContentType": "image/png",
+    }
+    store = object_store_with_client(client)
+
+    loaded = store.get_generated_image("user", "session", uuid4())
+
+    body.read.assert_not_called()
+    assert list(loaded.iter_bytes(chunk_size=4)) == [b"first", b"second"]
+    assert body.read.call_count == 3
+    body.close.assert_called_once_with()

@@ -1,4 +1,6 @@
 import asyncio
+import base64
+import threading
 from types import SimpleNamespace
 from uuid import uuid4
 
@@ -44,6 +46,16 @@ class FakeMigrationStore:
 
     def put_attachment(self, *args) -> None:
         self.saved.append(args)
+
+
+class FakeUploadStore:
+    def __init__(self) -> None:
+        self.saved: list[tuple] = []
+        self.lock = threading.Lock()
+
+    def put_attachment(self, *args) -> None:
+        with self.lock:
+            self.saved.append(args)
 
 
 def test_event_history_exposes_private_attachment_metadata() -> None:
@@ -157,10 +169,41 @@ def test_runtime_rejects_non_image_attachments() -> None:
     )
 
     try:
-        asyncio.run(
-            agent_runtime.AgentRuntime._content(runtime, "owner", "session-1", message)
-        )
+        asyncio.run(agent_runtime.AgentRuntime._content(runtime, "owner", "session-1", message))
     except InvalidFileError:
         pass
     else:
         raise AssertionError("A non-image attachment must be rejected")
+
+
+def test_runtime_stores_multiple_images_and_preserves_message_order(monkeypatch) -> None:
+    store = FakeUploadStore()
+    monkeypatch.setattr(agent_runtime, "get_object_store", lambda: store)
+    runtime = SimpleNamespace(settings=SimpleNamespace(max_inline_file_bytes=1024))
+    message = MessageCreate(
+        text="Compare these dishes",
+        files=[
+            InlineFile(
+                name="first.png",
+                mime_type="image/png",
+                data=base64.b64encode(b"first-image").decode(),
+            ),
+            InlineFile(
+                name="second.webp",
+                mime_type="image/webp",
+                data=base64.b64encode(b"second-image").decode(),
+            ),
+        ],
+    )
+
+    content, attachments = asyncio.run(
+        agent_runtime.AgentRuntime._content(runtime, "owner", "session-1", message)
+    )
+
+    assert [item["name"] for item in attachments] == ["first.png", "second.webp"]
+    assert [part.inline_data.data for part in content.parts[1:]] == [
+        b"first-image",
+        b"second-image",
+    ]
+    assert {saved[4] for saved in store.saved} == {"image/png", "image/webp"}
+    assert {saved[3] for saved in store.saved} == {b"first-image", b"second-image"}
