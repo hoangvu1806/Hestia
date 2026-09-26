@@ -20,3 +20,15 @@ def test_root_instruction_requires_proactive_evidence_and_contextual_visuals() -
     assert "visual planning is a required reasoning step" in instruction
     assert "include a process flowchart by default" in instruction
     assert "requires one illustration unless the user asks for text only" in instruction
+
+
+def test_dish_appearance_question_has_complete_visual_response_contract() -> None:
+    instruction = root_agent.instruction.lower()
+
+    assert "appearance questions" in instruction
+    assert (
+        "call generate_food_illustration once for a named dish appearance question"
+        in instruction
+    )
+    assert "[dish:lẩu thái|thai hot pot]" in instruction
+    assert "even when the food library has no exact recipe" in instruction

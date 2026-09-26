@@ -136,6 +136,7 @@ const sessionKey = (uid: string) => `hestia-session-id:${uid}`;
 const foodbTag = /\[(?:<)?([^:\]<>\n]+):(FDB\d+)(?:>)?\]/gi;
 const foodbFoodTag = /\[(?:<)?([^:\]<>\n]+):(FOOD\d+)(?:>)?\]/gi;
 const libraryTag = /\[(?:<)?(ingredient|dish|nutrient|compound)\s*:\s*([^|>\]\n]+?)(?:\s*\|\s*([^|>\]\n]+?))?(?:\s*\|\s*([^>\]\n]+?))?(?:>)?\]/gi;
+const legacyDishTag = /\[([^|:\]\n]{2,80})\s*\|\s*([A-Za-z][A-Za-z '\-]{1,79})\]/g;
 const markdownCode = /(```[\s\S]*?```|`[^`\n]+`)/g;
 const duplicatedMathOpen = /\$\s+\$(?=\s*\\(?:le|ge|lt|gt|approx|sim|pm|times|frac|text|circ))/g;
 const markdownLink = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)(?:\s+"[^"]*")?\)/g;
@@ -178,7 +179,7 @@ function markdownUrlTransform(value: string) {
   return defaultUrlTransform(value);
 }
 
-function libraryHref(kind: string, lookupName: string, id?: string) {
+function libraryHref(kind: string, lookupName: string, id?: string, displayName?: string) {
   const mode = kind === "dish"
     ? "meals"
     : kind === "nutrient"
@@ -189,6 +190,7 @@ function libraryHref(kind: string, lookupName: string, id?: string) {
   const params = new URLSearchParams({ q: lookupName.trim(), kind: mode });
   if (kind === "nutrient") params.set("nutrient", lookupName.trim().toLowerCase());
   if (id?.trim()) params.set("entity", id.trim());
+  if (kind === "dish" && displayName?.trim()) params.set("label", displayName.trim());
   return `/ingredients?${params.toString()}`;
 }
 
@@ -203,7 +205,7 @@ function libraryEntityHref(
   const legacyId = /^(?:FDB|FOOD)\d+$/i.test(possibleLookup) ? possibleLookup : "";
   const lookupName = legacyId ? displayName : possibleLookup || displayName;
   const id = /^(?:FDB|FOOD)\d+$/i.test(possibleId) ? possibleId : legacyId;
-  return libraryHref(kind, lookupName, id.toUpperCase());
+  return libraryHref(kind, lookupName, id.toUpperCase(), displayName);
 }
 
 function decorateLibraryTags(markdown: string) {
@@ -231,6 +233,9 @@ function decorateLibraryTags(markdown: string) {
                 );
                 return `[${displayName.trim()}](${href} "hestia-library:${normalizedKind}")`;
               },
+            )
+            .replace(legacyDishTag, (_, displayName: string, lookupName: string) =>
+              `[${displayName.trim()}](${libraryHref("dish", lookupName, undefined, displayName)} "hestia-library:dish")`,
             )
             .replace(foodbTag, (_, name: string, id: string) =>
               `[${name.trim()}](${libraryHref("compound", name, id.toUpperCase())} "hestia-library:compound:${id.toUpperCase()}")`,
