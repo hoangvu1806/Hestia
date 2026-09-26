@@ -217,6 +217,7 @@ export function FoodLibrary() {
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState("");
+  const [chatDishLabel, setChatDishLabel] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -241,6 +242,7 @@ export function FoodLibrary() {
         ? requestedMode as (typeof modes)[number][0]
         : "all";
       const initialNutrient = params.get("nutrient") || "protein";
+      if (initialMode === "meals") setChatDishLabel(params.get("label")?.trim() || "");
       if (initialQuery.length < 2) return;
       setQuery(initialQuery);
       setMode(initialMode);
@@ -288,6 +290,7 @@ export function FoodLibrary() {
     if (searchQuery.trim().length < 2) return;
     setLoading(true);
     setError("");
+    setChatDishLabel("");
     const params = new URLSearchParams({ q: searchQuery.trim(), kind: searchMode });
     if (searchMode === "nutrients") params.set("nutrient", nutrient);
     window.history.replaceState(null, "", `/ingredients?${params}`);
@@ -352,6 +355,7 @@ export function FoodLibrary() {
 
     {results ? <section className="library-results site-container">
       <header className="library-section-heading"><div><span>LIVE RESULTS</span><h2>{query}</h2></div><p>{resultCount} records mapped across the available sources. Similar names can describe different food states, so source IDs stay visible.</p></header>
+      {chatDishLabel && mode === "meals" ? <div className="library-chat-dish" role="note"><small>MENTIONED IN YOUR CHAT</small><strong>{chatDishLabel}</strong><p>The search below uses an English name. A chat mention is not a verified recipe record, and this dish may not be indexed here yet.</p></div> : null}
       {results.meals.length ? <div className="result-block"><div className="result-block-title"><h3>Dishes</h3><span>TheMealDB</span></div><div className="meal-grid">{results.meals.map((item) => <button className="meal-card" key={item.id} onClick={() => void openMeal(item.id)} type="button"><span className="meal-card-image"><Image alt="" fill sizes="(max-width: 700px) 80vw, 25vw" src={item.image} unoptimized /></span><span className="meal-card-copy"><small>{[item.area, item.category].filter(Boolean).join(" · ") || "Recipe"}</small><strong>{item.name}</strong><b>Open profile ↗</b></span></button>)}</div></div> : null}
       {results.foods.length ? <div className="result-block"><div className="result-block-title"><h3>{mode === "nutrients" ? `Ranked by ${nutrient}` : "Nutrition records"}</h3><span>USDA FoodData Central</span></div><div className="nutrition-grid">{results.foods.map((food) => <FoodNutrition food={food} focus={mode === "nutrients" ? nutrient : undefined} key={food.fdc_id} />)}</div></div> : null}
       {results.chemistry.foods.length || results.chemistry.compounds.length ? <div className="result-block chemistry-results"><div className="result-block-title"><h3>Food chemistry</h3><span>FooDB · PostgreSQL index</span></div><div className="chemistry-columns"><div><small>MATCHED INGREDIENTS</small>{results.chemistry.foods.map((food) => <button className="chemistry-food-row" key={food.public_id} onClick={() => void inspectIngredient(food.name)} type="button"><IngredientArtwork compact name={food.name} /><span>{food.public_id}</span><strong>{food.name}</strong><em>{food.scientific_name || food.food_subgroup}</em><small>{(food.relation_count || 0).toLocaleString()} reported · {(food.quantified_count || 0).toLocaleString()} quantified</small></button>)}</div><div><small>COMPOUNDS IN MATCHED INGREDIENTS</small>{results.chemistry.compounds.length ? results.chemistry.compounds.map((compound) => <a href={`https://foodb.ca/compounds/${compound.public_id}`} key={compound.public_id} rel="noreferrer" target="_blank"><span>{compound.public_id}</span><strong>{compound.name}</strong><em>{compound.superclass || compound.class_name || "Food compound"}</em><small className="compound-evidence">{compound.evidence_type === "direct_compound_match" ? "Direct name match" : `${compound.food_match_count || 1} matched food${compound.food_match_count === 1 ? "" : "s"} · ${compound.evidence_type === "quantified_food_relation" ? "quantified record" : "reported relation"}`}</small></a>) : <p className="compound-list-empty">These ingredient matches do not have usable compound relations yet.</p>}</div></div></div> : null}
