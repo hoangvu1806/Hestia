@@ -3,14 +3,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import rehypeKatex from "rehype-katex";
-import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
+import ReactMarkdown, { defaultUrlTransform, type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import {
   type ChangeEvent,
   type FormEvent,
   type KeyboardEvent,
+  memo,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -70,7 +72,7 @@ function restoredMessages(events: StoredEvent[]): Message[] {
   });
 }
 
-function PrivateImage({
+const PrivateImage = memo(function PrivateImage({
   alt,
   className,
   height,
@@ -125,7 +127,7 @@ function PrivateImage({
       width={width}
     />
   );
-}
+});
 
 const navItems = [
   ["chat", "chat", "/chat"],
@@ -306,6 +308,83 @@ function EvidenceRail({ markdown, title }: { markdown: string; title: string }) 
     </aside>
   );
 }
+
+const MessageMarkdown = memo(function MessageMarkdown({
+  aiIllustration,
+  complete,
+  content,
+  sessionId,
+  sourcesTitle,
+}: {
+  aiIllustration: string;
+  complete: boolean;
+  content: string;
+  sessionId: string;
+  sourcesTitle: string;
+}) {
+  const components = useMemo<Components>(() => ({
+    pre: MarkdownPre,
+    img: ({ alt, src }) => {
+      const source = typeof src === "string" ? src : "";
+      const generated = /^hestia-image:\/\//i.test(source);
+      return (
+        <figure className="generated-illustration">
+          {generated ? (
+            <PrivateImage
+              alt={alt || aiIllustration}
+              height={768}
+              src={generatedImageUrl(source, sessionId)}
+              width={1024}
+            />
+          ) : (
+            <Image
+              alt={alt || ""}
+              height={768}
+              src={source}
+              unoptimized
+              width={1024}
+            />
+          )}
+          <figcaption>{aiIllustration}</figcaption>
+        </figure>
+      );
+    },
+    a: ({ children, href, title }) => {
+      const entity = title?.match(
+        /^hestia-library:(ingredient|dish|nutrient|compound):/i,
+      );
+      if (entity && href) {
+        return (
+          <LibraryEntity
+            href={href}
+            kind={entity[1].toLowerCase()}
+            name={String(children)}
+          />
+        );
+      }
+      return (
+        <a className="evidence-link" href={href} rel="noreferrer" target="_blank">
+          {children}<span aria-hidden="true">↗</span>
+        </a>
+      );
+    },
+  }), [aiIllustration, sessionId]);
+
+  return (
+    <div className="message-text">
+      <ReactMarkdown
+        components={components}
+        rehypePlugins={[[rehypeKatex, { output: "htmlAndMathml", strict: false }]]}
+        remarkPlugins={[remarkGfm, remarkMath]}
+        skipHtml
+        urlTransform={markdownUrlTransform}
+      >
+        {decorateLibraryTags(content)}
+      </ReactMarkdown>
+      {complete ? <EvidenceRail markdown={content} title={sourcesTitle} /> : null}
+    </div>
+  );
+});
 
 function progressiveText(onText: (text: string) => void) {
   let received = "";
@@ -962,58 +1041,13 @@ export function AppShell({
                       />
                     ))}
                     {message.content ? (
-                      <div className="message-text">
-                        <ReactMarkdown
-                          components={{
-                            pre: MarkdownPre,
-                            img: ({ alt, src }) => {
-                              const source = typeof src === "string" ? src : "";
-                              const generated = /^hestia-image:\/\//i.test(source);
-                              return (
-                                <figure className="generated-illustration">
-                                  {generated ? (
-                                    <PrivateImage
-                                      alt={alt || chat.aiIllustration}
-                                      height={768}
-                                      src={generatedImageUrl(source, activeSessionId || "")}
-                                      width={1024}
-                                    />
-                                  ) : (
-                                    <Image
-                                      alt={alt || ""}
-                                      height={768}
-                                      src={source}
-                                      unoptimized
-                                      width={1024}
-                                    />
-                                  )}
-                                  <figcaption>{chat.aiIllustration}</figcaption>
-                                </figure>
-                              );
-                            },
-                            a: ({ children, href, title }) => {
-                              const entity = title?.match(/^hestia-library:(ingredient|dish|nutrient|compound):/i);
-                              if (entity && href) {
-                                return <LibraryEntity href={href} kind={entity[1].toLowerCase()} name={String(children)} />;
-                              }
-                              return (
-                                <a className="evidence-link" href={href} rel="noreferrer" target="_blank">
-                                  {children}<span aria-hidden="true">↗</span>
-                                </a>
-                              );
-                            },
-                          }}
-                          rehypePlugins={[[rehypeKatex, { output: "htmlAndMathml", strict: false }]]}
-                          remarkPlugins={[remarkGfm, remarkMath]}
-                          skipHtml
-                          urlTransform={markdownUrlTransform}
-                        >
-                          {decorateLibraryTags(message.content)}
-                        </ReactMarkdown>
-                        {message.role === "assistant" && !message.streaming ? (
-                          <EvidenceRail markdown={message.content} title={chat.sourcesUsed} />
-                        ) : null}
-                      </div>
+                      <MessageMarkdown
+                        aiIllustration={chat.aiIllustration}
+                        complete={message.role === "assistant" && !message.streaming}
+                        content={message.content}
+                        sessionId={activeSessionId || ""}
+                        sourcesTitle={chat.sourcesUsed}
+                      />
                     ) : null}
                     {message.progress?.length ? (
                       <div className="analysis-progress" aria-label={chat.progressLabel}>
