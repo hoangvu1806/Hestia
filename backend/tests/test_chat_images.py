@@ -29,6 +29,11 @@ class FakeStore:
         assert session_id == "session-1"
         return StoredObject(body=b"image-bytes", content_type="image/png", size=11)
 
+    def get_generated_image(self, user_id: str, session_id: str, image_id):
+        assert user_id == "owner"
+        assert session_id == "session-1"
+        return StoredObject(body=b"generated-image", content_type="image/png", size=15)
+
 
 class FakeMigrationStore:
     def __init__(self) -> None:
@@ -89,6 +94,33 @@ def test_attachment_download_requires_owning_firebase_user(monkeypatch) -> None:
 
     assert owner.status_code == 200
     assert owner.content == b"image-bytes"
+    assert owner.headers["cache-control"].startswith("private")
+    assert other.status_code == 404
+
+
+def test_generated_image_reload_requires_owning_firebase_user(monkeypatch) -> None:
+    app = create_app()
+    app.dependency_overrides[get_agent_runtime] = lambda: FakeRuntime()
+    monkeypatch.setattr(
+        dependencies,
+        "verify_firebase_id_token",
+        lambda token: {"uid": {"owner-token": "owner", "other-token": "other"}[token]},
+    )
+    monkeypatch.setattr(generated_images, "get_object_store", lambda: FakeStore())
+    image_id = uuid4()
+
+    with TestClient(app) as client:
+        owner = client.get(
+            f"/api/v1/sessions/session-1/images/{image_id}",
+            headers={"Authorization": "Bearer owner-token"},
+        )
+        other = client.get(
+            f"/api/v1/sessions/session-1/images/{image_id}",
+            headers={"Authorization": "Bearer other-token"},
+        )
+
+    assert owner.status_code == 200
+    assert owner.content == b"generated-image"
     assert owner.headers["cache-control"].startswith("private")
     assert other.status_code == 404
 
