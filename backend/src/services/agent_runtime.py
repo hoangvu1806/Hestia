@@ -4,11 +4,12 @@ import asyncio
 import base64
 import binascii
 import mimetypes
+import os
 from collections.abc import AsyncIterator
 from contextlib import aclosing
 from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 
-from google.adk.agents.run_config import RunConfig, StreamingMode
+from google.adk.agents.run_config import RunConfig, StreamingMode, ToolThreadPoolConfig
 from google.adk.apps import App
 from google.adk.artifacts import InMemoryArtifactService
 from google.adk.events import Event
@@ -43,8 +44,8 @@ class AgentRuntime:
         self.settings = settings
         self.sessions = DatabaseSessionService(
             settings.session_database_url,
-            pool_size=3,
-            max_overflow=2,
+            pool_size=settings.session_db_pool_size,
+            max_overflow=settings.session_db_max_overflow,
             pool_timeout=10,
             pool_recycle=1800,
             connect_args={"timeout": 10, "command_timeout": 60},
@@ -187,6 +188,10 @@ class AgentRuntime:
                 run_config=RunConfig(
                     streaming_mode=StreamingMode.SSE if stream else StreamingMode.NONE,
                     max_llm_calls=self.settings.max_llm_calls,
+                    # Sync tools (DB, HTTP) must not block other users' streams on the loop.
+                    tool_thread_pool_config=ToolThreadPoolConfig(
+                        max_workers=self.settings.tool_thread_workers
+                    ),
                     custom_metadata=metadata or None,
                 ),
             )
@@ -255,6 +260,19 @@ class AgentRuntime:
 
 
 _runtime: AgentRuntime | None = None
+
+
+async def warm_up_model_client() -> None:
+    """Import LiteLLM off the event loop before serving.
+
+    ADK imports LiteLLM lazily on the first model call, on the event loop. That import pulls in
+    the OpenAI SDK and, by default, downloads LiteLLM's model cost map synchronously, which
+    stalled every concurrent stream for several seconds on the first request.
+    """
+    os.environ.setdefault("LITELLM_LOCAL_MODEL_COST_MAP", "True")
+    from google.adk.models.lite_llm import _ensure_litellm_imported
+
+    await asyncio.to_thread(_ensure_litellm_imported)
 
 
 def get_agent_runtime() -> AgentRuntime:

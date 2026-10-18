@@ -34,7 +34,10 @@ class Settings(BaseSettings):
     usda_api_key: str = "DEMO_KEY"
     session_database_url: str
     max_inline_file_bytes: int = 8 * 1024 * 1024
-    max_llm_calls: int = 12
+    max_llm_calls: int = 20
+    tool_thread_workers: int = 16
+    session_db_pool_size: int = 10
+    session_db_max_overflow: int = 10
     s3_endpoint_url: str | None = None
     s3_access_key_id: str | None = None
     s3_secret_access_key: str | None = None

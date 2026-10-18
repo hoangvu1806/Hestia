@@ -8,13 +8,14 @@ from fastapi.responses import JSONResponse
 
 from api.v1.router import router as v1_router
 from core.config import get_settings
-from services.agent_runtime import close_agent_runtime
+from services.agent_runtime import close_agent_runtime, warm_up_model_client
 
 logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    await warm_up_model_client()
     yield
     await close_agent_runtime()
 
