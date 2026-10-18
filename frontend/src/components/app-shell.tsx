@@ -386,6 +386,34 @@ const MessageMarkdown = memo(function MessageMarkdown({
   );
 });
 
+const MAX_IMAGE_EDGE = 2048;
+
+// Phone cameras produce 4-10 MB photos; shrink them before upload so mobile sends stay fast.
+async function downscaleImage(file: File): Promise<File> {
+  if (!file.type.startsWith("image/") || file.type === "image/gif") return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, MAX_IMAGE_EDGE / Math.max(bitmap.width, bitmap.height));
+    if (scale === 1 && file.size <= 1.5 * 1024 * 1024) {
+      bitmap.close();
+      return file;
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext("2d")?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", 0.86),
+    );
+    if (!blob || blob.size >= file.size) return file;
+    const name = file.name.replace(/\.[^.]+$/, "") || "photo";
+    return new File([blob], `${name}.jpg`, { type: "image/jpeg" });
+  } catch {
+    return file;
+  }
+}
+
 function progressiveText(onText: (text: string) => void) {
   let received = "";
   let displayed = "";
@@ -455,10 +483,12 @@ export function AppShell({
   const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [connection, setConnection] = useState<"connecting" | "ready" | "error">(
     "connecting",
   );
   const fileInput = useRef<HTMLInputElement>(null);
+  const cameraInput = useRef<HTMLInputElement>(null);
   const textarea = useRef<HTMLTextAreaElement>(null);
   const conversation = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -472,7 +502,10 @@ export function AppShell({
       if (!accountMenu.current?.contains(event.target as Node)) setAccountOpen(false);
     }
     function closeWithEscape(event: globalThis.KeyboardEvent) {
-      if (event.key === "Escape") setAccountOpen(false);
+      if (event.key === "Escape") {
+        setAccountOpen(false);
+        setDrawerOpen(false);
+      }
     }
     window.addEventListener("pointerdown", closeAccount);
     window.addEventListener("keydown", closeWithEscape);
@@ -842,9 +875,10 @@ export function AppShell({
   }
 
   async function chooseFile(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
+    const picked = event.target.files?.[0];
     event.target.value = "";
-    if (!file) return;
+    if (!picked) return;
+    const file = await downscaleImage(picked);
     if (file.size > 8 * 1024 * 1024) {
       setMessages((current) => [
         ...current,
@@ -895,10 +929,35 @@ export function AppShell({
 
   return (
     <main className="app-frame">
-      <aside className="sidebar">
+      {drawerOpen ? (
+        <button
+          aria-label={sidebar.closeMenu}
+          className="drawer-backdrop"
+          onClick={() => setDrawerOpen(false)}
+          type="button"
+        />
+      ) : null}
+      <aside className={drawerOpen ? "sidebar open" : "sidebar"} id="hestia-sidebar">
         <div className="sidebar-top">
-          <Brand name={brand.name} tagline={brand.tagline} />
-          <button className="new-chat" onClick={() => void newConversation()} type="button">
+          <div className="sidebar-brand-row">
+            <Brand name={brand.name} tagline={brand.tagline} />
+            <button
+              aria-label={sidebar.closeMenu}
+              className="drawer-close"
+              onClick={() => setDrawerOpen(false)}
+              type="button"
+            >
+              <Icon height={20} name="close" width={20} />
+            </button>
+          </div>
+          <button
+            className="new-chat"
+            onClick={() => {
+              setDrawerOpen(false);
+              void newConversation();
+            }}
+            type="button"
+          >
             <span className="new-chat-icon"><Icon height={17} name="add" width={17} /></span>
             {sidebar.newChat}
           </button>
@@ -907,7 +966,12 @@ export function AppShell({
         <nav aria-label={sidebar.workspace} className="sidebar-nav">
           <p className="nav-label">{sidebar.workspace}</p>
           {navItems.map(([key, icon, href], index) => (
-            <Link className={index === 0 ? "nav-item active" : "nav-item"} href={href} key={key}>
+            <Link
+              className={index === 0 ? "nav-item active" : "nav-item"}
+              href={href}
+              key={key}
+              onClick={() => setDrawerOpen(false)}
+            >
               <Icon height={18} name={icon} width={18} />
               {sidebar[key]}
             </Link>
@@ -923,17 +987,20 @@ export function AppShell({
             <button
               className={item.id === activeSessionId ? "history-item active" : "history-item"}
               key={item.id}
-              onClick={() => void openConversation(item)}
+              onClick={() => {
+                setDrawerOpen(false);
+                void openConversation(item);
+              }}
               type="button"
             >
               <span>{sessionTitle(item)}</span>
               <small>{relativeDate(item.updated_at)}</small>
             </button>
-          )) : <p className="history-empty">Your conversations will appear here.</p>}
+          )) : <p className="history-empty">{sidebar.noHistory}</p>}
         </section>
 
         <div className="sidebar-footer">
-          <Link className="nav-item" href="/settings">
+          <Link className="nav-item" href="/settings" onClick={() => setDrawerOpen(false)}>
             <Icon height={18} name="settings" width={18} />
             {sidebar.settings}
           </Link>
@@ -948,6 +1015,16 @@ export function AppShell({
 
       <section className="chat-workspace">
         <header className="topbar">
+          <button
+            aria-controls="hestia-sidebar"
+            aria-expanded={drawerOpen}
+            aria-label={sidebar.openMenu}
+            className="menu-button"
+            onClick={() => setDrawerOpen(true)}
+            type="button"
+          >
+            <Icon height={22} name="menu" width={22} />
+          </button>
           <div className="mobile-brand"><Brand name={brand.name} /></div>
           <div className="page-title">
             <strong>{header.title}</strong>
@@ -1094,6 +1171,22 @@ export function AppShell({
           ) : null}
           <form className="composer" onSubmit={submit}>
             <input accept="image/*" hidden onChange={(event) => void chooseFile(event)} ref={fileInput} type="file" />
+            <input
+              accept="image/*"
+              capture="environment"
+              hidden
+              onChange={(event) => void chooseFile(event)}
+              ref={cameraInput}
+              type="file"
+            />
+            <button
+              aria-label={composer.camera}
+              className="composer-action composer-camera"
+              onClick={() => cameraInput.current?.click()}
+              type="button"
+            >
+              <Icon height={20} name="camera" width={20} />
+            </button>
             <button
               aria-label={composer.attach}
               className="composer-action"

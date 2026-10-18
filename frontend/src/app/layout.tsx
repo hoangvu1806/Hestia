@@ -6,6 +6,7 @@ import "katex/dist/katex.min.css";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth-provider";
 import { JsonLd } from "@/components/json-ld";
+import { MobileTabBar } from "@/components/mobile-tab-bar";
 import { absoluteUrl, getOrganizationSchema, getWebSiteSchema, site } from "@/lib/site";
 
 const themeScript = `(() => { try { const saved = localStorage.getItem('hestia-theme'); const systemDark = matchMedia('(prefers-color-scheme: dark)').matches; document.documentElement.dataset.theme = saved || (systemDark ? 'dark' : 'light'); document.documentElement.lang = localStorage.getItem('hestia-locale') || 'en'; } catch (_) {} })();`;
@@ -32,6 +33,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
+  viewportFit: "cover",
 };
 
 export const metadata: Metadata = {
@@ -134,7 +136,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body className={`${jakarta.variable} ${cormorant.variable}`}>
         <JsonLd data={rootStructuredData} />
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          {children}
+          <MobileTabBar />
+        </AuthProvider>
       </body>
     </html>
   );

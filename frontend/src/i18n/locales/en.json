@@ -17,7 +17,10 @@
     "historyOne": "Air-fry ingredients",
     "historyTwo": "Understanding Maillard",
     "historyThree": "Protein-rich dinner",
-    "settings": "Settings"
+    "settings": "Settings",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "noHistory": "Your conversations will appear here."
   },
   "header": {
     "title": "Ask Hestia",
@@ -74,7 +77,8 @@
     "placeholder": "Ask about your ingredients or the dish you want to cook…",
     "attach": "Attach an image",
     "send": "Send message",
-    "hint": "Hestia can make mistakes. Verify critical food-safety information."
+    "hint": "Hestia can make mistakes. Verify critical food-safety information.",
+    "camera": "Take a photo"
   },
   "profile": {
     "name": "Guest cook",

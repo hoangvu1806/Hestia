@@ -8,7 +8,10 @@ type IconName =
   | "chat"
   | "chemistry"
   | "clock"
+  | "close"
+  | "home"
   | "ingredients"
+  | "menu"
   | "moon"
   | "paperclip"
   | "settings"
@@ -25,6 +28,9 @@ const paths: Record<IconName, React.ReactNode> = {
   chat: <path d="M20 15a4 4 0 0 1-4 4H8l-5 3v-7a4 4 0 0 1-1-2.6V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z" />,
   chemistry: <><path d="M9 3h6m-5 0v5l-5.5 9.2A2.5 2.5 0 0 0 6.7 21h10.6a2.5 2.5 0 0 0 2.2-3.8L14 8V3" /><path d="M7 16h10" /></>,
   clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
+  close: <path d="M6 6l12 12M18 6 6 18" />,
+  home: <><path d="M3.5 10.5 12 3.8l8.5 6.7V20a1 1 0 0 1-1 1H15v-6.2H9V21H4.5a1 1 0 0 1-1-1Z" /></>,
+  menu: <path d="M4 7h16M4 12h16M4 17h10" />,
   ingredients: <><path d="M7 3v8m-3-8v5a3 3 0 0 0 6 0V3M7 11v10" /><path d="M17 3v18m0-18c3 2 3 8 0 10" /></>,
   moon: <path d="M20.4 14.5A8 8 0 0 1 9.5 3.6 9 9 0 1 0 20.4 14.5Z" />,
   paperclip: <path d="m20.5 11.5-8.7 8.7a5 5 0 0 1-7.1-7.1l9.1-9.1a3.5 3.5 0 0 1 5 5l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.3-8.3" />,

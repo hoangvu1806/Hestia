@@ -17,7 +17,10 @@
     "historyOne": "Nguyên liệu cho nồi chiên",
     "historyTwo": "Tìm hiểu phản ứng Maillard",
     "historyThree": "Bữa tối giàu đạm",
-    "settings": "Cài đặt"
+    "settings": "Cài đặt",
+    "openMenu": "Mở menu",
+    "closeMenu": "Đóng menu",
+    "noHistory": "Các cuộc trò chuyện của bạn sẽ hiện ở đây."
   },
   "header": {
     "title": "Hỏi Hestia",
@@ -74,7 +77,8 @@
     "placeholder": "Hỏi về nguyên liệu hoặc món bạn muốn nấu…",
     "attach": "Đính kèm hình ảnh",
     "send": "Gửi tin nhắn",
-    "hint": "Hestia có thể nhầm lẫn. Hãy kiểm chứng thông tin an toàn quan trọng."
+    "hint": "Hestia có thể nhầm lẫn. Hãy kiểm chứng thông tin an toàn quan trọng.",
+    "camera": "Chụp ảnh"
   },
   "profile": {
     "name": "Khách vào bếp",
