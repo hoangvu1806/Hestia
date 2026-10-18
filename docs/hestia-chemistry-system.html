@@ -1,0 +1,679 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hestia Chemistry System</title>
+<meta name="description" content="Trình bày hệ thống phân tích hóa học thực phẩm của Hestia: phân tích chất, phân tích phản ứng, tính toán hóa học, bằng chứng và xác minh an toàn.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f5f0;
+  --surface: #ffffff;
+  --surface-2: #f0ede5;
+  --text: #1d1c19;
+  --muted: #5f5b52;
+  --border: #ddd8cc;
+  --accent: #b5481f;
+  --accent-soft: #f6e3d8;
+  --c1: #2f6f8f; --c1-soft: #e1eef4;
+  --c2: #6b5aa6; --c2-soft: #ece8f6;
+  --c3: #3c7d4a; --c3-soft: #e3f1e5;
+  --c4: #a6731b; --c4-soft: #f7ecd6;
+  --danger: #a33a3a; --danger-soft: #f7e2e2;
+  --shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #151412; --surface: #1e1d1a; --surface-2: #262420; --text: #ece8df; --muted: #a8a294;
+    --border: #36332d; --accent: #e7845a; --accent-soft: #3a261c;
+    --c1: #7cb8d6; --c1-soft: #1c2c34; --c2: #ab9de0; --c2-soft: #272236;
+    --c3: #86c693; --c3-soft: #1e2e22; --c4: #e0b260; --c4-soft: #33291a;
+    --danger: #e08a8a; --danger-soft: #3a2222; --shadow: none; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #151412; --surface: #1e1d1a; --surface-2: #262420; --text: #ece8df; --muted: #a8a294;
+  --border: #36332d; --accent: #e7845a; --accent-soft: #3a261c;
+  --c1: #7cb8d6; --c1-soft: #1c2c34; --c2: #ab9de0; --c2-soft: #272236;
+  --c3: #86c693; --c3-soft: #1e2e22; --c4: #e0b260; --c4-soft: #33291a;
+  --danger: #e08a8a; --danger-soft: #3a2222; --shadow: none; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.65 "Be Vietnam Pro", system-ui, sans-serif;
+}
+code, .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: .86em; }
+code { background: var(--surface-2); padding: .1em .35em; border-radius: 4px; }
+a { color: var(--accent); }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+
+header.hero { padding: 64px 0 40px; border-bottom: 1px solid var(--border); }
+.eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: .75rem; color: var(--accent); font-weight: 600; }
+h1 { font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1.12; margin: .3em 0 .4em; letter-spacing: -.02em; }
+.lead { font-size: 1.15rem; color: var(--muted); max-width: 760px; }
+.hero-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 32px; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+.stat b { display: block; font-size: 1.6rem; line-height: 1.2; }
+.stat span { color: var(--muted); font-size: .85rem; }
+
+nav.toc { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+nav.toc .wrap { display: flex; gap: 6px; overflow-x: auto; padding-top: 10px; padding-bottom: 10px; scrollbar-width: none; }
+nav.toc a { white-space: nowrap; text-decoration: none; color: var(--muted); font-size: .85rem; padding: 6px 12px; border-radius: 999px; border: 1px solid transparent; }
+nav.toc a:hover { color: var(--text); border-color: var(--border); background: var(--surface); }
+.theme-btn { margin-left: auto; flex: none; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px; font: inherit; font-size: .85rem; cursor: pointer; }
+
+section { padding: 56px 0 8px; scroll-margin-top: 56px; }
+.sec-num { font-family: "JetBrains Mono", monospace; color: var(--accent); font-size: .85rem; }
+h2 { font-size: clamp(1.5rem, 3.5vw, 2rem); margin: .2em 0 .5em; letter-spacing: -.01em; }
+h3 { font-size: 1.15rem; margin: 1.8em 0 .6em; }
+p { margin: .6em 0; }
+.muted { color: var(--muted); }
+.src { font-size: .8rem; color: var(--muted); }
+.src code { font-size: .78rem; }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; box-shadow: var(--shadow); }
+.grid { display: grid; gap: 14px; }
+.g2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.g3 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.card h4 { margin: 0 0 .4em; font-size: 1rem; }
+.card p { margin: .3em 0; font-size: .93rem; }
+.tag { display: inline-block; font-size: .72rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; margin-bottom: 8px; }
+.t1 { background: var(--c1-soft); color: var(--c1); }
+.t2 { background: var(--c2-soft); color: var(--c2); }
+.t3 { background: var(--c3-soft); color: var(--c3); }
+.t4 { background: var(--c4-soft); color: var(--c4); }
+.tA { background: var(--accent-soft); color: var(--accent); }
+.tD { background: var(--danger-soft); color: var(--danger); }
+
+.flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 0; margin: 18px 0; }
+.flow .node { flex: 1 1 140px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; font-size: .88rem; position: relative; }
+.flow .node b { display: block; font-size: .95rem; margin-bottom: 2px; }
+.flow .arrow { flex: 0 0 28px; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 1.1rem; }
+.flow .node.k1 { border-top: 3px solid var(--c1); }
+.flow .node.k2 { border-top: 3px solid var(--c2); }
+.flow .node.k3 { border-top: 3px solid var(--c3); }
+.flow .node.k4 { border-top: 3px solid var(--c4); }
+.flow .node.kA { border-top: 3px solid var(--accent); }
+@media (max-width: 680px) {
+  .flow { flex-direction: column; }
+  .flow .arrow { flex-basis: 24px; transform: rotate(90deg); }
+}
+
+.tbl-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); margin: 14px 0; }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { background: var(--surface-2); font-weight: 600; font-size: .82rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+tr:last-child td { border-bottom: none; }
+
+.arch { display: grid; gap: 10px; margin: 18px 0; }
+.arch-row { display: grid; grid-template-columns: 150px 1fr; gap: 10px; align-items: stretch; }
+.arch-label { font-size: .8rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; display: flex; align-items: center; }
+.arch-boxes { display: flex; flex-wrap: wrap; gap: 8px; }
+.arch-boxes div { flex: 1 1 150px; padding: 10px 12px; border-radius: 10px; font-size: .88rem; border: 1px solid var(--border); background: var(--surface); }
+@media (max-width: 680px) { .arch-row { grid-template-columns: 1fr; } }
+
+.formula { font-family: "JetBrains Mono", monospace; background: var(--surface-2); border-radius: 8px; padding: 10px 12px; margin: 10px 0; font-size: .9rem; overflow-x: auto; white-space: nowrap; }
+.calc .card { display: flex; flex-direction: column; }
+.calc .ex { margin-top: auto; padding-top: 10px; border-top: 1px dashed var(--border); font-size: .85rem; color: var(--muted); }
+.calc .ex b { color: var(--text); font-weight: 600; }
+
+.chain { display: grid; gap: 10px; margin: 16px 0; }
+.chain-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--surface); }
+.chain-row > div { padding: 10px 12px; font-size: .85rem; border-right: 1px solid var(--border); }
+.chain-row > div:last-child { border-right: none; }
+.chain-row.head > div { background: var(--surface-2); font-weight: 600; font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+@media (max-width: 780px) {
+  .chain-row { grid-template-columns: 1fr; }
+  .chain-row > div { border-right: none; border-bottom: 1px solid var(--border); }
+  .chain-row > div:last-child { border-bottom: none; }
+  .chain-row.head { display: none; }
+  .chain-row > div::before { content: attr(data-l); display: block; font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; }
+}
+
+.ladder { display: grid; gap: 8px; margin: 16px 0; }
+.rung { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.rung .n { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: .85rem; }
+.rung h4 { margin: 0; font-size: .95rem; }
+.rung p { margin: 2px 0 0; font-size: .88rem; color: var(--muted); }
+
+.callout { border-left: 4px solid var(--accent); background: var(--accent-soft); padding: 14px 18px; border-radius: 0 10px 10px 0; margin: 18px 0; font-size: .95rem; }
+.callout.warn { border-color: var(--danger); background: var(--danger-soft); }
+
+.timeline { position: relative; margin: 20px 0; padding-left: 28px; }
+.timeline::before { content: ""; position: absolute; left: 9px; top: 6px; bottom: 6px; width: 2px; background: var(--border); }
+.step { position: relative; margin-bottom: 18px; }
+.step::before { content: ""; position: absolute; left: -24px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--bg); }
+.step h4 { margin: 0; font-size: 1rem; }
+.step p { margin: 4px 0 0; font-size: .92rem; color: var(--muted); }
+
+ul.clean { padding-left: 1.1em; margin: .4em 0; }
+ul.clean li { margin: .25em 0; font-size: .93rem; }
+footer { margin-top: 64px; padding: 28px 0 48px; border-top: 1px solid var(--border); color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Hestia · Hóa học thực phẩm dựa trên bằng chứng</div>
+    <h1>Từ thành phần chất đến<br>kết luận an toàn có nguồn</h1>
+    <p class="lead">Hestia là trợ lý AI đa phương thức. Hệ thống nhận diện nguyên liệu, tra cứu thành phần hóa học, suy luận các phản ứng có thể xảy ra khi chế biến, tính toán định lượng bằng công cụ xác định và chỉ đưa ra kết luận khi có bằng chứng truy ngược được về nguồn.</p>
+    <div class="hero-stats">
+      <div class="stat"><b>3</b><span>agent AI phối hợp</span></div>
+      <div class="stat"><b>9</b><span>công cụ hóa học & bằng chứng</span></div>
+      <div class="stat"><b>10</b><span>phép tính hóa học xác định</span></div>
+      <div class="stat"><b>12</b><span>nguồn dữ liệu & cơ quan chính thức</span></div>
+      <div class="stat"><b>8</b><span>mức phân loại bằng chứng</span></div>
+      <div class="stat"><b>87/95</b><span>điểm benchmark độc chất (19 ca)</span></div>
+    </div>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Mục lục">
+  <div class="wrap">
+    <a href="#tong-quan">1. Tổng quan</a>
+    <a href="#kien-truc">2. Kiến trúc</a>
+    <a href="#agent">3. Hệ agent</a>
+    <a href="#phan-tich-chat">4. Phân tích chất</a>
+    <a href="#phan-ung">5. Phân tích phản ứng</a>
+    <a href="#tinh-toan">6. Tính toán hóa học</a>
+    <a href="#bang-chung">7. Bằng chứng</a>
+    <a href="#xac-minh">8. Xác minh an toàn</a>
+    <a href="#vi-du">9. Một ca phân tích</a>
+    <a href="#benchmark">10. Benchmark</a>
+    <a href="#kiem-thu">11. Kiểm thử</a>
+    <a href="#van-hanh">12. Vận hành</a>
+    <a href="#gioi-han">13. Giới hạn</a>
+    <button class="theme-btn" id="themeBtn" type="button">Giao diện</button>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<!-- 1 -->
+<section id="tong-quan">
+  <div class="sec-num">01</div>
+  <h2>Tổng quan bài toán</h2>
+  <p>Khi một người nấu ăn, các thành phần hóa học trong nguyên liệu biến đổi dưới tác động của nhiệt độ, thời gian, độ ẩm và độ pH. Một số biến đổi tạo hương vị (phản ứng Maillard, caramel hóa). Một số khác có thể tạo chất cần lưu ý, hoặc không đủ để diệt vi sinh vật gây bệnh. Hestia trả lời ba câu hỏi:</p>
+  <div class="grid g3">
+    <div class="card"><span class="tag t1">Câu hỏi 1</span><h4>Trong món ăn có những chất gì?</h4><p>Nhận diện nguyên liệu, rồi tra thành phần hóa học có số đo và trích dẫn từ FooDB.</p></div>
+    <div class="card"><span class="tag t2">Câu hỏi 2</span><h4>Chế biến như vậy thì chất nào biến đổi?</h4><p>Suy luận phản ứng ứng viên theo điều kiện nấu, sau đó kiểm chứng bằng tài liệu khoa học.</p></div>
+    <div class="card"><span class="tag t3">Câu hỏi 3</span><h4>Kết luận dựa trên đâu, chắc chắn đến mức nào?</h4><p>Mỗi nhận định gắn với loại bằng chứng, nguồn và mức độ tin cậy.</p></div>
+  </div>
+  <div class="callout"><b>Nguyên tắc cốt lõi:</b> mô hình AI lên kế hoạch và giải thích. Việc <b>tra cứu dữ liệu</b> và <b>tính toán</b> được giao cho các công cụ chuyên biệt (theo ý tưởng của ChemCrow). AI không được tự nhớ số liệu, không được tính nhẩm và không được bịa nguồn.</div>
+</section>
+
+<!-- 2 -->
+<section id="kien-truc">
+  <div class="sec-num">02</div>
+  <h2>Kiến trúc hệ thống</h2>
+  <div class="arch">
+    <div class="arch-row"><div class="arch-label">Người dùng</div><div class="arch-boxes"><div style="border-top:3px solid var(--c1)"><b>Trình duyệt</b><br><span class="muted">Chat, gửi ảnh nguyên liệu</span></div><div style="border-top:3px solid var(--c1)"><b>Firebase Auth</b><br><span class="muted">Đăng nhập Google, ID token</span></div></div></div>
+    <div class="arch-row"><div class="arch-label">Giao diện</div><div class="arch-boxes"><div style="border-top:3px solid var(--c2)"><b>Next.js (static)</b><br><span class="muted">Render Markdown, LaTeX (KaTeX), Mermaid, trích dẫn</span></div></div></div>
+    <div class="arch-row"><div class="arch-label">API</div><div class="arch-boxes"><div style="border-top:3px solid var(--c3)"><b>FastAPI</b><br><span class="muted">REST + Server-Sent Events, xác thực token</span></div></div></div>
+    <div class="arch-row"><div class="arch-label">Trí tuệ</div><div class="arch-boxes"><div style="border-top:3px solid var(--accent)"><b>Google ADK</b><br><span class="muted">root_agent · food_analysis_agent · research_agent</span></div></div></div>
+    <div class="arch-row"><div class="arch-label">Dữ liệu</div><div class="arch-boxes"><div style="border-top:3px solid var(--c4)"><b>PostgreSQL</b><br><span class="muted">FooDB, OpenFoodTox, phiên chat</span></div><div style="border-top:3px solid var(--c4)"><b>USDA CSV</b><br><span class="muted">Hệ số giữ lại dinh dưỡng</span></div><div style="border-top:3px solid var(--c4)"><b>MinIO / S3</b><br><span class="muted">Ảnh riêng tư</span></div></div></div>
+    <div class="arch-row"><div class="arch-label">Nguồn ngoài</div><div class="arch-boxes"><div><b>PubChem</b><br><span class="muted">Danh tính & nguy hại</span></div><div><b>Europe PMC</b><br><span class="muted">Bài báo về phản ứng</span></div><div><b>Semantic Scholar</b><br><span class="muted">Qua Ai2 Asta</span></div></div></div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section id="agent">
+  <div class="sec-num">03</div>
+  <h2>Hệ thống agent</h2>
+  <p>Ba agent có vai trò tách biệt. Agent gốc trò chuyện với người dùng, còn hai agent chuyên môn chỉ trả về bằng chứng nội bộ cho agent gốc.</p>
+  <div class="grid g3">
+    <div class="card"><span class="tag tA">Điều phối</span><h4>root_agent</h4><p>Đọc ảnh và hội thoại, tách <b>quan sát</b> khỏi <b>thông tin người dùng cung cấp</b> và <b>suy đoán</b>. Quyết định khi nào cần chuyên gia. Viết câu trả lời cuối cùng kèm phương trình, sơ đồ và trích dẫn.</p><p class="src"><code>root_agent.py</code> · nhiệt độ mô hình 0.35</p></div>
+    <div class="card"><span class="tag t3">Chuyên gia hóa học</span><h4>food_analysis_agent</h4><p>Sàng lọc mối nguy theo 5 họ, quét thành phần, kiểm chứng con đường phản ứng, tính toán, tra độc tính, nguồn chính thức và tài liệu. Trả về bản tóm tắt bằng chứng. Tối đa <b>7 lần gọi công cụ</b>, trong đó tối đa 2 lần tìm tài liệu. Chỉ được kết thúc bằng <code>finish_task</code>, không được chuyển ngược về agent cha.</p><p class="src"><code>food_analysis_agent.py</code></p></div>
+    <div class="card"><span class="tag t2">Chuyên gia tài liệu</span><h4>research_agent</h4><p>Tìm bài báo khi người dùng yêu cầu nguồn, hoặc khi một kết luận khoa học cần tài liệu hỗ trợ. Phân biệt bằng chứng từ tóm tắt và từ toàn văn. Tối đa <b>5 lần gọi công cụ</b>, chỉ dùng các trường hợp lệ của Asta.</p><p class="src"><code>research_agent.py</code></p></div>
+  </div>
+  <h3>Quy trình 5 bước của agent gốc</h3>
+  <div class="flow">
+    <div class="node k1"><b>SEE</b>Đọc tin nhắn và ảnh. Tách quan sát, thông tin người dùng xác nhận, điểm chưa chắc.</div>
+    <div class="arrow">→</div>
+    <div class="node k2"><b>REASON</b>Xác định ý định thật và lượng thông tin tối thiểu cần có.</div>
+    <div class="arrow">→</div>
+    <div class="node k3"><b>VERIFY</b>Khi món ăn đã được xác nhận, chạy quy trình hóa học và an toàn.</div>
+    <div class="arrow">→</div>
+    <div class="node k4"><b>SOLVE</b>Có số liệu thì lập bài toán: đã biết, cần tìm, cơ chế, phương trình, giả định.</div>
+    <div class="arrow">→</div>
+    <div class="node kA"><b>ANSWER</b>Trả lời tự nhiên, có hóa học, kiểm soát rủi ro và nguồn.</div>
+  </div>
+  <p class="muted">Agent gốc gửi cho chuyên gia một <b>bản mô tả ca</b> (case brief) tự đủ thông tin: món ăn, nguyên liệu và trạng thái (đánh dấu chắc chắn hay không), thông tin người dùng xác nhận, các bước nấu, nhiệt độ, thời gian, độ ẩm, cách bảo quản, và các dữ kiện còn thiếu có thể làm thay đổi kết luận.</p>
+</section>
+
+<!-- 4 -->
+<section id="phan-tich-chat">
+  <div class="sec-num">04</div>
+  <h2>Phân tích chất</h2>
+  <p>Bước này trả lời câu hỏi "trong thực phẩm có những hợp chất nào, với hàm lượng bao nhiêu, theo nguồn nào".</p>
+
+  <h3>4.1 Các công cụ phân tích chất</h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Công cụ</th><th>Nguồn</th><th>Trả về</th><th>Không chứng minh được</th></tr></thead>
+    <tbody>
+      <tr><td><code>get_food_chemical_profile</code></td><td>FooDB</td><td>Hợp chất có trong tối đa 16 thực phẩm (hàm lượng, đơn vị, phần thực phẩm, dạng chế biến, CAS, phân loại, trích dẫn). Tham số <code>focus_compounds</code> kiểm tra luôn các tiền chất cần cho phản ứng ứng viên (ví dụ asparagine, đường khử, creatine) trong cùng một lần gọi</td><td>Liều nguy hại hay mức phơi nhiễm</td></tr>
+      <tr><td><code>search_food_compounds</code></td><td>FooDB</td><td>Kiểm tra một chất hoặc nhóm chất trong một thực phẩm. Tên dinh dưỡng thông dụng được đổi sang tên hóa học, ví dụ "vitamin C" → ascorbic acid</td><td>Chất có hình thành khi nấu</td></tr>
+      <tr><td><code>lookup_chemical_identity</code></td><td>PubChem</td><td>Công thức phân tử, khối lượng mol, SMILES, InChIKey, CID</td><td>Chất có mặt trong món ăn</td></tr>
+      <tr><td><code>get_pubchem_hazard_summary</code></td><td>PubChem</td><td>Trích đoạn mục "Safety and Hazards"</td><td>Mức phơi nhiễm theo khẩu phần</td></tr>
+      <tr><td><code>lookup_openfoodtox</code></td><td>EFSA OpenFoodTox 3.0</td><td>Tín hiệu độc tính, mức tham chiếu, tra theo tên, CAS hoặc InChIKey</td><td>Nguy cơ thực tế khi chưa biết lượng hình thành. Không có bản ghi cũng không có nghĩa là an toàn</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>4.2 Đối chiếu tên thực phẩm: tránh khớp nhầm</h3>
+  <p>Người dùng có thể viết "scallion", "green onion" hay "hành lá". FooDB lại lưu tên khoa học hoặc tên chung ("Domestic pig" thay cho pork, "Eggs", "Garden tomato"). Nếu khớp nhầm hoặc không khớp được thì toàn bộ phân tích hóa học phía sau sẽ sai, nên hàm <code>resolve_food</code> làm theo các bước:</p>
+  <div class="flow">
+    <div class="node k1"><b>Chuẩn hóa</b>Bỏ dấu (NFKD), chữ thường, chỉ giữ chữ và số</div>
+    <div class="arrow">→</div>
+    <div class="node k1"><b>Khớp chính xác</b>Trùng tên chuẩn hóa, hoặc tra bảng tên ẩm thực → tên FooDB (pork → Domestic pig, scallion → Green onion)</div>
+    <div class="arrow">→</div>
+    <div class="node k2"><b>Khớp gần đúng</b>Bỏ số nhiều (tomatoes → tomato), bỏ tiền tố chung (Garden, Common, Sweet), rồi so độ giống chuỗi</div>
+    <div class="arrow">→</div>
+    <div class="node k4"><b>Kiểm tra an toàn</b>Điểm ≥ 0.84 (hoặc ≥ 0.9) và cách ứng viên thứ hai ≥ 0.05</div>
+    <div class="arrow">→</div>
+    <div class="node kA"><b>Không chắc</b>Trả về 5 ứng viên gần nhất thay vì tự chọn</div>
+  </div>
+  <div class="callout"><b>Không gộp thực phẩm cụ thể vào loại chung:</b> một tên lạ không bao giờ bị ép về loại chung nhờ đoán chuỗi. Các phần thịt quen thuộc ("pork belly", "chicken breast") chỉ được ánh xạ về bản ghi của loài qua bảng tên có kiểm soát, và kết quả luôn kèm <code>match_note</code> nhắc rằng thành phần của phần thịt đó có thể khác. Từ chỉ cách chế biến được bỏ khi khớp ("boiled chicken egg" → Eggs, "frog meat" → True frog). Tính từ chỉ giống hoặc trạng thái ("bitter", "sprouted", "green") chỉ được bỏ ở bước cuối và luôn kèm cảnh báo rằng chúng có thể làm thay đổi hàm lượng độc chất. Từ "wild" được giữ lại có chủ đích: một loài hoang dã chưa xác định không bao giờ bị ánh xạ sang loài trồng. Kiểm thử trên 118 nguyên liệu phổ biến: 112 khớp đúng, các mục còn lại (galangal, fish sauce...) thật sự không có trong FooDB.</div>
+
+  <div class="callout"><b>Liên kết theo loài:</b> mỗi thực phẩm khớp được trả về kèm <code>same_species_foods</code>, tức các thực phẩm cùng loài hoặc cùng chi trong FooDB. Ví dụ: đậu cô ve (<i>Phaseolus vulgaris</i>) → cùng loài với đậu thận (Common bean), khoai tây → cùng chi với cà chua, cà tím. Agent dùng mối liên hệ này để kế thừa mối nguy theo loài (mục 5.2).</div>
+
+  <h3>4.3 Chọn hợp chất đại diện</h3>
+  <div class="grid g2">
+    <div class="card"><h4>Thống kê tổng thể cho mỗi thực phẩm</h4><ul class="clean"><li>Tổng số quan hệ thực phẩm–hợp chất</li><li>Số bản ghi <b>có định lượng</b> (hàm lượng &gt; 0)</li><li>8 nhóm hóa học phổ biến nhất (superclass / class / subclass)</li></ul></div>
+    <div class="card"><h4>Thứ tự ưu tiên khi chọn bản ghi</h4><ul class="clean"><li>Chất lượng chú giải: <code>high</code> → <code>medium</code> → còn lại</li><li>Bản ghi có trích dẫn đứng trước</li><li>Nếu không có bản ghi định lượng, lấy bản ghi "được báo cáo" và gắn nhãn <code>record_evidence = reported</code></li></ul></div>
+  </div>
+  <p>Từ hồ sơ này, chuyên gia hóa học chỉ chọn ra <b>3–8 chất quan trọng cho quyết định</b>: tiền chất phản ứng, độc tố tự nhiên, chất gây dị ứng, chất phụ gia hoặc chất nhiễm bẩn. Hệ thống không liệt kê hàng trăm chất. Các đơn vị và phần thực phẩm khác nhau nên <b>không được xếp hạng chéo đơn vị</b>.</p>
+</section>
+
+<!-- 5 -->
+<section id="phan-ung">
+  <div class="sec-num">05</div>
+  <h2>Phân tích phản ứng</h2>
+  <p>Hệ thống <b>không có danh sách phản ứng viết sẵn</b> (<code>tools.py</code>: "no list of target compounds or predefined cooking reactions"). Chuyên gia hóa học đề xuất các phản ứng ứng viên dựa trên món ăn và điều kiện nấu, rồi phải kiểm chứng từng phản ứng. Một phản ứng chỉ được chấp nhận khi nối được đủ năm mắt xích:</p>
+
+  <div class="chain">
+    <div class="chain-row head"><div>Tiền chất / thực phẩm</div><div>Điều kiện chế biến</div><div>Sản phẩm / mối nguy</div><div>Ý nghĩa sức khỏe</div><div>Biện pháp giảm thiểu</div></div>
+    <div class="chain-row"><div data-l="Tiền chất">Asparagine + đường khử (khoai tây)</div><div data-l="Điều kiện">Chiên, nướng ở nhiệt độ cao, độ ẩm thấp</div><div data-l="Sản phẩm">Acrylamide (qua phản ứng Maillard)</div><div data-l="Ý nghĩa">Nguy cơ dài hạn, không phải ngộ độc cấp</div><div data-l="Giảm thiểu">Ngâm, chần trước, chiên đến vàng nhạt</div></div>
+    <div class="chain-row"><div data-l="Tiền chất">Creatine + amino acid + đường (thịt)</div><div data-l="Điều kiện">Nướng trực tiếp trên lửa, áp chảo rất nóng, thời gian dài</div><div data-l="Sản phẩm">Amin dị vòng (HCA)</div><div data-l="Ý nghĩa">Nguy cơ dài hạn khi ăn thường xuyên</div><div data-l="Giảm thiểu">Ướp trước, lật thường xuyên, bỏ phần cháy</div></div>
+    <div class="chain-row"><div data-l="Tiền chất">Mỡ nhỏ xuống than</div><div data-l="Điều kiện">Khói, ngọn lửa trực tiếp</div><div data-l="Sản phẩm">Hydrocarbon thơm đa vòng (PAH)</div><div data-l="Ý nghĩa">Nguy cơ dài hạn</div><div data-l="Giảm thiểu">Lọc bớt mỡ, nướng gián tiếp, tránh khói bám</div></div>
+    <div class="chain-row"><div data-l="Tiền chất">Thịt gia cầm sống</div><div data-l="Điều kiện">Không đủ nhiệt ở tâm, dùng chung thớt sống/chín</div><div data-l="Sản phẩm">Vi khuẩn còn sống (ví dụ Salmonella)</div><div data-l="Ý nghĩa">Nguy cơ cấp tính</div><div data-l="Giảm thiểu">Nấu chín tới tâm, tách dụng cụ sống và chín</div></div>
+  </div>
+  <p class="src">Các hàng trên là <b>ví dụ minh họa</b> cho dạng chuỗi mà agent phải tạo. Trong hệ thống thật, mỗi mắt xích được agent xác lập riêng cho từng ca và gắn nguồn trả về từ công cụ.</p>
+
+  <h3>5.1 Kiểm chứng phản ứng bằng tài liệu</h3>
+  <div class="grid g2">
+    <div class="card"><span class="tag t2">search_reaction_literature</span><h4>Europe PMC</h4><p>Truy vấn 3–7 từ khóa theo thứ tự <code>thực phẩm + điều kiện + sản phẩm</code>. Nếu không có kết quả, công cụ tự rút gọn truy vấn. Mỗi bài trả về tiêu đề, năm, tạp chí, DOI, tóm tắt và URL. Mỗi ca được tìm tối đa 2 lần.</p></div>
+    <div class="card"><span class="tag t2">research_agent</span><h4>Semantic Scholar qua Ai2 Asta</h4><p>Tìm theo mức liên quan, theo tiêu đề, theo đoạn trích. Mỗi kết quả phải nêu rõ <b>nhận định cụ thể</b> mà bài báo hỗ trợ.</p></div>
+  </div>
+  <h3>5.2 Sàng lọc mối nguy theo 5 họ (trước khi gọi công cụ)</h3>
+  <p>Danh sách mối nguy đến từ kiến thức độc chất học của agent. Công cụ chỉ dùng để kiểm chứng, định lượng và cung cấp trích dẫn, không quyết định mối nguy nào tồn tại.</p>
+  <div class="grid g3">
+    <div class="card"><span class="tag t3">Họ 1</span><h4>Độc tố tự nhiên</h4><p>Của loài thực vật, nấm, động vật hoặc của một bộ phận, độ chín, giống. Bao gồm cả thực phẩm chỉ an toàn sau khi loại bỏ một phần, ngâm, lên men hoặc đun sôi kỹ.</p></div>
+    <div class="card"><span class="tag t4">Họ 2</span><h4>Độc chất sinh ra do quy trình</h4><p>Hóa nâu ở nhiệt cao, cháy và khói, phản ứng của phụ gia hoặc chất bảo quản dưới nhiệt, dầu bị phân hủy, sản phẩm phụ của lên men.</p></div>
+    <div class="card"><span class="tag tD">Họ 3</span><h4>Vi sinh</h4><p>Vi sinh vật phát triển do sai nhiệt độ hoặc thời gian, bào tử sống sót khi nấu, độc tố và amin sinh học có sẵn mà nấu lại không loại bỏ được.</p></div>
+    <div class="card"><span class="tag t1">Họ 4</span><h4>Thiết bị, nhiên liệu, môi trường</h4><p>Khí sinh ra khi đốt nhiên liệu, dụng cụ nấu phản ứng với thức ăn chua hoặc mặn, bao bì.</p></div>
+    <div class="card"><span class="tag t2">Họ 5</span><h4>Dị ứng và nhóm nhạy cảm</h4><p>Trẻ nhỏ, phụ nữ mang thai, người cao tuổi, người suy giảm miễn dịch, kể cả liều so với cân nặng.</p></div>
+  </div>
+
+  <h3>5.3 Thủ tục quyết định cho mỗi mối nguy</h3>
+  <div class="flow">
+    <div class="node k1"><b>Điều kiện bất hoạt</b>Đun sôi đủ lâu, bỏ nước, loại bỏ bộ phận, giữ lạnh, hoặc "không có, bền nhiệt"</div>
+    <div class="arrow">→</div>
+    <div class="node k2"><b>Quy trình của user có đạt không?</b>Có / không / không rõ. Xào nhanh, hấp, đun liu riu, "nóng là được" không chứng minh được đã sôi kỹ</div>
+    <div class="arrow">→</div>
+    <div class="node kA"><b>Không hoặc không rõ</b>Bắt buộc đưa vào bản đồ kiểm soát, kể cả khi hàm lượng ở dạng này thấp hơn hoặc chưa đo</div>
+  </div>
+  <div class="grid g2">
+    <div class="card"><h4>Kế thừa mối nguy theo loài</h4><p>Độc tố đã ghi nhận cho một loài áp dụng cho các giống, bộ phận, độ chín và trạng thái chế biến khác của loài đó, trừ khi có nguồn cho thấy dạng này không chứa. Lập luận "đây là dạng tươi, không phải dạng khô" mà không có bằng chứng là <b>không được phép</b>.</p></div>
+    <div class="card"><h4>Bất đối xứng phòng ngừa</h4><p>Không bao giờ kết luận một biện pháp phòng ngừa (đun sôi kỹ, bỏ nước, loại bỏ bộ phận, làm lạnh) là không cần thiết chỉ vì không tìm thấy bằng chứng về đúng dạng thực phẩm đó. Chỉ được bỏ khi bằng chứng cho thấy mối nguy vắng mặt hoặc đã bị loại bỏ.</p></div>
+  </div>
+
+  <div class="callout warn"><b>Quy tắc chống suy diễn:</b> không suy ra phản ứng chỉ vì hai chất cùng có mặt trong danh sách. Chỉ tìm tài liệu cho những nhận định về cơ chế hoặc cách giảm thiểu thật sự ảnh hưởng tới kết luận, không tìm cho vệ sinh thông thường hay hương vị.</div>
+</section>
+
+<!-- 6 -->
+<section id="tinh-toan">
+  <div class="sec-num">06</div>
+  <h2>Tính toán hóa học</h2>
+  <p>Mọi kết quả định lượng hiển thị cho người dùng đều phải đi qua hàm <code>solve_food_chemistry</code>. Hàm này chỉ làm phép tính, có kiểm tra đầu vào, và luôn trả về <b>công thức, phép thế số, kết quả kèm đơn vị, giả định và giới hạn</b>. Nếu thiếu dữ liệu, agent phải đưa ra quan hệ tổng quát hoặc một khoảng giá trị, không được tự bịa số.</p>
+
+  <div class="grid g3 calc">
+    <div class="card"><span class="tag t1">mass_fraction</span><h4>Nồng độ phần trăm khối lượng</h4>
+      <div class="formula">C% = m<sub>chất tan</sub> / m<sub>hỗn hợp</sub> × 100</div>
+      <p>Điều kiện: 0 ≤ m<sub>chất tan</sub> ≤ m<sub>hỗn hợp</sub>. Không ước tính độ hoạt động của nước hay mức an toàn vi sinh.</p>
+      <div class="ex">Ví dụ (test): 20 g muối + 180 g nước → 20 / 200 × 100 = <b>10%</b></div></div>
+    <div class="card"><span class="tag t1">dilution</span><h4>Pha loãng</h4>
+      <div class="formula">C₁V₁ = C₂V₂</div>
+      <p>Nhập đúng ba trong bốn giá trị, hàm giải ra giá trị còn thiếu. Giả định thể tích cộng được. Không dùng để dự đoán pH của thực phẩm có hệ đệm.</p>
+      <div class="ex">Ví dụ (test): 10 × 50 mL / 200 mL → C₂ = <b>2.5</b></div></div>
+    <div class="card"><span class="tag t1">moles</span><h4>Số mol</h4>
+      <div class="formula">n = m / M</div>
+      <p>M phải &gt; 0. Độ tinh khiết và nước kết tinh phải được tính sẵn trong m hoặc M.</p>
+      <div class="ex">Ví dụ: 10 g / 50 g·mol⁻¹ = <b>0.2 mol</b></div></div>
+    <div class="card"><span class="tag t2">stoichiometric_yield</span><h4>Hiệu suất theo tỉ lượng</h4>
+      <div class="formula">m<sub>SP</sub> = (m<sub>pư</sub>·p / M<sub>pư</sub>) · (ν<sub>SP</sub>/ν<sub>pư</sub>) · M<sub>SP</sub></div>
+      <p>Tách riêng khối lượng <b>lý thuyết</b> và khối lượng <b>dự kiến</b> (nhân hiệu suất). Giả định chất phản ứng là chất hạn chế. Phép tính không chứng minh phản ứng xảy ra trong nền thực phẩm.</p>
+      <div class="ex">Ví dụ (test): 10 g, M = 50, tỉ lệ 1 : 2, M<sub>SP</sub> = 25 → lý thuyết <b>10 g</b>, hiệu suất 80% → <b>8 g</b></div></div>
+    <div class="card"><span class="tag t3">nutrient_retention</span><h4>Lượng dinh dưỡng còn lại</h4>
+      <div class="formula">m<sub>còn</sub> = m<sub>đầu</sub> × RF% × hiệu suất ăn được</div>
+      <p>Hệ số RF lấy từ bảng USDA Release 6. Đây là <b>ước tính theo nhóm thực phẩm</b>, không phải số đo của chính món ăn.</p>
+      <div class="ex">Ví dụ giả định: 100 mg vitamin C × 70% × 1.0 = <b>70 mg</b></div></div>
+    <div class="card"><span class="tag t4">thermal_equivalent_time</span><h4>Thời gian tương đương nhiệt</h4>
+      <div class="formula">F<sub>ref</sub> = t · 10<sup>(T − T<sub>ref</sub>) / z</sup></div>
+      <p>Mô hình động học diệt khuẩn. Giả định nhiệt độ không đổi và giá trị z phù hợp với vi sinh vật mục tiêu. Không dùng để xác nhận an toàn khi chưa có quy trình chuẩn và nhiệt độ đo thực tế.</p>
+      <div class="ex">Ví dụ giả định: t = 2 phút, T = 75°C, T<sub>ref</sub> = 70°C, z = 7.5°C → 2 × 10<sup>0.667</sup> ≈ <b>9.28 phút</b></div></div>
+    <div class="card"><span class="tag t1">solute_for_mass_fraction</span><h4>Lượng chất tan cần pha</h4>
+      <div class="formula">m<sub>ct</sub> = p · m<sub>dm</sub> / (100 − p)</div>
+      <p>Bài toán ngược của C%. Trả về cả cách hiểu w/w chặt chẽ và cách pha trong bếp (w/v, gam trên 100 mL nước).</p>
+      <div class="ex">Ví dụ (test): nước muối 3% với 1000 g nước → <b>30,93 g</b> (w/w) hoặc <b>30 g</b> (cách pha bếp)</div></div>
+    <div class="card"><span class="tag t4">first_order_kinetics</span><h4>Động học bậc 1</h4>
+      <div class="formula">C = C₀ · e<sup>−kt</sup>, t<sub>½</sub> = ln2 / k</div>
+      <p>Tính phần còn lại sau thời gian t, hoặc thời gian để còn lại một tỉ lệ cho trước. k hoặc t½ phải lấy từ nguồn khớp với thực phẩm và quy trình.</p>
+      <div class="ex">Ví dụ (test): t½ = 20 phút, sau 20 phút còn <b>50%</b></div></div>
+    <div class="card"><span class="tag t4">arrhenius_rate_ratio</span><h4>Phương trình Arrhenius</h4>
+      <div class="formula">k₂/k₁ = exp[(E<sub>a</sub>/R)(1/T₁ − 1/T₂)]</div>
+      <p>Tốc độ phản ứng tăng bao nhiêu lần khi tăng nhiệt độ. Giả định E<sub>a</sub> không đổi trong khoảng nhiệt đang xét.</p>
+      <div class="ex">Ví dụ (test): E<sub>a</sub> = 50 kJ/mol, 160°C → 180°C ⇒ nhanh hơn <b>≈ 1,85 lần</b></div></div>
+    <div class="card"><span class="tag t2">henderson_hasselbalch</span><h4>pH dung dịch đệm</h4>
+      <div class="formula">pH = pK<sub>a</sub> + log([A⁻]/[HA])</div>
+      <p>Tính pH từ tỉ lệ base/acid, hoặc tỉ lệ và % ion hóa từ pH. Bỏ qua hiệu ứng hoạt độ.</p>
+      <div class="ex">Ví dụ (test): acid acetic pK<sub>a</sub> 4,76 ở pH 4,0 → ion hóa <b>≈ 14,8%</b></div></div>
+  </div>
+
+  <h3>6.1 Tra hệ số giữ lại dinh dưỡng (USDA)</h3>
+  <p><code>search_nutrient_retention</code> tìm trong bảng USDA theo mô tả cách chế biến và tên chất dinh dưỡng:</p>
+  <p>Bảng USDA viết tắt rất nhiều (VEG, BOILD, CKD, SIMMRD, BKD...). Công cụ chuẩn hóa các từ viết tắt này, đổi tên món sang nhóm USDA (broccoli → vegetable, salmon → finfish), và tính từ chỉ thực phẩm nặng gấp đôi từ chỉ cách nấu. Tên chất dinh dưỡng phải khớp đủ mọi token, nên "vitamin C" không bị nhầm sang "Vitamin B-6".</p>
+  <div class="formula">điểm = 0.72 × độ_phủ_có_trọng_số(thực phẩm, cách nấu) + 0.28 × khớp_dinh_dưỡng</div>
+  <p class="muted">Ví dụ: "boiled broccoli" + vitamin C → VEG, BOILED, WATER USED (70%) và các biến thể có chắt nước (55–60%). Agent phải nêu độ lệch giữa nhóm USDA và món ăn thực tế.</p>
+
+  <h3>6.2 Kiểm tra đầu vào</h3>
+  <ul class="clean">
+    <li>Mọi giá trị phải là số hữu hạn. Khối lượng mol, hệ số tỉ lượng và giá trị z phải dương.</li>
+    <li>Độ tinh khiết, hiệu suất và hiệu suất ăn được nằm trong khoảng 0–1. RF nằm trong khoảng 0–100.</li>
+    <li>Đầu vào sai trả về lỗi ổn định <code>invalid_input</code> kèm danh sách khóa đã nhận, ví dụ M = 0 bị từ chối.</li>
+    <li>Chấp nhận các tên khóa thường gặp (solution_mass_g, water_mass_g, initial_nutrient_mg...) để agent không mất lượt gọi vì đặt sai tên tham số.</li>
+    <li>Đơn vị chuẩn: gam, mililit, độ C, phút. Agent phải loại bỏ các phép tính sai thứ nguyên.</li>
+  </ul>
+</section>
+
+<!-- 7 -->
+<section id="bang-chung">
+  <div class="sec-num">07</div>
+  <h2>Hệ thống bằng chứng</h2>
+  <p>Mỗi kết luận được phân loại vào một trong tám mức bằng chứng. Mức càng cao thì càng được phép khẳng định mạnh:</p>
+  <div class="ladder">
+    <div class="rung"><div class="n t3">1</div><div><h4>Dữ liệu đo được / được báo cáo</h4><p>Hàm lượng trong FooDB, hệ số USDA, bản ghi OpenFoodTox, kèm trích dẫn gốc.</p></div></div>
+    <div class="rung"><div class="n t1">2</div><div><h4>Phép tính xác định</h4><p>Kết quả từ <code>solve_food_chemistry</code> với đầu vào và giả định được nêu rõ.</p></div></div>
+    <div class="rung"><div class="n t3">3</div><div><h4>Hướng dẫn chính thức</h4><p>Dữ kiện từ USDA FSIS, FDA, EFSA, BfR, NCI, CFS Hong Kong do <code>get_food_safety_reference</code> trả về, kèm URL trích dẫn được.</p></div></div>
+    <div class="rung"><div class="n t3">4</div><div><h4>Kiến thức độc chất học đã xác lập</h4><p>Mối nguy có trong tài liệu độc chất học chuẩn. Được nêu ngay cả khi công cụ không trả về gì. Tìm kiếm thất bại không bao giờ hạ cấp hay xóa một mối nguy đã xác lập, nhưng cũng không được gắn URL không hỗ trợ nó.</p></div></div>
+    <div class="rung"><div class="n t2">5</div><div><h4>Suy luận có cơ sở</h4><p>Phản ứng được tài liệu khoa học hỗ trợ trong điều kiện tương tự.</p></div></div>
+    <div class="rung"><div class="n t4">6</div><div><h4>Có thể xảy ra nhưng chưa xác nhận</h4><p>Hợp lý về hóa học nhưng chưa có bằng chứng khớp với thực phẩm và quy trình cụ thể.</p></div></div>
+    <div class="rung"><div class="n tD">7</div><div><h4>Bị mâu thuẫn</h4><p>Có nguồn phản bác. Hệ thống trình bày sự mâu thuẫn và giải thích nguồn nào phù hợp hơn với trường hợp đang xét.</p></div></div>
+    <div class="rung"><div class="n" style="background:var(--surface-2);color:var(--muted)">8</div><div><h4>Không đánh giá được</h4><p>Thiếu dữ liệu quyết định. Hệ thống nêu rõ dữ kiện nào còn thiếu và nó sẽ thay đổi kết luận ra sao.</p></div></div>
+  </div>
+
+  <h3>7.1 Mỗi nguồn chứng minh được gì</h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Nguồn</th><th>Hỗ trợ</th><th>Không hỗ trợ</th></tr></thead>
+    <tbody>
+      <tr><td><b>FooDB</b></td><td>Thành phần thực phẩm</td><td>Phản ứng, nguy cơ lâm sàng</td></tr>
+      <tr><td><b>PubChem</b></td><td>Danh tính chất, dữ liệu nguy hại</td><td>Chất đã hình thành trong món ăn</td></tr>
+      <tr><td><b>OpenFoodTox</b></td><td>Tín hiệu độc tính</td><td>Mức phơi nhiễm theo khẩu phần, bằng chứng hình thành</td></tr>
+      <tr><td><b>USDA Retention</b></td><td>Hệ số giữ lại theo nhóm</td><td>Số đo của món ăn cụ thể</td></tr>
+      <tr><td><b>Tham chiếu chính thức</b> (<code>get_food_safety_reference</code>: USDA FSIS, FDA, EFSA, BfR, NCI, CFS Hong Kong)</td><td>Nhiệt độ chín an toàn, vùng nhiệt nguy hiểm, bảo quản, nhiễm chéo, acrylamide, HCA/PAH, lectin trong họ đậu, glycoside sinh cyanide, glycoalkaloid, độc tố bạch quả, độc tố biển, nấm và thực vật hoang dã</td><td>Xác minh một món ăn cụ thể</td></tr>
+      <tr><td><b>Bài báo khoa học</b></td><td>Cơ chế, điều kiện hình thành, cách giảm thiểu</td><td>Nguy cơ của món ăn khi thực phẩm và quy trình không khớp</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>7.2 Sổ bằng chứng (evidence ledger)</h3>
+  <div class="formula">nhận định → loại bằng chứng → URL nguồn</div>
+  <ul class="clean">
+    <li>Chỉ dùng URL do công cụ trả về. <b>Không bao giờ bịa nguồn</b>, không viết URL theo trí nhớ, không đoán đường dẫn trang.</li>
+    <li>Chỉ mục chính thức được dựng từ chính các trang của cơ quan chức năng: mỗi dữ kiện chỉ ghi điều mà trang nguồn nói. Agent gọi công cụ này với mọi tên thực phẩm và mọi mối nguy trong ca, và dữ kiện chính thức được ưu tiên hơn niềm tin ban đầu của model.</li>
+    <li>Giữ nguyên tiêu đề bài báo, năm, trích dẫn FooDB, URL USDA, PubChem và EFSA.</li>
+    <li>Trích dẫn đặt ngay sau nhận định mà nó hỗ trợ, không gom thành danh sách nguồn chung chung.</li>
+    <li>Kết thúc phân tích sâu bằng 2–5 nguồn mạnh nhất.</li>
+    <li>Mã hợp chất FooDB (ví dụ <code>FDB012345</code>) chỉ để định danh. Bản thân nó không phải bằng chứng cho phản ứng.</li>
+  </ul>
+</section>
+
+<!-- 8 -->
+<section id="xac-minh">
+  <div class="sec-num">08</div>
+  <h2>Quy trình xác minh an toàn</h2>
+  <p>Mọi món ăn đã được người dùng xác nhận đều phải qua phân tích điểm kiểm soát tới hạn, kể cả khi người dùng chỉ hỏi "nấu thế nào". Cách tiếp cận này gần với tư duy HACCP.</p>
+
+  <h3>8.1 Bản đồ kiểm soát rủi ro</h3>
+  <div class="flow">
+    <div class="node k1"><b>Công đoạn</b>Sơ chế, ướp, nấu, bảo quản, hâm nóng</div>
+    <div class="arrow">→</div>
+    <div class="node k2"><b>Mối nguy / hóa học</b>Chất, vi sinh vật hoặc độc tố liên quan</div>
+    <div class="arrow">→</div>
+    <div class="node k4"><b>Điều kiện kích hoạt</b>Nhiệt, thời gian, độ ẩm, nhiễm chéo</div>
+    <div class="arrow">→</div>
+    <div class="node k3"><b>Kiểm soát</b>Dấu hiệu quan sát hoặc đo được và bước phòng ngừa</div>
+    <div class="arrow">→</div>
+    <div class="node kA"><b>Nguồn</b>URL bằng chứng</div>
+  </div>
+
+  <div class="grid g2">
+    <div class="card"><h4>Các điểm kiểm soát thường gặp</h4><ul class="clean"><li>Nhiễm chéo từ thực phẩm sống sang chín</li><li>Nhiệt độ ở tâm không đủ</li><li>Bảo quản và hâm nóng không đúng</li><li>Khói và cháy xém quá mức</li><li>Chất gây dị ứng</li><li>Độc tố tự nhiên đặc thù của thực phẩm</li></ul></div>
+    <div class="card"><h4>Phân loại nguy cơ</h4><ul class="clean"><li><b>Cấp tính</b> và <b>mãn tính</b> được tách riêng. Nguy cơ dài hạn không bị mô tả thành ngộ độc cấp</li><li>Không gọi mọi mối nguy vi sinh là "độc tố"</li><li>Quá trình bình thường như tạo hương vị không được xếp vào mục rủi ro</li><li>Không thêm mối nguy chỉ để lấp đầy nội dung</li></ul></div>
+  </div>
+
+  <h3>8.2 Khung trả lời câu hỏi an toàn</h3>
+  <div class="ladder">
+    <div class="rung"><div class="n tA">1</div><div><h4>Kết luận trước</h4><p>Một hai câu: không nên ăn, sửa bước này, hoặc không sao.</p></div></div>
+    <div class="rung"><div class="n tA">2</div><div><h4>Gọi đúng tên tác nhân</h4><p>Chất, độc tố hay vi sinh vật cụ thể và nguồn gốc của nó, không chỉ nói chung chung "có độc tố".</p></div></div>
+    <div class="rung"><div class="n tA">3</div><div><h4>Vì sao cách làm của user chưa giải quyết được</h4><p>Độ bền nhiệt, độ tan trong nước ngâm hoặc nước luộc, nhiệt độ và thời gian thực tế đạt được, bộ phận đã loại bỏ.</p></div></div>
+    <div class="rung"><div class="n tA">4</div><div><h4>Triệu chứng và thời gian khởi phát</h4><p>Nêu rõ là nguy cơ cấp tính hay dài hạn.</p></div></div>
+    <div class="rung"><div class="n tA">5</div><div><h4>Cách làm đúng</h4><p>Quy trình hoặc lựa chọn thay thế, kèm thông số cụ thể.</p></div></div>
+    <div class="rung"><div class="n tA">6</div><div><h4>Khi nào cần đi cấp cứu</h4><p>Áp dụng với mối nguy cấp tính, cho người đã lỡ ăn.</p></div></div>
+  </div>
+  <div class="callout"><b>Lời đồn "cặp kỵ" và phản bác:</b> với tuyên bố rằng một cặp thực phẩm sinh độc, hệ thống nói rõ có độc chất nào hình thành hay không, giải thích hóa học thực tế và nêu rủi ro thật còn lại. Khi người dùng phản bác hoặc dán nhận định từ nguồn khác, hệ thống đánh giá từng luận điểm riêng theo khoa học, nói rõ ý nào đúng, ý nào sai hoặc chưa chứng minh, và chủ động sửa câu trả lời trước của mình nếu nó sai.</div>
+
+  <h3>8.3 Cơ chế bảo vệ trong quá trình chạy</h3>
+  <div class="grid g3">
+    <div class="card"><span class="tag tA">Giới hạn công cụ</span><p>Mỗi lần gọi công cụ được đếm (<code>after_tool_callback</code>). Khi đủ 7 lần, mô hình bị buộc gọi <code>finish_task</code> với bằng chứng đã thu thập (<code>before_model_callback</code>).</p></div>
+    <div class="card"><span class="tag tA">Không thử lại</span><p>Công cụ lỗi hoặc trả về rỗng thì không gọi lại. Agent trả lời thận trọng dựa trên bằng chứng đã có và không để lộ lỗi kỹ thuật cho người dùng.</p></div>
+    <div class="card"><span class="tag tA">Giới hạn tìm tài liệu</span><p><code>before_tool_callback</code> chặn lần tìm tài liệu thứ ba trong một ca. Europe PMC chỉ trả về bài có abstract, và tự nới truy vấn khi có ít hơn 2 kết quả.</p></div>
+    <div class="card"><span class="tag tA">Không chuyển ngược</span><p>Hai agent chuyên môn đặt <code>disallow_transfer_to_parent</code> và <code>disallow_transfer_to_peers</code>. Gọi <code>transfer_to_agent</code> ở chế độ task từng làm ADK tự chờ chính nó và sập request.</p></div>
+    <div class="card"><span class="tag tA">Không suy đoán ẩn</span><p>Không bịa nguyên liệu, lượng, độ tươi hay độ chín. Một chất lỏng màu tối chưa rõ được gọi là "chưa xác định", không tự cho là nước mắm.</p></div>
+  </div>
+
+  <div class="callout warn"><b>Khi không có phản ứng nguy hại nào được xác lập,</b> hệ thống không chỉ nói "không có độc tố". Nó phải giải thích những con đường nào đã được xem xét, vì sao chúng không được ủng hộ trong điều kiện nấu đã nêu, và rủi ro an toàn thực phẩm thông thường nào vẫn cần lưu ý.</div>
+</section>
+
+<!-- 9 -->
+<section id="vi-du">
+  <div class="sec-num">09</div>
+  <h2>Một ca phân tích từ đầu đến cuối</h2>
+  <p class="muted">Kịch bản minh họa luồng xử lý. Các con số cụ thể trong câu trả lời thật sẽ do công cụ trả về.</p>
+  <div class="timeline">
+    <div class="step"><h4>1. Người dùng gửi ảnh: thịt gà, sả, nấm</h4><p>root_agent mô tả nguyên liệu, đánh dấu mục chưa chắc chắn và gợi ý 3–4 món. Chưa phân tích hóa học vì người dùng chưa chọn món.</p></div>
+    <div class="step"><h4>2. Người dùng chọn: "Mình muốn làm gà nướng sả"</h4><p>Món ăn đã được xác nhận, nên root_agent chuyển cho food_analysis_agent một bản mô tả ca: nguyên liệu, trạng thái sống, cách nấu là nướng, các dữ kiện còn thiếu như nhiệt độ và thời gian.</p></div>
+    <div class="step"><h4>3. Phân tích chất</h4><p>Gọi <code>get_food_chemical_profile(["chicken", "lemongrass", "mushroom"], focus_compounds=["creatine", "reducing sugar"])</code> một lần cho cả ba nguyên liệu, kiểm tra luôn các tiền chất. Chọn ra các chất quan trọng, ví dụ tiền chất của phản ứng Maillard và HCA trong thịt, hợp chất thơm trong sả.</p></div>
+    <div class="step"><h4>4. Phân tích phản ứng</h4><p>Đề xuất các chuỗi: thịt + nướng nhiệt cao → HCA, mỡ nhỏ xuống than → PAH, thịt gia cầm sống → vi khuẩn nếu chưa chín tới tâm. Gọi <code>get_food_safety_reference(["chicken", "lemongrass", "mushroom", "grilling", "doneness"])</code> với mọi thực phẩm và mối nguy trong ca, để lấy mốc 74°C cho gia cầm và cách giảm HCA/PAH kèm nguồn chính thức. Chỉ tìm tài liệu khi cần một cơ chế mà nguồn chính thức không có.</p></div>
+    <div class="step"><h4>5. Độc tính (nếu cần)</h4><p>Gọi <code>lookup_openfoodtox</code> cho đúng chất liên quan để lấy tín hiệu nguy hại kèm URL EFSA.</p></div>
+    <div class="step"><h4>6. Trả về bản tóm tắt bằng chứng</h4><p>Gồm bảng hợp chất, các con đường phản ứng, sổ bằng chứng, phân loại nguy cơ cấp/mãn tính, bản đồ kiểm soát rủi ro và đề xuất sơ đồ trực quan.</p></div>
+    <div class="step"><h4>7. Câu trả lời cuối cùng</h4><p>Các bước nấu kèm định lượng, phần giải thích hóa học ngắn gọn, mục rủi ro → điều kiện → kiểm soát, sơ đồ quy trình Mermaid, trích dẫn đặt ngay sau từng nhận định, và ảnh minh họa AI nếu hình dạng món ăn quan trọng.</p></div>
+  </div>
+
+  <h3>9.1 Quy ước trình bày khoa học</h3>
+  <div class="grid g3">
+    <div class="card"><h4>Công thức</h4><p>LaTeX trong <code>$...$</code>, hiển thị bằng KaTeX. Khi có phép tính: nêu phương trình, thay số, kết quả kèm đơn vị, rồi một câu giải thích ý nghĩa.</p></div>
+    <div class="card"><h4>Sơ đồ</h4><p>Flowchart Mermaid cho chuỗi phản ứng hoặc quy trình từ 4 bước trở lên. <code>xychart</code> cho so sánh số liệu. Bảng cho so sánh nhiều tiêu chí. Không vẽ biểu đồ từ số liệu bịa.</p></div>
+    <div class="card"><h4>Chip thực thể</h4><p><code>[compound:Asparagine|asparagine|FDB...]</code> liên kết tới thư viện thực phẩm. Mã FooDB chỉ được dùng khi công cụ đã trả về đúng mã đó cho đúng chất đó.</p></div>
+  </div>
+</section>
+
+<!-- 10 -->
+<section id="benchmark">
+  <div class="sec-num">10</div>
+  <h2>Benchmark độc chất khi nấu ăn</h2>
+  <p>Bộ 19 ca chạy qua agent thật (<code>backend/evals/</code>). Có 16 ca độc thật đã kiểm chứng và 3 "cặp kỵ" dân gian không có cơ sở làm nhóm đối chứng. Nhóm đối chứng cần thiết vì nếu thiếu nó, một hệ thống cảnh báo mọi thứ vẫn sẽ đạt điểm cao. Mỗi câu trả lời được một model giám khảo chấm theo đáp án chuẩn, tối đa 5 điểm: kết luận đúng (1), gọi đúng tác nhân (1), cơ chế đúng gồm chi tiết quy trình then chốt (2), triệu chứng (1), trừ 2 điểm nếu có lỗi gây hại.</p>
+
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Món / cặp nguyên liệu</th><th>Độc chất</th><th>Nguyên nhân then chốt</th><th>Trước</th><th>Sau</th></tr></thead>
+    <tbody>
+      <tr><td>Đậu thận hầm nồi nấu chậm</td><td>Lectin (PHA)</td><td>Nồi nấu chậm không đạt sôi</td><td>4</td><td>5</td></tr>
+      <tr><td>Đậu cô ve xào bò tái</td><td>Lectin (phasin)</td><td>Cùng loài với đậu thận, xào nhanh không đủ chín</td><td>0</td><td>5</td></tr>
+      <tr><td>Măng tươi luộc sơ 2 phút</td><td>Taxiphyllin → HCN</td><td>Luộc ngắn, không bỏ nước</td><td>3</td><td>4</td></tr>
+      <tr><td>Sắn đắng hấp, không ngâm</td><td>Linamarin → HCN</td><td>Hấp kín không bỏ được nước và HCN</td><td>4</td><td>4</td></tr>
+      <tr><td>Hạt mơ đắng ăn sống (held-out)</td><td>Amygdalin → HCN</td><td>Nhai giải phóng HCN</td><td>—</td><td>5</td></tr>
+      <tr><td>Khoai tây mọc mầm, vỏ xanh chiên</td><td>Solanine, chaconine</td><td>Bền nhiệt</td><td>5</td><td>5</td></tr>
+      <tr><td>Cơm nguội để ngoài 8 giờ rồi chiên</td><td>Cereulide (<i>B. cereus</i>)</td><td>Bào tử sinh độc tố, bền nhiệt</td><td>4</td><td>5</td></tr>
+      <tr><td>Cá ngừ để ngoài nắng rồi kho</td><td>Histamine</td><td>Vi khuẩn tạo histamine, bền nhiệt</td><td>5</td><td>5</td></tr>
+      <tr><td>Nướng than trong phòng kín</td><td>CO</td><td>Cháy thiếu oxy</td><td>4</td><td>4</td></tr>
+      <tr><td>Bacon, xúc xích chiên cháy</td><td>Nitrosamine</td><td>Nitrit phản ứng với amin ở nhiệt cao</td><td>1</td><td>3</td></tr>
+      <tr><td>Dầu chiên dùng lại, bốc khói</td><td>Acrolein, aldehyde</td><td>Phân hủy nhiệt, oxy hóa</td><td>4</td><td>5</td></tr>
+      <tr><td>Canh cá nóc</td><td>Tetrodotoxin</td><td>Bền nhiệt, ở gan, trứng, da</td><td>5</td><td>5</td></tr>
+      <tr><td>Nấm rừng luộc kỹ</td><td>Amatoxin</td><td>Bền nhiệt, triệu chứng muộn</td><td>4</td><td>5</td></tr>
+      <tr><td>Chả cóc cho trẻ</td><td>Bufadienolide</td><td>Ở da, tuyến, gan, trứng</td><td>3</td><td>4</td></tr>
+      <tr><td>50 hạt bạch quả rang cho trẻ</td><td>Ginkgotoxin</td><td>Bền nhiệt, đối kháng B6</td><td>5</td><td>5</td></tr>
+      <tr><td>Sữa đậu nành tắt bếp khi trào bọt (held-out)</td><td>Ức chế trypsin, lectin</td><td>"Sôi giả" ở 80–90°C</td><td>—</td><td>4</td></tr>
+      <tr><td>Lời đồn: cua + hồng</td><td>Không có</td><td>Tannin có thể gây bã thức ăn, không phải ngộ độc</td><td>5</td><td>5</td></tr>
+      <tr><td>Lời đồn: tôm + chanh sinh asen</td><td>Không có</td><td>Asen hữu cơ ít độc, lượng vitamin C phi thực tế</td><td>4</td><td>5</td></tr>
+      <tr><td>Lời đồn: sữa đậu nành + trứng</td><td>Không có</td><td>Không có phản ứng sinh độc</td><td>4</td><td>4</td></tr>
+    </tbody>
+  </table></div>
+  <div class="grid g3">
+    <div class="stat"><b>64/80 → 87/95</b><span>16 ca ban đầu → 19 ca hiện tại</span></div>
+    <div class="stat"><b>19/19</b><span>kết luận an toàn hay không đúng, không có lỗi gây hại</span></div>
+    <div class="stat"><b>11/16</b><span>ca độc thật được chỉ mục nguồn chính thức phủ tới</span></div>
+  </div>
+
+  <h3>10.1 Lỗi tìm được theo module và cách sửa</h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Lỗi</th><th>Module</th><th>Cách sửa tổng quát</th></tr></thead>
+    <tbody>
+      <tr><td>Bỏ sót mối nguy chính (nitrosamine ở bacon)</td><td>Bước liệt kê mối nguy</td><td>Sàng lọc theo 5 họ mối nguy (mục 5.2)</td></tr>
+      <tr><td>Truy xuất thất bại thì xóa luôn kiến thức đã xác lập (cóc)</td><td>Chính sách bằng chứng</td><td>Mức "kiến thức độc chất học đã xác lập"</td></tr>
+      <tr><td>Gạt mối nguy bằng lập luận "dạng này khác" (đậu cô ve)</td><td>Suy luận</td><td>Kế thừa theo loài, <code>same_species_foods</code>, thủ tục quyết định</td></tr>
+      <tr><td>Nói "không cần chần" vì không tìm thấy bằng chứng</td><td>Suy luận</td><td>Bất đối xứng phòng ngừa</td></tr>
+      <tr><td>Bênh câu trả lời cũ khi bị phản bác</td><td>root_agent</td><td>Đánh giá từng luận điểm, chủ động tự sửa</td></tr>
+      <tr><td>Kiến thức nội tại của model sai, quy tắc viết bằng lời không ghi đè được</td><td>Tầng truy xuất</td><td>Chỉ mục nguồn chính thống CFS HK, BfR, EFSA</td></tr>
+      <tr><td>Europe PMC trả về bản ghi rác</td><td><code>search_reaction_literature</code></td><td>Lọc <code>HAS_ABSTRACT:y</code>, nới truy vấn khi có ít hơn 2 kết quả</td></tr>
+      <tr><td>"boiled chicken egg", "bitter cassava" không khớp</td><td><code>resolve_food</code></td><td>Bỏ từ chỉ cách chế biến, bỏ tính từ chỉ giống kèm cảnh báo</td></tr>
+      <tr><td>Chuyên gia gọi <code>transfer_to_agent</code> làm sập request</td><td>Cấu hình ADK</td><td><code>disallow_transfer_to_parent</code> và <code>disallow_transfer_to_peers</code></td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">Prompt không nêu tên độc chất nào của benchmark. Hai ca held-out (hạt mơ đắng, sữa đậu nành) không được dùng để chỉnh prompt và đạt 5/5, 4/5. Một phần điểm tăng ở 11 ca có trong chỉ mục chính thức đến từ dữ liệu: đó là chủ đích (dựa trên nguồn chính thống), nhưng không thuần túy là năng lực suy luận.</p>
+</section>
+
+<!-- 11 -->
+<section id="kiem-thu">
+  <div class="sec-num">11</div>
+  <h2>Kiểm thử</h2>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Test</th><th>Kiểm tra điều gì</th></tr></thead>
+    <tbody>
+      <tr><td><code>test_mass_fraction_uses_total_mixture_mass</code></td><td>C% tính trên tổng khối lượng hỗn hợp, không phải trên dung môi (20 g / 200 g = 10%)</td></tr>
+      <tr><td><code>test_dilution_solves_one_missing_value</code></td><td>C₁V₁ = C₂V₂ giải đúng ẩn số còn thiếu</td></tr>
+      <tr><td><code>test_stoichiometry_labels_theoretical_and_expected_yield</code></td><td>Tách khối lượng lý thuyết (10 g) và dự kiến (8 g)</td></tr>
+      <tr><td><code>test_retention_search_returns_source_and_valid_factor</code></td><td>Tra USDA trả về nguồn hợp lệ, hệ số nằm trong 0–100</td></tr>
+      <tr><td><code>test_invalid_inputs_return_stable_error</code></td><td>M = 0 bị từ chối bằng <code>invalid_input</code></td></tr>
+      <tr><td><code>test_solute_for_target_brine_*</code>, <code>test_first_order_*</code>, <code>test_arrhenius_*</code>, <code>test_henderson_hasselbalch_*</code></td><td>Các phép tính mới: nước muối 3% cho 1 L nước (30 g theo cách pha bếp, 30,93 g theo w/w), động học bậc 1, Arrhenius, pH</td></tr>
+      <tr><td><code>test_retention_search_understands_usda_abbreviations</code></td><td>Bảng USDA khớp đúng rau luộc, khoai chiên, thịt heo nướng</td></tr>
+      <tr><td><code>test_resolve_food_maps_culinary_names</code></td><td>pork, egg, tomatoes, scallion, chicken breast... được ánh xạ đúng tên FooDB</td></tr>
+      <tr><td><code>test_resolve_food_ignores_preparation_words</code>, <code>test_resolve_food_reports_stripped_variety_qualifier</code>, <code>test_resolve_food_never_maps_wild_species_to_cultivated</code></td><td>Bỏ từ chỉ cách chế biến, cảnh báo khi bỏ tính từ chỉ giống, không ánh xạ loài hoang dã sang loài trồng</td></tr>
+      <tr><td><code>test_food_safety_reference_routes_foods_to_official_toxin_sources</code></td><td>Tên thực phẩm được định tuyến tới đúng nguồn chính thức về độc tố tự nhiên</td></tr>
+      <tr><td><code>test_specialist_instruction_has_no_adk_state_placeholders</code></td><td>Prompt không chứa <code>{...}</code> mà ADK hiểu nhầm là biến state</td></tr>
+      <tr><td><code>evals/run_toxic_eval.py</code>, <code>evals/judge_toxic_eval.py</code></td><td>Chạy benchmark 19 ca qua agent thật, rồi chấm bằng model giám khảo</td></tr>
+      <tr><td><code>test_food_library.py</code>, <code>test_agent_instructions.py</code></td><td>Tra cứu thư viện thực phẩm và các ràng buộc trong chỉ dẫn agent</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">Định hướng đánh giá theo FoodGuardBench: kiểm tra xem câu trả lời có bỏ sót nguy cơ, có phóng đại cảnh báo, có trích nguồn không hỗ trợ kết luận, và có nói rõ khi thiếu dữ liệu hay không.</p>
+</section>
+
+<!-- 12 -->
+<section id="van-hanh">
+  <div class="sec-num">12</div>
+  <h2>Vận hành: streaming và nhiều người dùng</h2>
+  <div class="grid g2">
+    <div class="card"><span class="tag t3">Stream thật</span><h4>SSE từ model tới trình duyệt</h4><p>Backend chạy <code>StreamingMode.SSE</code> và phát <code>text_delta</code> từ các event partial. Frontend đọc từng chunk qua <code>ReadableStream</code>. Đo thực tế: khoảng 600–760 mảnh chữ rải đều trong 5–7 giây, đúng tốc độ model sinh token. Trang chỉ tự cuộn khi người dùng gửi tin và khi câu trả lời xong.</p></div>
+    <div class="card"><span class="tag t3">Đồng thời</span><h4>Không để user này chặn user khác</h4><p>Tool đồng bộ (FooDB, PubChem, Europe PMC) chạy trong thread pool 16 luồng qua <code>ToolThreadPoolConfig</code>. LiteLLM được import sẵn khi server khởi động, vì nếu để ADK import lần đầu ngay trên event loop thì cả server đứng khoảng 7 giây. Pool kết nối phiên chat: 10 + 10.</p></div>
+  </div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Đo với 2 user chat cùng lúc</th><th>Trước</th><th>Sau</th></tr></thead>
+    <tbody>
+      <tr><td><code>/health</code> chậm nhất trong lúc chat</td><td>6.991 ms</td><td>138 ms</td></tr>
+      <tr><td>Chữ đầu tiên của câu hỏi đơn giản</td><td>15–17 giây</td><td>8,8 giây</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- 13 -->
+<section id="gioi-han">
+  <div class="sec-num">13</div>
+  <h2>Giới hạn và hướng phát triển</h2>
+  <div class="grid g2">
+    <div class="card"><span class="tag tD">Giới hạn hiện tại</span><ul class="clean">
+      <li>Không mô phỏng phản ứng ở cấp phân tử, không cân bằng phương trình tự động, không tính nhiệt động học.</li>
+      <li>Phản ứng do mô hình AI đề xuất, sau đó mới được kiểm chứng bằng tài liệu. Chưa có cơ sở tri thức phản ứng có cấu trúc.</li>
+      <li>Không xử lý dữ liệu thực nghiệm (phổ, chuẩn độ, pH đo được).</li>
+      <li>Không ước tính được lượng chất hình thành trong món ăn, nên chưa đánh giá phơi nhiễm theo khẩu phần.</li>
+      <li>Chỉ mục nguồn chính thức còn nhỏ (9 chủ đề). Mối nguy ngoài chỉ mục vẫn phụ thuộc kiến thức nội tại của model, có thể sai như đã thấy ở ca đậu cô ve.</li>
+      <li>Ca bacon mới đạt 3/5: chưa nói rõ nitrit phản ứng với amin ở nhiệt độ chiên cao.</li>
+      <li>Một ca nấu ăn mất khoảng 40–90 giây, tìm bài báo qua Asta mất khoảng 3 phút.</li>
+      <li>Khóa theo phiên nằm trong bộ nhớ của một process, nên chưa chạy được nhiều worker.</li>
+      <li>Không thay thế xét nghiệm phòng thí nghiệm, tư vấn y tế hay hướng dẫn an toàn thực phẩm chính thức.</li>
+    </ul></div>
+    <div class="card"><span class="tag t3">Hướng phát triển</span><ul class="clean">
+      <li>Cân bằng phương trình và kiểm tra bảo toàn nguyên tố bằng RDKit hoặc ChemPy.</li>
+      <li>Cơ sở tri thức phản ứng thực phẩm có nguồn: Maillard, caramel hóa, acrylamide, HCA/PAH, oxy hóa lipid, nitrosamine.</li>
+      <li>Thêm phép tính độ hoạt động của nước và thư viện hằng số động học (k, E<sub>a</sub>) có nguồn để dùng với các phép tính động học đã có.</li>
+      <li>Ước tính phơi nhiễm: lượng hình thành × khẩu phần, so với mức tham chiếu.</li>
+      <li>Chế độ "báo cáo hóa học" hiển thị đầy đủ phương trình, cơ chế và mức bằng chứng.</li>
+      <li>Mở rộng chỉ mục chính thức (FDA Bad Bug Book, các fact sheet độc tố tự nhiên của CFS) và thêm ca vào benchmark mỗi khi phát hiện câu trả lời sai.</li>
+    </ul></div>
+  </div>
+
+  <h3>Nguồn dữ liệu</h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Nguồn</th><th>Dùng cho</th></tr></thead>
+    <tbody>
+      <tr><td><a href="https://foodb.ca/">FooDB</a></td><td>Quan hệ thực phẩm – hợp chất, hàm lượng, phân loại hóa học</td></tr>
+      <tr><td><a href="https://pubchem.ncbi.nlm.nih.gov/">PubChem</a></td><td>Danh tính chất (công thức, SMILES, InChIKey), dữ liệu nguy hại</td></tr>
+      <tr><td><a href="https://www.efsa.europa.eu/en/data-report/chemical-hazards-database-openfoodtox">EFSA OpenFoodTox</a></td><td>Độc tính và mức tham chiếu</td></tr>
+      <tr><td><a href="https://catalog.data.gov/dataset/usda-table-of-nutrient-retention-factors-release-6-2007">USDA Nutrient Retention Factors R6</a></td><td>Hệ số giữ lại dinh dưỡng khi chế biến</td></tr>
+      <tr><td><a href="https://europepmc.org/">Europe PMC</a></td><td>Tài liệu về phản ứng và cách giảm thiểu</td></tr>
+      <tr><td><a href="https://www.semanticscholar.org/">Semantic Scholar</a> (Ai2 Asta)</td><td>Tìm bài báo khoa học</td></tr>
+      <tr><td><a href="https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/safe-temperature-chart">USDA FSIS</a></td><td>Nhiệt độ chín an toàn, vùng nhiệt nguy hiểm, thức ăn thừa</td></tr>
+      <tr><td><a href="https://www.fda.gov/food/buy-store-serve-safe-food/safe-food-handling">FDA</a></td><td>Bốn bước an toàn: làm sạch, tách riêng, nấu chín, làm lạnh</td></tr>
+      <tr><td><a href="https://www.efsa.europa.eu/en/topics/topic/acrylamide">EFSA</a></td><td>Acrylamide, lectin trong đậu nấu chưa chín</td></tr>
+      <tr><td><a href="https://www.bfr.bund.de/en/press-release/only-enjoy-cooked-beans/">BfR</a></td><td>Phasin trong hạt và vỏ quả đậu</td></tr>
+      <tr><td><a href="https://www.cancer.gov/about-cancer/causes-prevention/risk/diet/cooked-meats-fact-sheet">NCI</a></td><td>HCA và PAH trong thịt nấu ở nhiệt cao</td></tr>
+      <tr><td><a href="https://www.cfs.gov.hk/english/programme/programme_rafs/programme_rafs_fc_01_17_report.html">CFS Hong Kong</a></td><td>Độc tố tự nhiên trong thực vật, đậu, độc tố biển, nấm và thực vật hoang dã</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">Hestia · Hệ thống phân tích hóa học thực phẩm dựa trên bằng chứng. Nội dung được tổng hợp từ mã nguồn trong <code>backend/src/agents/food_risk_agent/</code> và <code>docs/hestia-core-agent-idea.md</code>. Kết quả của hệ thống không thay thế xét nghiệm phòng thí nghiệm hay tư vấn y tế.</div>
+</footer>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var btn = document.getElementById("themeBtn");
+  try { var saved = localStorage.getItem("hestia-theme"); if (saved) root.setAttribute("data-theme", saved); } catch (e) {}
+  btn.addEventListener("click", function () {
+    var dark = root.getAttribute("data-theme") === "dark" ||
+      (!root.getAttribute("data-theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    var next = dark ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("hestia-theme", next); } catch (e) {}
+  });
+})();
+</script>
+</body>
+</html>
