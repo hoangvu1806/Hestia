@@ -171,6 +171,7 @@ footer { margin-top: 64px; padding: 28px 0 48px; border-top: 1px solid var(--bor
       <div class="stat"><b>12</b><span>nguồn dữ liệu & cơ quan chính thức</span></div>
       <div class="stat"><b>8</b><span>mức phân loại bằng chứng</span></div>
       <div class="stat"><b>87/95</b><span>điểm benchmark độc chất (19 ca)</span></div>
+      <div class="stat"><b>Web + Android</b><span>cùng một frontend, cùng backend</span></div>
     </div>
   </div>
 </header>
@@ -189,7 +190,8 @@ footer { margin-top: 64px; padding: 28px 0 48px; border-top: 1px solid var(--bor
     <a href="#benchmark">10. Benchmark</a>
     <a href="#kiem-thu">11. Kiểm thử</a>
     <a href="#van-hanh">12. Vận hành</a>
-    <a href="#gioi-han">13. Giới hạn</a>
+    <a href="#mobile">13. App mobile</a>
+    <a href="#gioi-han">14. Giới hạn</a>
     <button class="theme-btn" id="themeBtn" type="button">Giao diện</button>
   </div>
 </nav>
@@ -610,8 +612,47 @@ footer { margin-top: 64px; padding: 28px 0 48px; border-top: 1px solid var(--bor
 </section>
 
 <!-- 13 -->
-<section id="gioi-han">
+<section id="mobile">
   <div class="sec-num">13</div>
+  <h2>App mobile Android</h2>
+  <p>App Android bọc chính bản web tĩnh (Next.js static export) bằng <b>Tauri 2</b> (<code>frontend/src-tauri</code>). App có đủ các trang như web, đăng nhập Google như web, và dùng chung backend với web. Mã ứng dụng là <code>space.vectorium.hestia</code>, hỗ trợ Android 7.0 trở lên, kiến trúc arm64 và x86_64. APK được ký bằng keystore riêng.</p>
+
+  <h3>13.1 Giao diện mobile</h3>
+  <div class="grid g3">
+    <div class="card"><span class="tag tA">Điều hướng</span><h4>Thanh tab dưới</h4><p>Home, Ask, Library, Science, Settings. Tab đang mở được tô màu. Ở màn chat, tab bar tự ẩn khi bàn phím mở để ô nhập có chỗ.</p></div>
+    <div class="card"><span class="tag tA">Phiên chat</span><h4>Drawer trượt từ trái</h4><p>Từ 900px trở xuống, sidebar thành drawer mở bằng nút ☰: tạo cuộc trò chuyện mới, chọn phiên cũ, vào Settings, xem tài khoản. Drawer đóng khi chọn mục, bấm ra ngoài hoặc nhấn Esc.</p></div>
+    <div class="card"><span class="tag tA">Camera</span><h4>Chụp hoặc tải ảnh</h4><p>Ô nhập trên điện thoại có nút camera (<code>capture="environment"</code>) để mở thẳng app camera của máy, và nút kẹp giấy để chọn ảnh có sẵn. Ảnh được thu nhỏ trên máy (cạnh dài tối đa 2048 px, JPEG 0,86) trước khi gửi.</p></div>
+  </div>
+  <p class="muted">Header và composer chừa khoảng an toàn cho thanh trạng thái và thanh cử chỉ (<code>env(safe-area-inset-*)</code>, <code>viewport-fit=cover</code>). Icon app là logo Hestia trên nền kem, dạng adaptive icon.</p>
+
+  <h3>13.2 Cấu hình backend cho app mobile</h3>
+  <p>App chạy ở origin <code>http://tauri.localhost</code> và gọi API production. Backend không cần domain mới, chỉ cần cho phép origin này.</p>
+  <div class="ladder">
+    <div class="rung"><div class="n tA">1</div><div><h4>Thêm origin của app vào CORS</h4><p>Trong file env của backend production (file <code>.env</code> ở gốc dự án khi chạy Docker Compose, hoặc <code>backend/.env</code>), nối <code>http://tauri.localhost</code> vào danh sách hiện có, rồi khởi động lại backend:</p><div class="formula">HESTIA_CORS_ORIGINS=https://hestia.vectorium.space,http://tauri.localhost</div><p>Thay phần đầu bằng các origin bạn đang dùng. Nếu thiếu bước này, đăng nhập vẫn chạy nhưng mọi lệnh gọi API (chat, phiên chat, ảnh) đều lỗi và app báo "temporary interruption".</p></div></div>
+    <div class="rung"><div class="n tA">2</div><div><h4>Kiểm tra CORS</h4><p>Lệnh sau phải trả về <code>200</code>. Trả về <code>400</code> nghĩa là origin chưa được cho phép.</p><div class="formula">curl -s -o /dev/null -w "%{http_code}" -X OPTIONS https://hestia.vectorium.space/api/v1/sessions -H "Origin: http://tauri.localhost" -H "Access-Control-Request-Method: POST" -H "Access-Control-Request-Headers: authorization,content-type"</div></div></div>
+    <div class="rung"><div class="n tA">3</div><div><h4>Firebase Authorized domains</h4><p>Firebase Console → Authentication → Settings → Authorized domains: thêm <code>tauri.localhost</code>, để Google sign-in chuyển hướng về lại app được.</p></div></div>
+    <div class="rung"><div class="n tA">4</div><div><h4>Cloudflare Tunnel và SSE</h4><p>Không cần đổi gì: <code>/api/v1/*</code> vẫn trỏ về backend. Stream SSE đã có header <code>Cache-Control: no-cache</code> và <code>X-Accel-Buffering: no</code>, nên chữ hiện dần trong app giống trên web.</p></div></div>
+    <div class="rung"><div class="n tA">5</div><div><h4>Đổi địa chỉ API (khi cần)</h4><p>APK đóng sẵn địa chỉ <code>https://hestia.vectorium.space/api/v1</code> lúc build (<code>frontend/scripts/build-app.mjs</code>). Nếu chuyển backend sang domain khác, đặt <code>HESTIA_APP_API_URL</code> rồi build lại APK, và thêm <code>http://tauri.localhost</code> vào CORS của domain mới.</p></div></div>
+  </div>
+  <p class="muted">Giá trị CORS mặc định trong <code>backend/src/core/config.py</code>, <code>backend/.env.example</code> và <code>compose.env.example</code> đã có sẵn <code>http://tauri.localhost</code>. Server production đọc file env riêng, nên vẫn phải thêm thủ công như bước 1.</p>
+
+  <h3>13.3 Build APK</h3>
+  <div class="formula">cd frontend &amp;&amp; npm run android:build</div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Thành phần</th><th>Giá trị</th></tr></thead>
+    <tbody>
+      <tr><td>Yêu cầu</td><td>Rust (target <code>aarch64-linux-android</code>, <code>x86_64-linux-android</code>), JDK 17, Android SDK platform 36, NDK, biến <code>ANDROID_HOME</code> và <code>NDK_HOME</code></td></tr>
+      <tr><td>Output</td><td><code>frontend/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk</code>, bản phát hành chép vào <code>release/</code> (không commit)</td></tr>
+      <tr><td>Ký APK</td><td><code>frontend/src-tauri/gen/android/keystore.properties</code> (<code>password</code>, <code>keyAlias</code>, <code>storeFile</code>), được git bỏ qua. Mọi bản cập nhật phải ký bằng đúng keystore đó, nên cần sao lưu</td></tr>
+      <tr><td>Đăng nhập Google</td><td>WebView dùng user agent của Chrome Android để Google không chặn trang đăng nhập trong WebView</td></tr>
+      <tr><td>Camera</td><td>Manifest khai báo <code>&lt;queries&gt;</code> cho <code>IMAGE_CAPTURE</code> (bắt buộc từ Android 11). Không xin quyền <code>CAMERA</code>, vì app mở camera hệ thống qua intent</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- 14 -->
+<section id="gioi-han">
+  <div class="sec-num">14</div>
   <h2>Giới hạn và hướng phát triển</h2>
   <div class="grid g2">
     <div class="card"><span class="tag tD">Giới hạn hiện tại</span><ul class="clean">
@@ -623,6 +664,7 @@ footer { margin-top: 64px; padding: 28px 0 48px; border-top: 1px solid var(--bor
       <li>Ca bacon mới đạt 3/5: chưa nói rõ nitrit phản ứng với amin ở nhiệt độ chiên cao.</li>
       <li>Một ca nấu ăn mất khoảng 40–90 giây, tìm bài báo qua Asta mất khoảng 3 phút.</li>
       <li>Khóa theo phiên nằm trong bộ nhớ của một process, nên chưa chạy được nhiều worker.</li>
+      <li>App mobile mới có bản Android. Đăng nhập Google trong WebView dựa vào user agent của Chrome, nên nếu Google thay đổi cách phát hiện WebView thì sẽ cần chuyển sang đăng nhập native.</li>
       <li>Không thay thế xét nghiệm phòng thí nghiệm, tư vấn y tế hay hướng dẫn an toàn thực phẩm chính thức.</li>
     </ul></div>
     <div class="card"><span class="tag t3">Hướng phát triển</span><ul class="clean">
