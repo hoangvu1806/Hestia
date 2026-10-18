@@ -207,7 +207,7 @@ button { cursor: pointer; }
 .chat-account-popover { top: calc(100% + 11px); }
 .chat-account-popover > .account-sign-out { grid-template-columns: 1fr auto; }
 .mobile-brand { display: none; }
-.conversation { flex: 1 1 0%; min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-color: rgba(130,100,85,.22) transparent; }
+.conversation { flex: 1 1 0%; min-height: 0; overflow: auto; overflow-anchor: none; overscroll-behavior: contain; scrollbar-color: rgba(130,100,85,.22) transparent; }
 
 .welcome { display: flex; width: min(940px, calc(100% - 48px)); margin: auto; padding: 54px 0 34px; flex-direction: column; align-items: center; text-align: center; }
 .welcome-logo .brand-copy { display: none; }
@@ -399,7 +399,9 @@ button { cursor: pointer; }
 .send-button { color: white; background: linear-gradient(135deg, var(--accent-strong), var(--accent-2)); box-shadow: 0 9px 20px rgba(222,70,45,.24), inset 0 1px rgba(255,255,255,.3); }
 .send-button:hover { transform: translateY(-1px) scale(1.02); box-shadow: 0 13px 25px rgba(222,70,45,.3), inset 0 1px rgba(255,255,255,.36); }
 .send-button:disabled, .composer-action:disabled { cursor: not-allowed; opacity: .42; box-shadow: none; }
-.composer textarea:disabled { cursor: wait; }
+.send-button.is-loading:disabled { cursor: default; opacity: 1; }
+.send-button.is-loading:hover { transform: none; }
+.send-spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.35); border-top-color: #fff; border-radius: 50%; animation: progress-spin .8s linear infinite; }
 .disclaimer { margin: 8px 0 0; color: var(--subtle); font-size: 9px; font-weight: 550; text-align: center; }
 .not-found { display: grid; min-height: 100dvh; place-content: center; gap: 12px; text-align: center; }
 .not-found span { color: var(--accent); font-size: 13px; font-weight: 800; letter-spacing: .15em; }

@@ -517,13 +517,18 @@ export function AppShell({
     };
   }, [user]);
 
-  useEffect(() => {
+  function scrollToEnd(behavior: ScrollBehavior) {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: busy ? "auto" : "smooth" });
+      messagesEndRef.current.scrollIntoView({ behavior });
     } else if (conversation.current) {
       const el = conversation.current;
-      el.scrollTo({ top: el.scrollHeight, behavior: busy ? "auto" : "smooth" });
+      el.scrollTo({ top: el.scrollHeight, behavior });
     }
+  }
+
+  // While a reply streams, leave the scroll position to the reader.
+  useEffect(() => {
+    if (!busy) scrollToEnd("smooth");
   }, [messages, busy]);
 
   async function activeSession() {
@@ -647,6 +652,7 @@ export function AppShell({
     setPendingFile(null);
     setPreview(null);
     setBusy(true);
+    requestAnimationFrame(() => scrollToEnd("smooth"));
 
     let renderer: ReturnType<typeof progressiveText> | null = null;
     try {
@@ -1098,7 +1104,6 @@ export function AppShell({
             </button>
             <textarea
               aria-label={composer.placeholder}
-              disabled={busy}
               onChange={(event) => setDraft(event.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={composer.placeholder}
@@ -1107,12 +1112,13 @@ export function AppShell({
               value={draft}
             />
             <button
+              aria-busy={busy}
               aria-label={composer.send}
-              className="send-button"
+              className={busy ? "send-button is-loading" : "send-button"}
               disabled={busy || (!draft.trim() && !pendingFile)}
               type="submit"
             >
-              <Icon height={20} name="arrow" width={20} />
+              {busy ? <span aria-hidden="true" className="send-spinner" /> : <Icon height={20} name="arrow" width={20} />}
             </button>
           </form>
           <p className="disclaimer">{composer.hint}</p>
