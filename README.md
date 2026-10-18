@@ -124,6 +124,32 @@ Run the local static-export workflow:
 
 Open http://localhost:3434. npm run build creates frontend/out/, and npm run start serves an existing export.
 
+### Android app
+
+The Android app wraps the same static frontend with Tauri 2 (`frontend/src-tauri`). It has the
+same pages, Google sign-in, and chat as the web app, plus a camera button in the mobile composer.
+
+Requirements: Rust with the `aarch64-linux-android` and `x86_64-linux-android` targets, JDK 17,
+Android SDK platform 36, and an NDK.
+
+    cd frontend
+    $env:ANDROID_HOME = "D:\AndroidSDK"
+    $env:NDK_HOME = "D:\AndroidSDK\ndk\27.0.12077973"
+    npm run android:build
+
+The signed APK is written to
+`frontend/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk`.
+The build calls `scripts/build-app.mjs`, which points the app at
+`https://hestia.vectorium.space/api/v1` (override with `HESTIA_APP_API_URL`).
+
+Release signing reads `frontend/src-tauri/gen/android/keystore.properties` (`password`,
+`keyAlias`, `storeFile`). Keep that file and the keystore out of version control and back the
+keystore up: every update of the app must be signed with the same key.
+
+The app is served from `http://tauri.localhost`. Add that origin to the production
+`HESTIA_CORS_ORIGINS`, and add `tauri.localhost` to Firebase Authentication → Settings →
+Authorized domains so Google sign-in can redirect back into the app.
+
 ## Docker Compose
 
 Copy the environment templates, provide the Firebase Admin key, and start the stack:

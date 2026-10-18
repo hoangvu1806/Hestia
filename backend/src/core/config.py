@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     port: int = 8484
     log_level: str = "INFO"
     docs_enabled: bool = True
-    cors_origins: str = "http://localhost:3434,http://127.0.0.1:3434"
+    cors_origins: str = "http://localhost:3434,http://127.0.0.1:3434,http://tauri.localhost"
     firebase_credentials_path: Path = (
         BACKEND_DIR / "secrets" / "firebase" / "service-account.json"
     )

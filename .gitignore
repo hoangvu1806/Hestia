@@ -72,3 +72,6 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# Built Android packages
+release/*.apk

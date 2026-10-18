@@ -6,7 +6,10 @@
     "dev": "npm run build && serve -l 3434 --no-clipboard out",
     "build": "next build",
     "start": "serve -l 3434 --no-clipboard out",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "tauri": "tauri",
+    "build:app": "node scripts/build-app.mjs",
+    "android:build": "tauri android build --apk --target aarch64 x86_64"
   },
   "dependencies": {
     "firebase": "^12.19.0",
@@ -21,6 +24,7 @@
     "remark-math": "^6.0.0"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^2.12.3",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
