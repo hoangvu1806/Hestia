@@ -23,6 +23,10 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+function isTauriApp(): boolean {
+  return "__TAURI_INTERNALS__" in window || navigator.userAgent.includes("HestiaApp/");
+}
 const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: "select_account" });
 
@@ -43,11 +47,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     async signInWithGoogle() {
       await setPersistence(firebaseAuth, browserLocalPersistence);
-      if (window.matchMedia("(max-width: 800px)").matches) {
+      // Mobile browsers block the third-party storage that the redirect flow reads on return,
+      // so every browser uses a popup. Only the Tauri webview, which cannot open popups,
+      // uses the redirect flow.
+      if (isTauriApp()) {
         await signInWithRedirect(firebaseAuth, googleProvider);
         return;
       }
-      await signInWithPopup(firebaseAuth, googleProvider);
+      try {
+        await signInWithPopup(firebaseAuth, googleProvider);
+      } catch (error) {
+        if ((error as { code?: string }).code !== "auth/popup-blocked") throw error;
+        await signInWithRedirect(firebaseAuth, googleProvider);
+      }
     },
     async signOut() {
       await firebaseSignOut(firebaseAuth);
