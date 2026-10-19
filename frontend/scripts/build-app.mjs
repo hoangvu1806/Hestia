@@ -1,6 +1,7 @@
 // Builds the static export for the native app. The app is served from tauri.localhost,
 // so the API must be absolute; local .env files would otherwise point it at 127.0.0.1.
 import { spawnSync } from "node:child_process";
+import { rmSync } from "node:fs";
 
 const env = {
   ...process.env,
@@ -9,4 +10,6 @@ const env = {
 };
 
 const result = spawnSync("npx", ["next", "build"], { env, shell: true, stdio: "inherit" });
+// The website hosts the APK under /downloads; the app must not bundle a copy of itself.
+rmSync("out/downloads", { force: true, recursive: true });
 process.exit(result.status ?? 1);

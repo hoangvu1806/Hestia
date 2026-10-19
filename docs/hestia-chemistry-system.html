@@ -642,7 +642,7 @@ footer { margin-top: 64px; padding: 28px 0 48px; border-top: 1px solid var(--bor
     <thead><tr><th>Thành phần</th><th>Giá trị</th></tr></thead>
     <tbody>
       <tr><td>Yêu cầu</td><td>Rust (target <code>aarch64-linux-android</code>, <code>x86_64-linux-android</code>), JDK 17, Android SDK platform 36, NDK, biến <code>ANDROID_HOME</code> và <code>NDK_HOME</code></td></tr>
-      <tr><td>Output</td><td><code>frontend/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk</code>, bản phát hành chép vào <code>release/</code> (không commit)</td></tr>
+      <tr><td>Output</td><td><code>frontend/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk</code>, bản phát hành chép vào <code>frontend/public/downloads/hestia-android.apk</code> để trang <code>/download</code> phục vụ (VPS có file sau khi <code>git pull</code> và build lại frontend). Khi thay APK, cập nhật phiên bản, dung lượng và SHA-256 trong <code>ANDROID_APK</code> ở <code>frontend/src/app/download/page.tsx</code></td></tr>
       <tr><td>Ký APK</td><td><code>frontend/src-tauri/gen/android/keystore.properties</code> (<code>password</code>, <code>keyAlias</code>, <code>storeFile</code>), được git bỏ qua. Mọi bản cập nhật phải ký bằng đúng keystore đó, nên cần sao lưu</td></tr>
       <tr><td>Đăng nhập Google</td><td>WebView dùng user agent của Chrome Android để Google không chặn trang đăng nhập trong WebView</td></tr>
       <tr><td>Camera</td><td>Manifest khai báo <code>&lt;queries&gt;</code> cho <code>IMAGE_CAPTURE</code> (bắt buộc từ Android 11). Không xin quyền <code>CAMERA</code>, vì app mở camera hệ thống qua intent</td></tr>
