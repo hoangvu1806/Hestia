@@ -4,6 +4,12 @@ Hestia is an open-source culinary intelligence application for ingredient resear
 
 Production: [hestia.vectorium.space](https://hestia.vectorium.space/)
 
+## Demo
+
+[![Hestia teaser — click to play the 24-second demo](docs/hestia-teaser-poster.jpg)](docs/Hestia_Premium_24s.mp4)
+
+▶ [Watch the 24-second teaser](docs/Hestia_Premium_24s.mp4): ingredient discovery, how cooking changes food chemistry (asparagine and reducing sugars to acrylamide through the Maillard reaction), and cited sources.
+
 ## Capabilities
 
 - Multimodal chat with image uploads and Server-Sent Events streaming
